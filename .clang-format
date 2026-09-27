@@ -1,0 +1,11 @@
+BasedOnStyle: Microsoft
+ColumnLimit: 120
+IndentWidth: 4
+NamespaceIndentation: All
+AccessModifierOffset: -4
+PointerAlignment: Left
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortLambdasOnASingleLine: All
+Cpp11BracedListStyle: false
+SpaceBeforeCpp11BracedList: true
+IncludeBlocks: Preserve

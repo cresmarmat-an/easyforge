@@ -1,0 +1,20 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(Threads)
+
+include("${CMAKE_CURRENT_LIST_DIR}/easyforgeTargets.cmake")
+
+# The libraries in this installation. find_package(easyforge COMPONENTS ...)
+# fails if a component asked for is not one of them.
+set(easyforge_LIBRARIES "@EASYFORGE_INSTALLED_LIBRARIES@")
+
+foreach(component IN LISTS easyforge_FIND_COMPONENTS)
+    if(TARGET easyforge::${component})
+        set(easyforge_${component}_FOUND TRUE)
+    else()
+        set(easyforge_${component}_FOUND FALSE)
+    endif()
+endforeach()
+
+check_required_components(easyforge)

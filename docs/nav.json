@@ -1,0 +1,53 @@
+{
+  "sections": [
+    {
+      "folder": "getting-started",
+      "title": "Getting started",
+      "pages": ["introduction", "names-and-patterns"]
+    },
+    {
+      "folder": "installation",
+      "title": "Installation",
+      "pages": ["fetching-with-cmake", "installing-and-find-package", "build-options", "platform-requirements"]
+    },
+    {
+      "folder": "core",
+      "title": "core",
+      "pages": [
+        { "page": "overview", "title": "Overview" },
+        "vectors",
+        "matrices",
+        "rotations-and-transforms",
+        "rectangles-and-boxes",
+        "colors",
+        "random-numbers",
+        "properties",
+        "results",
+        "logging",
+        "background-jobs",
+        "measuring-time",
+        "testing"
+      ]
+    },
+    {
+      "title": "Planned libraries",
+      "pages": [
+        "assets/overview",
+        "window/overview",
+        "input/overview",
+        "graphics/overview",
+        "data/overview",
+        "ui/overview",
+        "script/overview",
+        "sound/overview",
+        "physics/overview",
+        "network/overview"
+      ]
+    },
+    {
+      "folder": "reference",
+      "title": "Reference",
+      "pages": ["capabilities-and-limitations", "changelog", "license"]
+    }
+  ]
+}

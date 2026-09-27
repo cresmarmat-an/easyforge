@@ -1,0 +1,14 @@
+# Build output
+/build/
+/out/
+/_site/
+
+# Editors and tools
+/.vs/
+/.vscode/
+/.idea/
+*.user
+CMakeUserPresets.json
+
+# Python
+__pycache__/

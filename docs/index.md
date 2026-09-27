@@ -1,0 +1,61 @@
+# easyforge
+
+C++ libraries for windows, input, graphics, interfaces, sound, physics,
+networking, data, and scripting, written from scratch for Windows, Linux,
+macOS, iOS, Android, and the web. Each library works on its own or together with
+the others, and none of them contains third-party code.
+
+> [!NOTE] In development
+> easyforge is at 0.0.1-alpha. The `core` library is available and tested on
+> Windows. The other libraries are being written one at a time, and each page
+> below says whether its library is available yet.
+
+## A first program
+
+```cpp
+#include <easyforge/core.h>
+
+using namespace easyforge;
+
+int main()
+{
+    Transform crate = {
+        .Position = { 0.0f, 2.0f, 0.0f },
+        .Rotation = Quaternion::FromAngles(0.0f, Radians(45.0f), 0.0f),
+    };
+
+    Job<float> distance = Jobs::Shared().Run([crate] {
+        return Length(crate.ApplyToPoint({ 1.0f, 0.0f, 0.0f }));
+    });
+
+    Log("easyforge {}: the corner is {:.2f} away", VersionText, distance.Get());
+}
+```
+
+It prints `[information] easyforge 0.0.1-alpha: the corner is 2.24 away`.
+[Fetching with CMake](installation/fetching-with-cmake.md) shows how to add
+easyforge to your own project.
+
+## The libraries
+
+| Library | What it does | Status |
+|---|---|---|
+| [core](core/overview.md) | Math, colors, properties, results, logging, background jobs, testing | Available |
+| [assets](assets/overview.md) | Reads images, 3D models, sounds, and fonts from files | Planned |
+| [window](window/overview.md) | Windows, the frame loop, and everything the system sends | Planned |
+| [input](input/overview.md) | Named actions from keyboard, mouse, touch, and gamepads | Planned |
+| [graphics](graphics/overview.md) | 2D and 3D drawing on Direct3D 12, Vulkan, Metal, and WebGPU | Planned |
+| [data](data/overview.md) | A tree-shaped table with change tracking, undo, and saving | Planned |
+| [ui](ui/overview.md) | Interfaces: layout, elements, themes, effects, and displays | Planned |
+| [script](script/overview.md) | The easyforge scripting language, embeddable in any program | Planned |
+| [sound](sound/overview.md) | Mixing, streaming, effects, and positional sound | Planned |
+| [physics](physics/overview.md) | Bodies, collisions, and joints in 2D, later 3D | Planned |
+| [network](network/overview.md) | One-way messages and two-way requests between programs | Planned |
+
+## Where to go next
+
+- [Introduction](getting-started/introduction.md): what easyforge is made of and
+  how the libraries depend on each other.
+- [Names and patterns](getting-started/names-and-patterns.md): the conventions
+  every library follows, so learning one teaches the others.
+- [core overview](core/overview.md): everything in the library you can use today.
