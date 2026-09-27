@@ -8,7 +8,8 @@ go into more detail.
 | Library | Status |
 |---|---|
 | core | Available and tested on Windows |
-| assets, window, input, graphics, data, ui, script, sound, physics, network | Planned, in that order |
+| assets | Available and tested on Windows |
+| window, input, graphics, data, ui, script, sound, physics, network | Planned, in that order |
 
 ## core
 
@@ -35,11 +36,42 @@ It cannot yet:
 - Prioritize or cancel background jobs.
 - Write log messages to a file without a handler of your own.
 
+## assets
+
+It can:
+
+- Read PNG at every color type and bit depth, interlaced or not, with
+  transparency and checksum checking.
+- Read baseline and extended sequential JPEG, grayscale or color, with any
+  whole-number chroma subsampling and restart markers.
+- Read BMP (palettes, bit masks, every header version), TGA (with run-length
+  compression), and QOI.
+- Read WAV with integer or floating point samples, and QOA, whole or streamed a
+  piece at a time with seeking.
+- Read TrueType fonts and collections: metrics, outlines including composites,
+  kerning from GPOS or the kern table, and anti-aliased glyph bitmaps.
+- Read OBJ models with MTL materials, with smooth normals made when missing.
+- Find files in mounted folders and packs, then the working directory, then next
+  to the program; write packs.
+- Decompress deflate and zlib data, and compute CRC-32 and Adler-32.
+- Load any of these on background threads.
+- Survive damaged files, which give an error instead of a crash.
+
+It cannot yet:
+
+- Read progressive, CMYK, or 12-bit JPEG, run-length compressed BMP, or animated
+  PNG beyond its first frame.
+- Read Ogg Vorbis, MP3, or compressed WAV.
+- Read OpenType fonts with CFF outlines, apply hinting, or shape text beyond
+  kerning pairs.
+- Read glTF or FBX models, skeletons, or animation.
+- Compress data, or watch files for changes.
+
 ## Platforms
 
 | Platform | Status |
 |---|---|
-| Windows | `core` built and tested with Visual Studio 2026 |
+| Windows | `core` and `assets` built and tested with Visual Studio 2026 |
 | Linux | Planned for stage 2 |
 | Web | Planned for stage 3 |
 | macOS and iOS | Planned for stage 4 |

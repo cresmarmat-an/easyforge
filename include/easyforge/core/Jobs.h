@@ -81,6 +81,9 @@ namespace easyforge
         // A job that was never started. It counts as done.
         Job() = default;
 
+        // False for a job made with Job(), which has no function and no value.
+        bool IsStarted() const { return State != nullptr; }
+
         bool IsDone() const { return !State || State->Done.load(std::memory_order_acquire); }
 
         // Returns once the job has finished. While waiting, this thread runs other

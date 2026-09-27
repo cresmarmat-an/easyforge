@@ -117,6 +117,7 @@ namespace easyforge
             {
                 ++passed;
                 std::printf("[pass] %s\n", test.Name);
+                std::fflush(stdout);
             }
             else
             {
@@ -126,6 +127,7 @@ namespace easyforge
                 {
                     std::printf("       %s\n", failure.c_str());
                 }
+                std::fflush(stdout);
             }
         }
 

@@ -14,7 +14,7 @@ ones you use.
 | Library | CMake target | Header | Status |
 |---|---|---|---|
 | core | `easyforge::core` | `<easyforge/core.h>` | Available |
-| assets | `easyforge::assets` | `<easyforge/assets.h>` | Planned |
+| assets | `easyforge::assets` | `<easyforge/assets.h>` | Available |
 | window | `easyforge::window` | `<easyforge/window.h>` | Planned |
 | input | `easyforge::input` | `<easyforge/input.h>` | Planned |
 | graphics | `easyforge::graphics` | `<easyforge/graphics.h>` | Planned |

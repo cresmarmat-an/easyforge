@@ -3,18 +3,29 @@
     {
       "folder": "getting-started",
       "title": "Getting started",
-      "pages": ["introduction", "names-and-patterns"]
+      "pages": [
+        "introduction",
+        "names-and-patterns"
+      ]
     },
     {
       "folder": "installation",
       "title": "Installation",
-      "pages": ["fetching-with-cmake", "installing-and-find-package", "build-options", "platform-requirements"]
+      "pages": [
+        "fetching-with-cmake",
+        "installing-and-find-package",
+        "build-options",
+        "platform-requirements"
+      ]
     },
     {
       "folder": "core",
       "title": "core",
       "pages": [
-        { "page": "overview", "title": "Overview" },
+        {
+          "page": "overview",
+          "title": "Overview"
+        },
         "vectors",
         "matrices",
         "rotations-and-transforms",
@@ -30,9 +41,24 @@
       ]
     },
     {
+      "folder": "assets",
+      "title": "assets",
+      "pages": [
+        {
+          "page": "overview",
+          "title": "Overview"
+        },
+        "images",
+        "sounds",
+        "fonts",
+        "models",
+        "files-and-packs",
+        "compression"
+      ]
+    },
+    {
       "title": "Planned libraries",
       "pages": [
-        "assets/overview",
         "window/overview",
         "input/overview",
         "graphics/overview",
@@ -47,7 +73,11 @@
     {
       "folder": "reference",
       "title": "Reference",
-      "pages": ["capabilities-and-limitations", "changelog", "license"]
+      "pages": [
+        "capabilities-and-limitations",
+        "changelog",
+        "license"
+      ]
     }
   ]
 }

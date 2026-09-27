@@ -6,3 +6,12 @@
 *.wav binary
 *.qoa binary
 *.ttf binary
+*.ttc binary
+
+# Test files are compared byte for byte, so git must never change them. The
+# scripts that make them, and the readable model files, are ordinary text.
+tests/**/data/** binary
+tests/**/data/*.py text diff merge eol=lf
+tests/**/data/*.ps1 text diff merge eol=lf
+tests/**/data/**/*.obj text diff merge eol=lf
+tests/**/data/**/*.mtl text diff merge eol=lf

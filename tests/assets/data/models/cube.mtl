@@ -1,0 +1,13 @@
+# Two materials.
+newmtl Painted
+Kd 0.5 0.25 1.0
+Ns 98
+d 0.75
+map_Kd textures\paint.png
+
+newmtl Metal
+Kd 1 1 1
+Pm 1
+Pr 0.2
+Ke 0 0 0
+map_Bump -bm 1.0 textures/metal_normal.png

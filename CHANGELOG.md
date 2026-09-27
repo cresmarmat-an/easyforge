@@ -19,3 +19,8 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   public headers avoid names that `windows.h` defines as macros, and each
   library includes only the headers of libraries it depends on.
 - The documentation site, built from `docs/` and published on every push.
+- The `assets` library: images (PNG, JPEG, BMP, TGA, QOI), sounds (WAV and QOA,
+  whole or streamed), TrueType fonts with kerning and an anti-aliased
+  rasterizer, OBJ models with MTL materials, file search with mountable folders
+  and packs, deflate and zlib decompression, and loading in the background.
+  Every decoder is tested against files cut short or with bytes changed.

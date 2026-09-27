@@ -47,4 +47,9 @@ namespace easyforge
     {
         return std::abs(first - second) <= tolerance;
     }
+
+    inline bool NearlyEqual(double first, double second, double tolerance = 0.000000001)
+    {
+        return std::abs(first - second) <= tolerance;
+    }
 }
