@@ -5,6 +5,7 @@
       "title": "Getting started",
       "pages": [
         "introduction",
+        "first-window",
         "names-and-patterns"
       ]
     },
@@ -15,6 +16,7 @@
         "fetching-with-cmake",
         "installing-and-find-package",
         "build-options",
+        "app-icons",
         "platform-requirements"
       ]
     },
@@ -33,6 +35,7 @@
         "colors",
         "random-numbers",
         "properties",
+        "events-and-views",
         "results",
         "logging",
         "background-jobs",
@@ -57,9 +60,22 @@
       ]
     },
     {
+      "folder": "window",
+      "title": "window",
+      "pages": [
+        {
+          "page": "overview",
+          "title": "Overview"
+        },
+        "events",
+        "title-bars",
+        "screens-and-scaling",
+        "icons-and-cursors"
+      ]
+    },
+    {
       "title": "Planned libraries",
       "pages": [
-        "window/overview",
         "input/overview",
         "graphics/overview",
         "data/overview",

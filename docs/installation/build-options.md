@@ -6,13 +6,22 @@ configuring, or with `set()` before `FetchContent_MakeAvailable`.
 | Option | Default | What it does |
 |---|---|---|
 | `EASYFORGE_BUILD_TESTS` | `ON` when easyforge is built on its own, `OFF` when fetched | Builds the tests and the build checks |
+| `EASYFORGE_INSTALL` | `ON` when easyforge is built on its own, `OFF` when fetched | Adds the rules `cmake --install` uses |
 | `EASYFORGE_ONLY` | empty | Builds one library and the libraries it depends on |
 | `EASYFORGE_BUILD_CORE` | `ON` | Builds the `core` library |
 | `EASYFORGE_BUILD_ASSETS` | `ON` | Builds the `assets` library |
+| `EASYFORGE_BUILD_WINDOW` | `ON` | Builds the `window` library, on platforms it supports |
 
-Every library gets an `EASYFORGE_BUILD_<LIBRARY>` option once it exists, such as
-`EASYFORGE_BUILD_WINDOW`. Switching off a library that another library needs is
-an error, and the message says which one.
+Every library gets an `EASYFORGE_BUILD_<LIBRARY>` option once it exists.
+Switching off a library that another library needs is an error, and the message
+says which one. On a platform a library does not support yet, such as `window`
+on Linux before stage 2, the library is left out with a message.
+
+## Tools
+
+`easyforge-icon`, which [`easyforge_app_icon`](app-icons.md) runs, is defined
+whenever `assets` is built. When easyforge is fetched, it is only compiled if a
+program uses `easyforge_app_icon`.
 
 ## Building one library
 
@@ -35,12 +44,13 @@ ctest --test-dir build -C Debug --output-on-failure
 Besides each library's tests, three checks run:
 
 - **Every public header compiles on its own**, so each one includes what it
-  needs. On Windows each header is also compiled after `windows.h`, without
-  `NOMINMAX`, because that is how many programs include it.
+  needs. On Windows each header is also compiled after `windows.h` and
+  `windowsx.h`, without `NOMINMAX`, because that is how many programs include
+  them.
 - **public-header-names** fails if a public header uses a name that
-  `windows.h` defines as a macro, such as `DrawText`, `min`, or `near`.
-  Programs that include `windows.h` first would otherwise call functions that do
-  not exist.
+  `windows.h` or `windowsx.h` defines as a macro, such as `DrawText`, `min`,
+  `near`, or `IsMaximized`. Programs that include those headers first would
+  otherwise call functions that do not exist.
 - **library-includes** fails if a library's code includes a header of a library
   it does not depend on.
 

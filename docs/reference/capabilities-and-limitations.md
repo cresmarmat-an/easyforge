@@ -9,7 +9,8 @@ go into more detail.
 |---|---|
 | core | Available and tested on Windows |
 | assets | Available and tested on Windows |
-| window, input, graphics, data, ui, script, sound, physics, network | Planned, in that order |
+| window | Available and tested on Windows |
+| input, graphics, data, ui, script, sound, physics, network | Planned, in that order |
 
 ## core
 
@@ -67,11 +68,39 @@ It cannot yet:
 - Read glTF or FBX models, skeletons, or animation.
 - Compress data, or watch files for changes.
 
+## window
+
+It can:
+
+- Open any number of windows, sized in points so they look the same on every
+  screen, and run their frames together at the screen's refresh rate.
+- Change the title, icon, size, position, minimum size, full screen,
+  maximizing, minimizing, always on top, visibility, background, and cursor at
+  any time.
+- Report keys by their position on the keyboard, typed text as UTF-8 including
+  input methods, the mouse with click counts and both wheels, touches, dropped
+  files, focus, resizing, scaling changes, and light and dark mode changes.
+- Lock the mouse for camera control, with movement straight from the mouse.
+- Replace the system's title bar with a view of your own that still drags,
+  maximizes, resizes, and shows the Windows 11 snap layouts.
+- Keep drawing while the person drags an edge, and keep the content the same
+  size in points when the window moves to a screen with different scaling.
+- Read and write the clipboard, list the screens, and use image cursors.
+- Build an image into the program as its icon with `easyforge_app_icon`.
+
+It cannot yet:
+
+- Run on anything but Windows 10 version 1703 or later.
+- Show menus, message boxes, or dialogs for opening and saving files.
+- Report pen pressure, media keys, or screens being plugged in.
+- Accept dropped text or images, only files.
+- Run frames only when something changes.
+
 ## Platforms
 
 | Platform | Status |
 |---|---|
-| Windows | `core` and `assets` built and tested with Visual Studio 2026 |
+| Windows | `core`, `assets`, and `window` built and tested with Visual Studio 2026 |
 | Linux | Planned for stage 2 |
 | Web | Planned for stage 3 |
 | macOS and iOS | Planned for stage 4 |

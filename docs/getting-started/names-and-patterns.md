@@ -64,7 +64,7 @@ Objects expose their settings as [properties](../core/properties.md), which you
 read and assign like variables:
 
 ```cpp
-window.Title = "Notes";                  // once window exists
+window.Title = "Notes";
 std::string title = window.Title;
 ```
 
@@ -82,7 +82,7 @@ if (!count)
 ```
 
 Functions return [Result](../core/results.md) for this. Objects that can fail to
-be made, such as a window the system refuses to open, will offer the same
+be made, such as a window the system refuses to open, offer the same
 `if (!object)` test and an `Error()` function.
 
 ## Nothing global, with three exceptions
@@ -92,7 +92,7 @@ two physics worlds. Three things belong to the whole program instead:
 
 - where [log messages](../core/logging.md) go,
 - the [shared background threads](../core/background-jobs.md) from `Jobs::Shared()`,
-- and, once `assets` exists, the list of folders and packs that files are read from.
+- and the list of folders and packs that [files](../assets/files-and-packs.md) are read from.
 
 ## Headers
 
@@ -101,6 +101,12 @@ Each library has one header that includes all of it, such as
 `<easyforge/core/Vector.h>`, when you want to include less.
 
 easyforge's headers never include platform headers. You can include
-`windows.h` before or after them, with or without `NOMINMAX`: easyforge avoids
-every name that `windows.h` turns into a macro, such as `DrawText`, `min`, and
-`near`, and the build checks this for every public header.
+`windows.h` and `windowsx.h` before or after them, with or without `NOMINMAX`:
+easyforge avoids every name those headers turn into a macro, such as `DrawText`,
+`min`, `near`, and `IsMaximized`, and the build checks this for every public
+header.
+
+One name still needs care. `windows.h` declares a function called `Rectangle`,
+so a program that includes it and writes `using namespace easyforge;` has two
+things named `Rectangle`, and the compiler asks which one is meant. Write
+`easyforge::Rectangle` in that program.

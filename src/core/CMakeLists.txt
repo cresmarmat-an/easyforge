@@ -2,6 +2,7 @@ easyforge_add_library(core
     SOURCES
         Color.cpp
         Jobs.cpp
+        Keys.cpp
         Log.cpp
         Matrix.cpp
         Quaternion.cpp

@@ -24,3 +24,14 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   rasterizer, OBJ models with MTL materials, file search with mountable folders
   and packs, deflate and zlib decompression, and loading in the background.
   Every decoder is tested against files cut short or with bytes changed.
+- The `window` library for Windows: windows sized in points, the frame loop,
+  keyboard, text, mouse, touch, and file drop events, custom title bars with
+  snap layouts, screens and scaling, icons, cursors, a locked mouse, and the
+  clipboard.
+- `Event`, `Key`, `View`, `Host`, and `HostListener` in `core`, which let
+  libraries work together without depending on each other.
+- `ImageData::Resized`, which scales images in linear light.
+- `easyforge_app_icon`, a CMake function that builds an image into a program as
+  its icon, and the `easyforge-icon` tool behind it.
+- `EASYFORGE_INSTALL`, so projects that fetch easyforge do not get its install
+  rules.

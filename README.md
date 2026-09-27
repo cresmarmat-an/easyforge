@@ -14,8 +14,8 @@ SDK.
 
 ## Status
 
-easyforge is at **0.0.1-alpha**. The `core` and `assets` libraries are finished
-and tested on Windows. The other libraries are being built one at a time, in the
+easyforge is at **0.0.1-alpha**. The `core`, `assets`, and `window` libraries
+are finished and tested on Windows. The other libraries are being built one at a time, in the
 order listed below; each one arrives with its tests, its documentation, and an
 example.
 
@@ -23,7 +23,7 @@ example.
 |---|---|---|
 | `core` | Math, colors, properties, results, logging, background jobs, testing | Available |
 | `assets` | Reads images, 3D models, sounds, and fonts from files | Available |
-| `window` | Windows, the frame loop, and everything the system sends | Planned |
+| `window` | Windows, the frame loop, and everything the system sends | Available |
 | `input` | Named actions from keyboard, mouse, touch, and gamepads | Planned |
 | `graphics` | 2D and 3D drawing on Direct3D 12, Vulkan, Metal, and WebGPU | Planned |
 | `data` | A tree-shaped table with change tracking, undo, and saving | Planned |
@@ -36,27 +36,27 @@ example.
 ## A first program
 
 ```cpp
-#include <easyforge/core.h>
+#include <easyforge/window.h>
 
 using namespace easyforge;
 
 int main()
 {
-    Transform crate = {
-        .Position = { 0.0f, 2.0f, 0.0f },
-        .Rotation = Quaternion::FromAngles(0.0f, Radians(45.0f), 0.0f),
+    Window window = Window::New({ .Title = "Notes", .Icon = "icon.png", .Width = 1280, .Height = 720 });
+
+    window.OnEvent = [window](const Event& event) {
+        if (event.Type == EventType::KeyPressed && event.Key == Key::Escape)
+        {
+            window.Close();
+        }
     };
 
-    Job<float> distance = Jobs::Shared().Run([crate] {
-        return Length(crate.ApplyToPoint({ 1.0f, 0.0f, 0.0f }));
-    });
-
-    Log("easyforge {}: the corner is {:.2f} away", VersionText, distance.Get());
+    window.Run();
 }
 ```
 
-When `window` and `ui` are ready, a window with an interface will look like
-this:
+That is an empty window that closes with Escape. When `ui` is ready, a window
+with an interface will look like this:
 
 ```cpp
 #include <easyforge/window.h>
@@ -92,7 +92,7 @@ FetchContent_Declare(easyforge
     GIT_TAG main)
 FetchContent_MakeAvailable(easyforge)
 
-target_link_libraries(my_program PRIVATE easyforge::core)
+target_link_libraries(my_program PRIVATE easyforge::window)
 ```
 
 Only the libraries you link are compiled. easyforge needs CMake 3.22 or later

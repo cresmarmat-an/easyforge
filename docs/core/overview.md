@@ -24,6 +24,7 @@ target_link_libraries(my_program PRIVATE easyforge::core)
 | [Colors](colors.md) | `Color`, hex codes, sRGB and linear light |
 | [Random numbers](random-numbers.md) | `Random` |
 | [Properties](properties.md) | `Property`, settings you read and assign like variables |
+| [Events, hosts, and views](events-and-views.md) | `Event`, `Key`, `View`, `Host`, `HostListener`, how libraries work together |
 | [Results](results.md) | `Result`, `Failure` |
 | [Logging](logging.md) | `Log`, `LogLevel`, `SetLogHandler` |
 | [Background jobs](background-jobs.md) | `Jobs`, `Job`, `ParallelFor` |
@@ -56,9 +57,3 @@ easyforge::VersionText      // "0.0.1-alpha"
 All of these are `constexpr`, so they can be used in `static_assert` and other
 compile-time checks.
 
-## Coming with window
-
-When the `window` library arrives, `core` gains the types that let libraries
-work together without depending on each other: `Event`, which describes a key,
-click, touch, or resize, and the `Host` and `View` interfaces that let an
-interface fill a window without either library knowing the other.

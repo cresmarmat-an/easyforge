@@ -7,8 +7,11 @@
 #include <easyforge/core/BoundingBox.h>
 #include <easyforge/core/Clock.h>
 #include <easyforge/core/Color.h>
+#include <easyforge/core/Event.h>
 #include <easyforge/core/Formatting.h>
+#include <easyforge/core/Host.h>
 #include <easyforge/core/Jobs.h>
+#include <easyforge/core/Keys.h>
 #include <easyforge/core/Log.h>
 #include <easyforge/core/Matrix.h>
 #include <easyforge/core/Property.h>

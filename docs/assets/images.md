@@ -40,6 +40,22 @@ ImageData fromPixels(2, 1, { 255, 0, 0, 255,  0, 0, 255, 255 });
 `ImageData(width, height, pixels)` checks that `pixels` holds exactly
 `width * height * 4` bytes; if not, the image is empty and `Error()` says why.
 
+## Resizing
+
+```cpp
+ImageData thumbnail = photo.Resized(128, 96);
+```
+
+`Resized` returns a copy at the new size. Shrinking averages every pixel that
+each new pixel covers, so fine detail turns smooth instead of speckled; growing
+blends the four nearest pixels. Colors are blended in linear light, weighted by
+alpha, so a transparent pixel's color never bleeds into its neighbors and dark
+and light edges keep their brightness.
+
+Resizing an empty image, or to a size of zero or larger than
+`ImageData::MaximumSide`, gives an empty image with an error. Resizing to the
+same size gives an exact copy.
+
 ## Recognizing the format
 
 The format is recognized from the first bytes of the file, not from its name, so

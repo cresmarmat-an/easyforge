@@ -9,6 +9,7 @@ easyforge_add_library(assets
         images/Jpeg.cpp
         images/Png.cpp
         images/Qoi.cpp
+        images/Resize.cpp
         images/Tga.cpp
         models/ModelData.cpp
         sounds/Qoa.cpp

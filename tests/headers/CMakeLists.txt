@@ -1,7 +1,7 @@
 # Compiles every public header of the built libraries on its own, so each one
 # includes everything it needs. On Windows each header is also compiled after
-# windows.h, without NOMINMAX or WIN32_LEAN_AND_MEAN, the way many programs
-# include it; that catches code the min and max macros would break.
+# windows.h and windowsx.h, without NOMINMAX or WIN32_LEAN_AND_MEAN, the way
+# many programs include them; that catches names their macros would break.
 
 get_property(built_libraries GLOBAL PROPERTY EASYFORGE_BUILT_LIBRARIES)
 
@@ -22,7 +22,8 @@ foreach(library IN LISTS built_libraries)
 
         if(WIN32)
             set(after_windows "${CMAKE_CURRENT_BINARY_DIR}/after_windows_${name}.cpp")
-            file(CONFIGURE OUTPUT "${after_windows}" CONTENT "#include <windows.h>\n#include <${header}>\n" @ONLY)
+            file(CONFIGURE OUTPUT "${after_windows}"
+                CONTENT "#include <windows.h>\n#include <windowsx.h>\n#include <${header}>\n" @ONLY)
             list(APPEND checks "${after_windows}")
         endif()
     endforeach()

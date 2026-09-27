@@ -118,17 +118,22 @@ function(easyforge_add_library library)
 
     easyforge_set_warnings(${target})
 
-    install(TARGETS ${target}
-        EXPORT easyforgeTargets
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    if(EASYFORGE_INSTALL)
+        install(TARGETS ${target}
+            EXPORT easyforgeTargets
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    endif()
 
     set_property(GLOBAL APPEND PROPERTY EASYFORGE_BUILT_LIBRARIES ${library})
 endfunction()
 
 # Installs headers, libraries, and the files find_package(easyforge) reads.
 function(easyforge_install_package)
+    if(NOT EASYFORGE_INSTALL)
+        return()
+    endif()
     include(CMakePackageConfigHelpers)
 
     get_property(built_libraries GLOBAL PROPERTY EASYFORGE_BUILT_LIBRARIES)
@@ -138,6 +143,9 @@ function(easyforge_install_package)
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/easyforge)
 
     install(TARGETS easyforge_easyforge EXPORT easyforgeTargets)
+    if(TARGET easyforge_icon_tool)
+        install(TARGETS easyforge_icon_tool EXPORT easyforgeTargets RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    endif()
     install(EXPORT easyforgeTargets
         NAMESPACE easyforge::
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/easyforge)
@@ -158,5 +166,6 @@ function(easyforge_install_package)
     install(FILES
         "${PROJECT_BINARY_DIR}/easyforgeConfig.cmake"
         "${PROJECT_BINARY_DIR}/easyforgeConfigVersion.cmake"
+        "${PROJECT_SOURCE_DIR}/cmake/EasyforgeAppIcon.cmake"
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/easyforge)
 endfunction()

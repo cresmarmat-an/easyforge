@@ -17,17 +17,20 @@ endif()
 
 include(GNUInstallDirs)
 include(cmake/EasyforgeLibraries.cmake)
+include(cmake/EasyforgeAppIcon.cmake)
 
 # easyforge does not use C++20 modules, so CMake does not need to look for them.
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 option(EASYFORGE_BUILD_TESTS "Build the easyforge tests" ${PROJECT_IS_TOP_LEVEL})
+option(EASYFORGE_INSTALL "Add the rules that install easyforge" ${PROJECT_IS_TOP_LEVEL})
 set(EASYFORGE_ONLY "" CACHE STRING
     "Build only this library and the libraries it depends on, for example 'network'")
 
 configure_file(cmake/version.h.in "${EASYFORGE_GENERATED_INCLUDE_DIRECTORY}/easyforge/version.h" @ONLY)
 
 easyforge_add_libraries()
+add_subdirectory(tools)
 
 # One target that links every library that was built.
 add_library(easyforge_easyforge INTERFACE)

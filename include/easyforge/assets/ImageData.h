@@ -68,6 +68,12 @@ namespace easyforge
         Color ColorAt(int x, int y) const;
         void SetColorAt(int x, int y, Color color);
 
+        // A copy scaled to the given size. Shrinking averages every pixel each new
+        // pixel covers; growing blends the nearest four. Colors are blended in
+        // linear light, weighted by alpha, so a transparent pixel's color never
+        // bleeds into its neighbors.
+        ImageData Resized(int width, int height) const;
+
     private:
         std::string ErrorText;
     };

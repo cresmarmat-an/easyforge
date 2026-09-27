@@ -160,3 +160,81 @@ EASYFORGE_TEST(ImageLoadInBackground)
     EASYFORGE_EXPECT(nothing.Ready());
     EASYFORGE_EXPECT(!nothing.Get());
 }
+
+EASYFORGE_TEST(ImageResizedShrinks)
+{
+    // A 4 by 4 checkerboard of black and white shrinks to 2 by 2 middle gray.
+    // Averaged in linear light, half white is 50% linear, which is sRGB 188.
+    ImageData checkers(4, 4);
+    for (int y = 0; y < 4; ++y)
+    {
+        for (int x = 0; x < 4; ++x)
+        {
+            checkers.SetColorAt(x, y, (x + y) % 2 == 0 ? Color::White : Color::Black);
+        }
+    }
+    ImageData half = checkers.Resized(2, 2);
+    EASYFORGE_REQUIRE(half);
+    EASYFORGE_EXPECT_EQUAL(half.Width, 2);
+    EASYFORGE_EXPECT_EQUAL(half.Height, 2);
+    for (std::size_t pixel = 0; pixel < half.Pixels.size(); pixel += 4)
+    {
+        EASYFORGE_EXPECT_EQUAL(half.Pixels[pixel + 0], std::uint8_t { 188 });
+        EASYFORGE_EXPECT_EQUAL(half.Pixels[pixel + 3], std::uint8_t { 255 });
+    }
+
+    // Shrinking by an amount that does not divide evenly keeps a solid color exact.
+    ImageData solid(7, 5);
+    for (int y = 0; y < 5; ++y)
+    {
+        for (int x = 0; x < 7; ++x)
+        {
+            solid.SetColorAt(x, y, Color::Hex("#3366CC"));
+        }
+    }
+    ImageData smaller = solid.Resized(3, 2);
+    EASYFORGE_REQUIRE(smaller);
+    for (int y = 0; y < 2; ++y)
+    {
+        for (int x = 0; x < 3; ++x)
+        {
+            EASYFORGE_EXPECT_EQUAL(smaller.ColorAt(x, y), Color::Hex("#3366CC"));
+        }
+    }
+}
+
+EASYFORGE_TEST(ImageResizedGrowsAndKeepsSize)
+{
+    ImageData pair(2, 1);
+    pair.SetColorAt(0, 0, Color::Black);
+    pair.SetColorAt(1, 0, Color::White);
+
+    ImageData wide = pair.Resized(4, 1);
+    EASYFORGE_REQUIRE(wide);
+    // The outer pixels repeat the edges; the inner ones blend.
+    EASYFORGE_EXPECT_EQUAL(wide.Pixels[0], std::uint8_t { 0 });
+    EASYFORGE_EXPECT_EQUAL(wide.Pixels[12], std::uint8_t { 255 });
+    EASYFORGE_EXPECT(wide.Pixels[4] > 0 && wide.Pixels[4] < wide.Pixels[8] && wide.Pixels[8] < 255);
+
+    ImageData same = pair.Resized(2, 1);
+    EASYFORGE_EXPECT(same.Pixels == pair.Pixels);
+}
+
+EASYFORGE_TEST(ImageResizedIgnoresTransparentColors)
+{
+    // A transparent red pixel next to an opaque blue one: shrinking gives blue at
+    // half alpha, with no red in it.
+    ImageData pair(2, 1);
+    pair.SetColorAt(0, 0, Color::Hex("#FF000000"));
+    pair.SetColorAt(1, 0, Color::Hex("#0000FF"));
+    ImageData one = pair.Resized(1, 1);
+    EASYFORGE_REQUIRE(one);
+    EASYFORGE_EXPECT_EQUAL(one.Pixels[0], std::uint8_t { 0 });
+    EASYFORGE_EXPECT_EQUAL(one.Pixels[2], std::uint8_t { 255 });
+    EASYFORGE_EXPECT_EQUAL(one.Pixels[3], std::uint8_t { 128 });
+
+    ImageData empty;
+    EASYFORGE_EXPECT(!empty.Resized(2, 2));
+    EASYFORGE_EXPECT(!pair.Resized(0, 5));
+    EASYFORGE_EXPECT(!pair.Resized(0, 5).Error().empty());
+}

@@ -20,6 +20,8 @@ set(forbidden
     OutputDebugString PeekMessage PlaySound PostMessage RegisterClass RemoveDirectory RemoveProp ReportEvent
     SendMessage SetCurrentDirectory SetEnvironmentVariable SetFileAttributes SetProp SetWindowText StartDoc
     TextOut UnregisterClass Yield
+    # Function-like macros from windowsx.h.
+    IsMinimized IsMaximized IsRestored GetWindowStyle GetWindowID
     # Uppercase macros that are easy to reach for as enum values.
     ABSOLUTE CALLBACK CONST DELETE ERROR IGNORE IN INFINITE OPAQUE OPTIONAL OUT RELATIVE TRANSPARENT)
 
