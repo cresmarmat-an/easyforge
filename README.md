@@ -14,8 +14,8 @@ SDK.
 
 ## Status
 
-easyforge is at **0.0.1-alpha**. The `core`, `assets`, and `window` libraries
-are finished and tested on Windows. The other libraries are being built one at a time, in the
+easyforge is at **0.0.1-alpha**. The `core`, `assets`, `window`, and `input`
+libraries are finished and tested on Windows. The other libraries are being built one at a time, in the
 order listed below; each one arrives with its tests, its documentation, and an
 example.
 
@@ -24,7 +24,7 @@ example.
 | `core` | Math, colors, properties, results, logging, background jobs, testing | Available |
 | `assets` | Reads images, 3D models, sounds, and fonts from files | Available |
 | `window` | Windows, the frame loop, and everything the system sends | Available |
-| `input` | Named actions from keyboard, mouse, touch, and gamepads | Planned |
+| `input` | Named actions from keyboard, mouse, and gamepads | Available |
 | `graphics` | 2D and 3D drawing on Direct3D 12, Vulkan, Metal, and WebGPU | Planned |
 | `data` | A tree-shaped table with change tracking, undo, and saving | Planned |
 | `ui` | Interfaces: layout, elements, themes, effects, and displays | Planned |

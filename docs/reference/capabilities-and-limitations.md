@@ -10,7 +10,8 @@ go into more detail.
 | core | Available and tested on Windows |
 | assets | Available and tested on Windows |
 | window | Available and tested on Windows |
-| input, graphics, data, ui, script, sound, physics, network | Planned, in that order |
+| input | Available and tested on Windows |
+| graphics, data, ui, script, sound, physics, network | Planned, in that order |
 
 ## core
 
@@ -96,11 +97,33 @@ It cannot yet:
 - Accept dropped text or images, only files.
 - Run frames only when something changes.
 
+## input
+
+It can:
+
+- Bind named actions to keys, mouse buttons, the wheel, gamepad buttons, one
+  gamepad axis, whole sticks, and four keys that make a direction, any number
+  per action.
+- Report each action as pressed, held, or released, with taps inside one frame
+  kept, and give values from 0 to 1 and directions no longer than 1.
+- Follow a window by itself, skipping presses an interface already used, or
+  take events from any other source.
+- Read up to four Xbox controllers through XInput, with a round dead zone,
+  analog triggers, rumble, and one player per gamepad.
+- Change bindings while running, and save and load them as readable text.
+- Record input frame by frame and play it back exactly, from memory or a file.
+
+It cannot yet:
+
+- Bind touches, mouse movement, or key combinations.
+- Read gamepads other than through XInput, or anywhere but Windows.
+- Read motion sensors, touchpads, lights, or battery levels of controllers.
+
 ## Platforms
 
 | Platform | Status |
 |---|---|
-| Windows | `core`, `assets`, and `window` built and tested with Visual Studio 2026 |
+| Windows | `core`, `assets`, `window`, and `input` built and tested with Visual Studio 2026 |
 | Linux | Planned for stage 2 |
 | Web | Planned for stage 3 |
 | macOS and iOS | Planned for stage 4 |

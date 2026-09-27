@@ -11,6 +11,7 @@ configuring, or with `set()` before `FetchContent_MakeAvailable`.
 | `EASYFORGE_BUILD_CORE` | `ON` | Builds the `core` library |
 | `EASYFORGE_BUILD_ASSETS` | `ON` | Builds the `assets` library |
 | `EASYFORGE_BUILD_WINDOW` | `ON` | Builds the `window` library, on platforms it supports |
+| `EASYFORGE_BUILD_INPUT` | `ON` | Builds the `input` library |
 
 Every library gets an `EASYFORGE_BUILD_<LIBRARY>` option once it exists.
 Switching off a library that another library needs is an error, and the message

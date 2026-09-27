@@ -26,6 +26,7 @@ namespace easyforge
             "Number Pad 5", "Number Pad 6", "Number Pad 7", "Number Pad 8", "Number Pad 9",
             "Number Pad .", "Number Pad +", "Number Pad -", "Number Pad *", "Number Pad /", "Number Pad Enter",
         };
+        static_assert(names.back() == "Number Pad Enter", "every key needs a name");
         std::size_t index = static_cast<std::size_t>(key);
         return index < names.size() ? names[index] : names[0];
     }

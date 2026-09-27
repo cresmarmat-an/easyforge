@@ -29,9 +29,9 @@ window.OnEvent = [](const Event& event) {
 };
 ```
 
-For games, the `input` library will turn these events into named actions such
-as "Jump", with gamepads included. The events are what it is built on, and they
-are there for anything it does not cover.
+For games, the [input](../input/overview.md) library turns these events into
+named actions such as "Jump", with gamepads included. The events are what it is
+built on, and they are there for anything it does not cover.
 
 ## What each event carries
 

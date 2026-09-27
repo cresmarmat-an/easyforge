@@ -35,3 +35,7 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   its icon, and the `easyforge-icon` tool behind it.
 - `EASYFORGE_INSTALL`, so projects that fetch easyforge do not get its install
   rules.
+- The `input` library: named actions bound to keys, mouse buttons, the wheel,
+  gamepad buttons, axes, sticks, and key directions; Xbox controllers through
+  XInput with dead zones and rumble; bindings saved as text; and recording and
+  exact playback of input.

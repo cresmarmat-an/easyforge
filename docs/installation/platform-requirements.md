@@ -15,7 +15,7 @@ network backends.
 
 | Platform | Stage | Uses | Status |
 |---|---|---|---|
-| Windows | 1 | Win32, Direct3D 12, WASAPI, XInput, Winsock | `core`, `assets`, and `window` available |
+| Windows | 1 | Win32, Direct3D 12, WASAPI, XInput, Winsock | `core`, `assets`, `window`, and `input` available |
 | Linux | 2 | X11, Wayland, Vulkan, ALSA, PulseAudio | Planned |
 | Web | 3 | Emscripten, WebGPU, Web Audio, WebSocket | Planned |
 | macOS and iOS | 4 | Cocoa, UIKit, Metal, CoreAudio | Planned |
@@ -29,10 +29,14 @@ libraries, which every Windows installation has: `user32`, `gdi32`, `shell32`,
 `imm32`, `dwmapi`, `shcore`, and `advapi32`. CMake passes them on to your
 program by itself.
 
+`input` reads gamepads through XInput, which it loads when the program starts:
+`xinput1_4.dll` on Windows 8 and later, or `xinput9_1_0.dll`. A computer without
+either has no gamepads, and everything else keeps working.
+
 ## What has been tested
 
-`core`, `assets`, and `window` are built and tested on Windows 10 with Visual
-Studio 2026, in both the Debug and Release configurations. The repository's
+`core`, `assets`, `window`, and `input` are built and tested on Windows 10 with
+Visual Studio 2026, in both the Debug and Release configurations. The repository's
 build workflow repeats this on GitHub's Windows runners on every push.
 
 `core` and `assets` use only the C++ standard library apart from two small
@@ -40,3 +44,5 @@ Windows functions: writing to the debugger's output window, and finding the
 program's folder. Their Linux versions are written, so they are expected to
 build on Linux and macOS with the compilers above. They have not been built
 there yet; that happens in stage 2, along with `window` for X11 and Wayland.
+`input` builds on every platform, and reads no gamepads outside Windows until
+their stages.

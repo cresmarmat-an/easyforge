@@ -74,9 +74,21 @@
       ]
     },
     {
+      "folder": "input",
+      "title": "input",
+      "pages": [
+        {
+          "page": "overview",
+          "title": "Overview"
+        },
+        "bindings",
+        "gamepads",
+        "recording"
+      ]
+    },
+    {
       "title": "Planned libraries",
       "pages": [
-        "input/overview",
         "graphics/overview",
         "data/overview",
         "ui/overview",

@@ -13,7 +13,8 @@ EASYFORGE_TEST(KeyNamesForPeople)
     EASYFORGE_EXPECT_EQUAL(KeyName(Key::Count), std::string_view("Unknown"));
     for (int key = 1; key < static_cast<int>(Key::Count); ++key)
     {
-        EASYFORGE_EXPECT(KeyName(static_cast<Key>(key)) != "Unknown");
+        std::string_view name = KeyName(static_cast<Key>(key));
+        EASYFORGE_EXPECT(!name.empty() && name != "Unknown");
     }
 }
 
