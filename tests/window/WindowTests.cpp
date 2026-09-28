@@ -93,11 +93,6 @@ EASYFORGE_TEST(WindowPropertiesChangeTheWindow)
     window.Resizable = true;
     EASYFORGE_EXPECT((GetWindowLongPtrW(handle, GWL_STYLE) & WS_THICKFRAME) != 0);
 
-    window.AlwaysOnTop = true;
-    EASYFORGE_EXPECT((GetWindowLongPtrW(handle, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
-    window.AlwaysOnTop = false;
-    EASYFORGE_EXPECT((GetWindowLongPtrW(handle, GWL_EXSTYLE) & WS_EX_TOPMOST) == 0);
-
     // A hidden window remembers to be maximized when it shows.
     window.Maximized = true;
     EASYFORGE_EXPECT(window.Maximized);
@@ -112,6 +107,27 @@ EASYFORGE_TEST(WindowPropertiesChangeTheWindow)
     std::string icon = window.Icon;
     EASYFORGE_EXPECT_EQUAL(icon, std::string("a file that does not exist.png"));
     window.Close();
+}
+
+EASYFORGE_TEST(WindowStaysOnTop)
+{
+    // Some setups never let a program's oldest window stay on top, so an older
+    // window is made first.
+    Window older = NewHidden();
+    Window window = NewHidden();
+    HWND handle = HandleOf(window);
+    window.AlwaysOnTop = true;
+    EASYFORGE_EXPECT(window.AlwaysOnTop);
+    EASYFORGE_EXPECT((GetWindowLongPtrW(handle, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
+    window.AlwaysOnTop = false;
+    EASYFORGE_EXPECT(!window.AlwaysOnTop);
+    EASYFORGE_EXPECT((GetWindowLongPtrW(handle, GWL_EXSTYLE) & WS_EX_TOPMOST) == 0);
+
+    Window fromSettings = Window::New({ .AlwaysOnTop = true, .Visible = false });
+    EASYFORGE_EXPECT((GetWindowLongPtrW(HandleOf(fromSettings), GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
+    fromSettings.Close();
+    window.Close();
+    older.Close();
 }
 
 EASYFORGE_TEST(WindowFullscreenCoversItsScreen)
