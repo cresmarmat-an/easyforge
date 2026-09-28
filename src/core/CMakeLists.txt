@@ -3,6 +3,8 @@ easyforge_add_library(core
         Color.cpp
         Jobs.cpp
         Keys.cpp
+        language/Parser.cpp
+        language/Tokens.cpp
         Log.cpp
         Matrix.cpp
         Quaternion.cpp

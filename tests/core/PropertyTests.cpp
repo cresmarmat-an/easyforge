@@ -132,3 +132,14 @@ EASYFORGE_TEST(PropertyRebind)
     EASYFORGE_EXPECT_EQUAL(firstSettings.Width, 640);
     EASYFORGE_EXPECT_EQUAL(secondSettings.Width, 1);
 }
+
+EASYFORGE_TEST(PropertyTakesBracedValuesOfZero)
+{
+    // Zeros could also be read as null pointers; the value is what is meant.
+    Settings settings;
+    Panel panel(settings);
+    panel.Size = { 0, 0 };
+    EASYFORGE_EXPECT_EQUAL(settings.Size, Vector2());
+    panel.Size = { 1, 0 };
+    EASYFORGE_EXPECT_EQUAL(settings.Size, Vector2(1, 0));
+}

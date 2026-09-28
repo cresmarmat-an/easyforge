@@ -3,6 +3,7 @@ add_executable(easyforge-core-tests
     ColorTests.cpp
     JobsTests.cpp
     KeyTests.cpp
+    LanguageTests.cpp
     LogTests.cpp
     MatrixTests.cpp
     PropertyTests.cpp

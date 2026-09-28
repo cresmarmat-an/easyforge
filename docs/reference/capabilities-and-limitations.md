@@ -24,6 +24,8 @@ It can:
 - Give objects properties that are read and assigned like variables.
 - Report failures as values with readable messages, without exceptions.
 - Log at four levels to standard error, the debugger, or a handler of your own.
+- Read source in the easyforge language into a syntax tree, reporting every
+  problem with its line and column.
 - Run work on background threads, wait without freezing the pool, and split
   loops across threads.
 - Measure time with a clock that never jumps.

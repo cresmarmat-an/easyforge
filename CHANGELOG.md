@@ -39,3 +39,7 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   gamepad buttons, axes, sticks, and key directions; Xbox controllers through
   XInput with dead zones and rumble; bindings saved as text; and recording and
   exact playback of input.
+- The language reader in `core`: a tokenizer and parser for the syntax the
+  script and shader languages share.
+- Assigning braced values such as `{ 0, 0, 0 }` to a `Property` no longer fails
+  to compile.

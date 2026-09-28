@@ -22,3 +22,6 @@
 #include <easyforge/core/Scalar.h>
 #include <easyforge/core/Transform.h>
 #include <easyforge/core/Vector.h>
+
+#include <easyforge/core/language/Syntax.h>
+#include <easyforge/core/language/Tokens.h>

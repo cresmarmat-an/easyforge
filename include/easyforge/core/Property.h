@@ -24,7 +24,9 @@ namespace easyforge
         using Reader = Value (*)(const void* owner);
         using Writer = void (*)(void* owner, const Value& value);
 
-        constexpr Property(void* owner, Reader reader, Writer writer) noexcept
+        // Explicit, so that assigning a braced value such as `= { 0, 0, 0 }` can
+        // only mean the value, never a new property.
+        explicit constexpr Property(void* owner, Reader reader, Writer writer) noexcept
             : Owner(owner), Reading(reader), Writing(writer)
         {
         }

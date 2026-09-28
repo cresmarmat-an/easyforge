@@ -25,6 +25,7 @@ target_link_libraries(my_program PRIVATE easyforge::core)
 | [Random numbers](random-numbers.md) | `Random` |
 | [Properties](properties.md) | `Property`, settings you read and assign like variables |
 | [Events, hosts, and views](events-and-views.md) | `Event`, `Key`, `View`, `Host`, `HostListener`, how libraries work together |
+| [The language reader](language.md) | `language::Tokenize`, `language::Parse`, the syntax tree the script and shader languages share |
 | [Results](results.md) | `Result`, `Failure` |
 | [Logging](logging.md) | `Log`, `LogLevel`, `SetLogHandler` |
 | [Background jobs](background-jobs.md) | `Jobs`, `Job`, `ParallelFor` |
