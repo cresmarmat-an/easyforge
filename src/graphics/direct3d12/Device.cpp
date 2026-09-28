@@ -445,6 +445,7 @@ namespace easyforge::internal::direct3d12
         void SetVertexBuffer(gpu::Buffer& buffer) override;
         void SetIndexBuffer(gpu::Buffer& buffer) override;
         void SetScissor(gpu::ScissorRectangle rectangle) override;
+        void CopyTexture(gpu::Texture& source, gpu::ScissorRectangle area, gpu::Texture& destination, int x, int y) override;
         void Draw(std::uint32_t vertexCount, std::uint32_t instanceCount, std::uint32_t firstVertex,
             std::uint32_t firstInstance) override;
         void DrawIndexed(std::uint32_t indexCount, std::uint32_t firstIndex, std::int32_t baseVertex) override;
@@ -693,6 +694,23 @@ namespace easyforge::internal::direct3d12
     {
         D3D12_RECT scissor { rectangle.X, rectangle.Y, rectangle.X + rectangle.Width, rectangle.Y + rectangle.Height };
         List->RSSetScissorRects(1, &scissor);
+    }
+
+    void Context::CopyTexture(gpu::Texture& source, gpu::ScissorRectangle area, gpu::Texture& destination, int x, int y)
+    {
+        auto& from = static_cast<Texture&>(source);
+        auto& to = static_cast<Texture&>(destination);
+        Move(from, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        Move(to, D3D12_RESOURCE_STATE_COPY_DEST);
+        D3D12_TEXTURE_COPY_LOCATION target {};
+        target.pResource = to.Resource.Get();
+        target.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        D3D12_TEXTURE_COPY_LOCATION origin {};
+        origin.pResource = from.Resource.Get();
+        origin.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        D3D12_BOX box { static_cast<UINT>(area.X), static_cast<UINT>(area.Y), 0, static_cast<UINT>(area.X + area.Width),
+            static_cast<UINT>(area.Y + area.Height), 1 };
+        List->CopyTextureRegion(&target, static_cast<UINT>(x), static_cast<UINT>(y), 0, &origin, &box);
     }
 
     void Context::Draw(std::uint32_t vertexCount, std::uint32_t instanceCount, std::uint32_t firstVertex,

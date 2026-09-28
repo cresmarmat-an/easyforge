@@ -14,7 +14,7 @@ namespace easyforge
     {
         namespace
         {
-            constexpr std::array<gpu::VertexAttribute, 9> ShapeAttributes = { {
+            constexpr std::array<gpu::VertexAttribute, 11> ShapeAttributes = { {
                 { "ORIGIN", gpu::VertexFormat::Float2, 0 },
                 { "AXIS_X", gpu::VertexFormat::Float2, 8 },
                 { "AXIS_Y", gpu::VertexFormat::Float2, 16 },
@@ -24,8 +24,18 @@ namespace easyforge
                 { "BORDER", gpu::VertexFormat::Float4, 64 },
                 { "SHAPE", gpu::VertexFormat::Float4, 80 },
                 { "CLIP", gpu::VertexFormat::Float4, 96 },
+                { "GRADIENT", gpu::VertexFormat::Float4, 112 },
+                { "GRADIENT_LINE", gpu::VertexFormat::Float4, 128 },
             } };
-            static_assert(sizeof(ShapeInstance) == 112);
+            static_assert(sizeof(ShapeInstance) == 144);
+
+            // The blur shader's constants, in the order of its Blur buffer.
+            struct BlurConstants
+            {
+                float Step[2];
+                float Radius;
+                float Spread;
+            };
 
             constexpr std::array<gpu::VertexAttribute, 3> MeshAttributes = { {
                 { "POSITION", gpu::VertexFormat::Float3, 0 },
@@ -137,6 +147,21 @@ namespace easyforge
             }
             ShapePipeline = std::move(shape).Get();
 
+            Result<std::unique_ptr<gpu::Pipeline>> replace = Device->CreatePipeline({
+                .VertexShader = shaders.Shape,
+                .PixelShader = shaders.Shape,
+                .Attributes = ShapeAttributes,
+                .VertexStride = sizeof(ShapeInstance),
+                .PerInstance = true,
+                .TriangleStrip = true,
+                .Name = "replacing shapes",
+            });
+            if (!replace)
+            {
+                return Failure(replace.Error());
+            }
+            ReplacePipeline = std::move(replace).Get();
+
             Result<std::unique_ptr<gpu::Pipeline>> mesh = Device->CreatePipeline({
                 .VertexShader = shaders.Mesh,
                 .PixelShader = shaders.Mesh,
@@ -153,6 +178,19 @@ namespace easyforge
                 return Failure(mesh.Error());
             }
             MeshPipeline = std::move(mesh).Get();
+
+            Result<std::unique_ptr<gpu::Pipeline>> blur = Device->CreatePipeline({
+                .VertexShader = shaders.Blur,
+                .PixelShader = shaders.Blur,
+                .TriangleStrip = true,
+                .ColorFormat = gpu::TextureFormat::Rgba8,
+                .Name = "blur",
+            });
+            if (!blur)
+            {
+                return Failure(blur.Error());
+            }
+            BlurPipeline = std::move(blur).Get();
             Made = true;
             return {};
         }
@@ -206,6 +244,51 @@ namespace easyforge
             return target.get();
         }
 
+        std::array<gpu::Texture*, 3> RendererState::BlurTargets(std::size_t index, int width, int height)
+        {
+            if (BlurTargetPool.size() <= index)
+            {
+                BlurTargetPool.resize(index + 1);
+            }
+            std::array<std::unique_ptr<gpu::Texture>, 3>& targets = BlurTargetPool[index];
+            for (std::unique_ptr<gpu::Texture>& target : targets)
+            {
+                if (!target || target->Width() != width || target->Height() != height)
+                {
+                    target = Device->CreateTexture({ .Width = width, .Height = height, .RenderTarget = true, .Name = "blur" });
+                }
+            }
+            return { targets[0].get(), targets[1].get(), targets[2].get() };
+        }
+
+        void RendererState::DrawBlur(gpu::Commands& commands, const DrawStep& step, gpu::Texture& target)
+        {
+            gpu::Texture& first = *step.BlurTargets[0];
+            gpu::Texture& second = *step.BlurTargets[1];
+            gpu::ScissorRectangle area { static_cast<int>(step.BlurArea.X), static_cast<int>(step.BlurArea.Y), first.Width(),
+                first.Height() };
+            commands.CopyTexture(target, area, first, 0, 0);
+            commands.CopyTexture(target, area, *step.BlurTargets[2], 0, 0);
+
+            // Across into the second picture, then down back into the first.
+            BlurConstants constants { { 1.0f / static_cast<float>(first.Width()), 0.0f }, step.BlurRadius,
+                Max(step.BlurRadius * 0.5f, 0.5f) };
+            for (int pass = 0; pass < 2; ++pass)
+            {
+                gpu::Texture& from = pass == 0 ? first : second;
+                gpu::Texture& into = pass == 0 ? second : first;
+                commands.BeginPass({ .ColorTarget = &into, .ClearColor = false });
+                commands.SetPipeline(*BlurPipeline);
+                commands.SetConstants(&constants, sizeof(constants));
+                std::array<gpu::Texture*, 1> textures = { &from };
+                commands.SetTextures(textures, gpu::Sampling::LinearClamp);
+                commands.Draw(4);
+                commands.EndPass();
+                constants.Step[0] = 0.0f;
+                constants.Step[1] = 1.0f / static_cast<float>(first.Height());
+            }
+        }
+
         void RendererState::DrawRecorded(gpu::Commands& commands, const internal::DrawList& list, gpu::Texture& target, Color clear)
         {
             commands.BeginPass({ .ColorTarget = &target, .Clear = clear });
@@ -219,6 +302,23 @@ namespace easyforge
             for (const DrawStep& step : list.Steps)
             {
                 std::array<gpu::Texture*, 1> textures = { step.Texture };
+                if (step.Backdrop)
+                {
+                    // What is drawn so far has to be in the target before it can be
+                    // blurred, so the pass ends here and starts again after.
+                    commands.EndPass();
+                    DrawBlur(commands, step, target);
+                    commands.BeginPass({ .ColorTarget = &target, .ClearColor = false });
+                    commands.SetPipeline(*ReplacePipeline);
+                    commands.SetVertices(list.Instances.data(), list.Instances.size() * sizeof(ShapeInstance));
+                    commands.SetConstants(constants, sizeof(constants));
+                    std::array<gpu::Texture*, 2> pictures = { step.BlurTargets[0], step.BlurTargets[2] };
+                    commands.SetTextures(pictures, gpu::Sampling::LinearClamp);
+                    commands.Draw(4, 1, 0, step.First);
+                    commands.SetPipeline(*ShapePipeline);
+                    shapesReady = true;
+                    continue;
+                }
                 if (step.Pipeline)
                 {
                     commands.SetPipeline(*step.Pipeline);
@@ -416,6 +516,7 @@ namespace easyforge
             pixels = { static_cast<float>(State->Surface->Width()), static_cast<float>(State->Surface->Height()) };
         }
         State->Clear = clear;
+        State->BlursRecorded = 0;
         State->Frame.Begin(pixels, State->Scale(), static_cast<float>(State->SinceStart.Seconds()));
         return Canvas(&State->Frame);
     }

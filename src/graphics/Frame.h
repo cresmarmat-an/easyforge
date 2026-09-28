@@ -27,11 +27,17 @@ namespace easyforge::internal
         float Fill[4] {};
         float Border[4] {};
 
-        // Corner radius, border width, mode, unused.
+        // Corner radius, border width, mode, and how many pixels the edge is
+        // softened over.
         float Shape[4] {};
 
         // The clip area in pixels: left, top, right, bottom.
         float Clip[4] {};
+
+        // A gradient's last color, and the line it runs along in the shape's own
+        // pixels: start X and Y, end X and Y. A line of no length means no gradient.
+        float Gradient[4] {};
+        float GradientLine[4] {};
     };
 
     enum class ShapeMode
@@ -40,6 +46,7 @@ namespace easyforge::internal
         Picture = 1,
         Glyph = 2,
         PremultipliedPicture = 3,
+        Backdrop = 4,
     };
 
     // One step of drawing a list: shapes in a row that use the same texture, or
@@ -55,6 +62,14 @@ namespace easyforge::internal
         // A shader, when Pipeline is set; Texture is then its content.
         gpu::Pipeline* Pipeline = nullptr;
         std::vector<std::uint8_t> Constants;
+
+        // A blur of what the target holds under BlurArea (target pixels), made
+        // in the first two pictures of BlurTargets and drawn back by shape First.
+        // The third keeps what was there before.
+        bool Backdrop = false;
+        Rectangle BlurArea;
+        float BlurRadius = 0.0f;
+        gpu::Texture* BlurTargets[3] {};
     };
 
     // What is drawn into one target: the frame itself, or a layer's picture.

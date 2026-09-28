@@ -21,6 +21,9 @@ cbuffer Choice : register(b1)
 
 Texture2D Picture : register(t0);
 
+// For a blur behind an area: what was there before it was blurred.
+Texture2D Original : register(t1);
+
 // The four ways of sampling from the root signature. SamplingIndex picks one;
 // it is the same for every pixel of a draw, so the branch costs nothing.
 SamplerState LinearClamp : register(s0);
@@ -56,6 +59,8 @@ struct Instance
     float4 Border : BORDER;
     float4 Shape : SHAPE;
     float4 Clip : CLIP;
+    float4 Gradient : GRADIENT;
+    float4 GradientLine : GRADIENT_LINE;
 };
 
 struct Interpolated
@@ -69,14 +74,16 @@ struct Interpolated
     nointerpolation float4 Shape : SHAPE;
     nointerpolation float4 Clip : CLIP;
     nointerpolation float4 Bounds : BOUNDS;
+    nointerpolation float4 Gradient : GRADIENT;
+    nointerpolation float4 GradientLine : GRADIENT_LINE;
 };
 
 Interpolated VertexMain(Instance instance, uint vertex : SV_VertexID)
 {
     // Corners in strip order, with a pixel of room around the shape for the
-    // anti-aliased edge.
+    // anti-aliased edge, and more for a softened one.
     float2 corner = float2(vertex & 1, vertex >> 1);
-    float margin = instance.Shape.z == 2.0 ? 0.0 : 1.0;
+    float margin = instance.Shape.z == 2.0 ? 0.0 : 1.0 + instance.Shape.w * 1.5;
     float2 local = lerp(-margin.xx, instance.Size + margin, corner);
     float2 pixel = instance.Origin + instance.AxisX * local.x + instance.AxisY * local.y;
 
@@ -90,6 +97,8 @@ Interpolated VertexMain(Instance instance, uint vertex : SV_VertexID)
     output.Border = instance.Border;
     output.Shape = instance.Shape;
     output.Clip = instance.Clip;
+    output.Gradient = instance.Gradient;
+    output.GradientLine = instance.GradientLine;
     output.Bounds = float4(min(instance.Coordinates.xy, instance.Coordinates.zw), max(instance.Coordinates.xy, instance.Coordinates.zw));
     return output;
 }
@@ -103,6 +112,16 @@ float RoundedBoxDistance(float2 position, float2 halfSize, float radius)
 float4 Premultiply(float4 color)
 {
     return float4(color.rgb * color.a, color.a);
+}
+
+// A close approximation of the error function, which gives the coverage of an
+// edge blurred by a Gaussian.
+float ErrorFunction(float x)
+{
+    float magnitude = abs(x);
+    float polynomial = 1.0 + (0.278393 + (0.230389 + 0.078108 * magnitude * magnitude) * magnitude) * magnitude;
+    polynomial *= polynomial;
+    return sign(x) * (1.0 - 1.0 / (polynomial * polynomial));
 }
 
 float4 PixelMain(Interpolated input) : SV_Target
@@ -125,8 +144,31 @@ float4 PixelMain(Interpolated input) : SV_Target
     float radius = min(input.Shape.x, min(halfSize.x, halfSize.y));
     float distance = RoundedBoxDistance(input.Local - halfSize, halfSize, radius);
     float coverage = saturate(0.5 - distance);
+    float blur = input.Shape.w;
+    if (blur > 0.0)
+    {
+        // The blur is the width of the soft edge; the Gaussian's spread is half of it.
+        coverage = 0.5 - 0.5 * ErrorFunction(distance / (blur * 0.5 * 1.41421356));
+    }
+
+    if (mode == 4.0)
+    {
+        // A blur behind an area replaces what was there, so the pipeline does not
+        // blend; the edge mixes the blurred picture with what was there before.
+        // Both pictures reach past the area, so the edge pixels read what is
+        // really under them.
+        return lerp(Original.Sample(LinearClamp, input.Coordinates), Picture.Sample(LinearClamp, input.Coordinates),
+            coverage);
+    }
 
     float4 fill = Premultiply(input.Fill);
+    float2 along = input.GradientLine.zw - input.GradientLine.xy;
+    float lengthSquared = dot(along, along);
+    if (mode == 0.0 && lengthSquared > 0.0)
+    {
+        float amount = saturate(dot(input.Local - input.GradientLine.xy, along) / lengthSquared);
+        fill = lerp(Premultiply(input.Fill), Premultiply(input.Gradient), amount);
+    }
     if (mode == 1.0 || mode == 3.0)
     {
         float2 coordinates = clamp(input.Coordinates, input.Bounds.xy, input.Bounds.zw);
@@ -143,6 +185,52 @@ float4 PixelMain(Interpolated input) : SV_Target
         fill = lerp(Premultiply(input.Border), fill, saturate(0.5 - inner));
     }
     return fill * coverage;
+}
+)hlsl";
+
+    // A Gaussian blur along one direction, run twice (across, then down) over a
+    // picture that fills the target.
+    inline constexpr const char* BlurShader = R"hlsl(
+cbuffer Blur : register(b0)
+{
+    // One pixel along the direction, in texture coordinates.
+    float2 Step;
+    float Radius;
+    float Spread;
+};
+
+Texture2D Source : register(t0);
+SamplerState LinearClamp : register(s0);
+
+struct Interpolated
+{
+    float4 Position : SV_Position;
+    float2 Coordinates : TEXCOORD;
+};
+
+Interpolated VertexMain(uint vertex : SV_VertexID)
+{
+    float2 corner = float2(vertex & 1, vertex >> 1);
+    Interpolated output;
+    output.Position = float4(corner * float2(2.0, -2.0) + float2(-1.0, 1.0), 0.0, 1.0);
+    output.Coordinates = corner;
+    return output;
+}
+
+float4 PixelMain(Interpolated input) : SV_Target
+{
+    float4 total = Source.Sample(LinearClamp, input.Coordinates);
+    float weights = 1.0;
+    int taps = min((int)ceil(Radius), 96);
+    for (int index = 1; index <= taps; ++index)
+    {
+        float distance = (float)index;
+        float weight = exp(-distance * distance / (2.0 * Spread * Spread));
+        total += weight * Source.Sample(LinearClamp, input.Coordinates + Step * distance);
+        total += weight * Source.Sample(LinearClamp, input.Coordinates - Step * distance);
+        weights += 2.0 * weight;
+    }
+    return total / weights;
 }
 )hlsl";
 

@@ -32,16 +32,47 @@ rectangles at whole-point positions come out crisp.
 | `CornerRadius` | 0 | Rounds all four corners; it is limited to half the shorter side, so a large radius makes a pill |
 | `BorderWidth` | 0 | A border inside the edge |
 | `BorderColor` | transparent | The border's color |
+| `Gradient` | none | A `LinearGradient` to fill with instead of `Color` |
+| `Blur` | 0 | Softens the edge over this many points, half inside and half outside |
 
 ```cpp
 canvas.Rectangle({ .Position = { 240, 20 }, .Size = { 200, 80 }, .Color = Color::White, .CornerRadius = 40,
     .BorderWidth = 4, .BorderColor = Color::Hex("#E8553B") });
 ```
 
+### Gradients
+
+```cpp
+canvas.Rectangle({ .Position = { 20, 20 }, .Size = { 300, 120 }, .CornerRadius = 12,
+    .Gradient = LinearGradient { .From = Color::Hex("#243B55"), .To = Color::Hex("#141E30"), .Angle = 90 } });
+```
+
+A `LinearGradient` goes from `From` to `To` along `Angle` degrees: 0 from left
+to right, 90 from top to bottom, 180 from right to left. The two colors sit on
+the shape's farthest corners, so the whole shape is covered from the first
+color to the last, whatever its size. Colors are mixed with their alpha
+applied, so a gradient to a transparent color fades without a dark fringe.
+
+### Soft edges, shadows, and glows
+
+```cpp
+// A shadow: the card's box, moved down, darkened, and softened.
+canvas.Rectangle({ .Position = { 40, 46 }, .Size = { 240, 140 }, .Color = Color::Black.WithAlpha(0.35f),
+    .CornerRadius = 12, .Blur = 18 });
+canvas.Rectangle({ .Position = { 40, 40 }, .Size = { 240, 140 }, .Color = Color::White, .CornerRadius = 12 });
+```
+
+`Blur` fades the edge the way a Gaussian blur of the shape would: half of the
+shape's color on the edge itself, fading to almost nothing `Blur` points
+outside, and reaching almost full color as far inside. It is worked out from the
+distance to the outline, so it costs no more than a sharp shape. For small
+shapes with a large blur it is an approximation, a little stronger than a true
+blur would be.
+
 ### Circles
 
 `canvas.Circle(center, radius, style)`, where `CircleStyle` has `Color`,
-`BorderWidth`, and `BorderColor`.
+`BorderWidth`, `BorderColor`, `Gradient`, and `Blur`.
 
 ### Lines
 
@@ -64,9 +95,23 @@ canvas.Image(sheet, { .Position = { 20, 200 }, .Source = { 32, 0, 32, 32 } }); /
 | `Source` | empty | The part of the texture to draw, in its pixels; empty is all of it |
 | `Tint` | white | Multiplies every pixel; lower its alpha to fade the image |
 | `CornerRadius` | 0 | Rounds the image's corners |
+| `Slice` | 0 | Keeps this many pixels at each edge from stretching; see below |
 
 Whether an image is smoothed when scaled is a setting of the
 [texture](textures-and-fonts.md#textures).
+
+### Images that stretch without distorting
+
+```cpp
+canvas.Image(frame, { .Position = { 20, 20 }, .Size = { 300, 120 }, .Slice = 12 });
+```
+
+With `Slice`, the image is cut into nine pieces 12 pixels from each edge. The
+corners are drawn at one point per pixel, the top and bottom edges stretch only
+sideways, the left and right edges only up and down, and the middle both ways.
+A button or a frame drawn in a small image stays sharp at any size. The slice is
+limited to half the image and half the drawn size. `CornerRadius` is not used
+with a slice.
 
 ## Text
 
@@ -115,6 +160,27 @@ as `input.Content`. Layers nest, and only what is inside the area is kept.
 | `Values` | none | The shader's values, such as `{ { "Speed", 2.0f } }` |
 | `Opacity` | 1 | Fades the whole layer |
 
+## Blurring what is behind
+
+```cpp
+canvas.Image(photo, { .Size = canvas.Size() });
+canvas.BlurBehind({ 40, 40, 320, 200 }, 20, 12);    // area, radius, corner radius
+canvas.Rectangle({ .Position = { 40, 40 }, .Size = { 320, 200 }, .Color = Color::White.WithAlpha(0.4f),
+    .CornerRadius = 12 });
+```
+
+`BlurBehind` blurs what has been drawn under the area so far, like frosted
+glass, and puts the blurred picture in its place, with rounded corners when
+given a corner radius. What is drawn afterwards covers it as usual, so a
+see-through rectangle on top tints the glass. The blur reaches `radius` points
+and takes in what is just outside the area, so the edges blend with their
+surroundings.
+
+To blur, the GPU has to finish drawing what is under the area first, so each
+`BlurBehind` splits the frame's drawing in two. A few per frame are fine; one
+for every item in a long list is not. Inside a layer, it blurs only what was
+drawn into the layer.
+
 ## Shaders
 
 `canvas.Shaded(shader, area, values)` runs a shader over an area, with nothing as
@@ -160,7 +226,9 @@ anti-aliased formula.
 
 - Lines have square ends; there are no round or joined ends and no dashed lines.
 - There are no paths, polygons, or curves beyond the rounded rectangle and circle.
-- Gradients, shadows, and blur are not built in; draw them with a shader, or use
-  the effects `ui` adds.
+- Gradients are linear, with two colors. For radial gradients or more colors, use
+  a [shader](shaders.md).
+- Images and text cannot be blurred on their own; draw them in a layer and blur
+  behind a later area, or use a shader.
 - Transforms move and scale; they do not rotate.
 - A clip area is a rectangle, not a rounded shape.

@@ -1,5 +1,6 @@
 #include <easyforge/graphics/Canvas.h>
 
+#include <array>
 #include <cmath>
 
 #include <easyforge/core/Log.h>
@@ -47,8 +48,8 @@ namespace easyforge
 
             std::uint32_t index = static_cast<std::uint32_t>(list.Instances.size());
             list.Instances.push_back(instance);
-            if (!list.Steps.empty() && !list.Steps.back().Pipeline && list.Steps.back().Texture == texture &&
-                list.Steps.back().Sampling == sampling)
+            if (!list.Steps.empty() && !list.Steps.back().Pipeline && !list.Steps.back().Backdrop &&
+                list.Steps.back().Texture == texture && list.Steps.back().Sampling == sampling)
             {
                 ++list.Steps.back().Count;
                 return;
@@ -131,6 +132,24 @@ namespace easyforge
                 instance.Shape[2] = static_cast<float>(mode);
                 return instance;
             }
+
+            // Gives a shape of `size` pixels a gradient along `angle` degrees, with
+            // the first and last colors on the farthest corners.
+            void ApplyGradient(ShapeInstance& instance, const LinearGradient& gradient, Vector2 size)
+            {
+                float angle = Radians(gradient.Angle);
+                Vector2 direction { std::cos(angle), std::sin(angle) };
+                float reach = std::abs(size.X * 0.5f * direction.X) + std::abs(size.Y * 0.5f * direction.Y);
+                Vector2 center = size * 0.5f;
+                Vector2 start = center - direction * reach;
+                Vector2 end = center + direction * reach;
+                StoreColor(instance.Fill, gradient.From);
+                StoreColor(instance.Gradient, gradient.To);
+                instance.GradientLine[0] = start.X;
+                instance.GradientLine[1] = start.Y;
+                instance.GradientLine[2] = end.X;
+                instance.GradientLine[3] = end.Y;
+            }
         }
     }
 
@@ -145,9 +164,14 @@ namespace easyforge
             return;
         }
         float scale = Recorder->PixelsPerPoint();
-        Recorder->Add(internal::Shape(Recorder->ToPixels(style.Position), style.Size * scale, style.Color,
-                          style.CornerRadius * scale, style.BorderWidth * scale, style.BorderColor, ShapeMode::Solid),
-            nullptr, internal::gpu::Sampling::LinearClamp);
+        ShapeInstance instance = internal::Shape(Recorder->ToPixels(style.Position), style.Size * scale, style.Color,
+            style.CornerRadius * scale, style.BorderWidth * scale, style.BorderColor, ShapeMode::Solid);
+        if (style.Gradient)
+        {
+            internal::ApplyGradient(instance, *style.Gradient, style.Size * scale);
+        }
+        instance.Shape[3] = Max(style.Blur, 0.0f) * scale;
+        Recorder->Add(instance, nullptr, internal::gpu::Sampling::LinearClamp);
     }
 
     void Canvas::Circle(Vector2 center, float radius, const CircleStyle& style) const
@@ -159,9 +183,14 @@ namespace easyforge
         float scale = Recorder->PixelsPerPoint();
         Vector2 corner = Recorder->ToPixels(center - Vector2 { radius, radius });
         float diameter = radius * 2.0f * scale;
-        Recorder->Add(internal::Shape(corner, { diameter, diameter }, style.Color, radius * scale,
-                          style.BorderWidth * scale, style.BorderColor, ShapeMode::Solid),
-            nullptr, internal::gpu::Sampling::LinearClamp);
+        ShapeInstance instance = internal::Shape(corner, { diameter, diameter }, style.Color, radius * scale,
+            style.BorderWidth * scale, style.BorderColor, ShapeMode::Solid);
+        if (style.Gradient)
+        {
+            internal::ApplyGradient(instance, *style.Gradient, { diameter, diameter });
+        }
+        instance.Shape[3] = Max(style.Blur, 0.0f) * scale;
+        Recorder->Add(instance, nullptr, internal::gpu::Sampling::LinearClamp);
     }
 
     void Canvas::Line(Vector2 from, Vector2 to, const LineStyle& style) const
@@ -213,10 +242,43 @@ namespace easyforge
         }
         Vector2 size = style.Size.X > 0.0f && style.Size.Y > 0.0f ? style.Size : source.Size();
         float scale = Recorder->PixelsPerPoint();
-        ShapeInstance instance = internal::Shape(Recorder->ToPixels(style.Position), size * scale, style.Tint,
-            style.CornerRadius * scale, 0.0f, Color::Transparent, ShapeMode::Picture);
         float width = static_cast<float>(texture.Width());
         float height = static_cast<float>(texture.Height());
+
+        if (style.Slice > 0.0f)
+        {
+            // Nine pieces: the corners keep their size, and the edges and middle
+            // stretch. Each edge keeps at most half of the image and of the size.
+            float sourceSlice = Min(style.Slice, Min(source.Width, source.Height) * 0.5f);
+            float drawnSlice = Min(sourceSlice, Min(size.X, size.Y) * 0.5f);
+            float sourceX[4] = { source.Left(), source.Left() + sourceSlice, source.Right() - sourceSlice, source.Right() };
+            float sourceY[4] = { source.Top(), source.Top() + sourceSlice, source.Bottom() - sourceSlice, source.Bottom() };
+            float drawnX[4] = { 0.0f, drawnSlice, size.X - drawnSlice, size.X };
+            float drawnY[4] = { 0.0f, drawnSlice, size.Y - drawnSlice, size.Y };
+            for (int row = 0; row < 3; ++row)
+            {
+                for (int column = 0; column < 3; ++column)
+                {
+                    Vector2 pieceSize { drawnX[column + 1] - drawnX[column], drawnY[row + 1] - drawnY[row] };
+                    if (pieceSize.X <= 0.0f || pieceSize.Y <= 0.0f)
+                    {
+                        continue;
+                    }
+                    Vector2 corner = Recorder->ToPixels(style.Position + Vector2 { drawnX[column], drawnY[row] });
+                    ShapeInstance piece = internal::Shape(corner, pieceSize * scale, style.Tint, 0.0f, 0.0f,
+                        Color::Transparent, ShapeMode::Picture);
+                    piece.Coordinates[0] = sourceX[column] / width;
+                    piece.Coordinates[1] = sourceY[row] / height;
+                    piece.Coordinates[2] = sourceX[column + 1] / width;
+                    piece.Coordinates[3] = sourceY[row + 1] / height;
+                    Recorder->Add(piece, uploaded, state->Sampling());
+                }
+            }
+            return;
+        }
+
+        ShapeInstance instance = internal::Shape(Recorder->ToPixels(style.Position), size * scale, style.Tint,
+            style.CornerRadius * scale, 0.0f, Color::Transparent, ShapeMode::Picture);
         instance.Coordinates[0] = source.Left() / width;
         instance.Coordinates[1] = source.Top() / height;
         instance.Coordinates[2] = source.Right() / width;
@@ -317,6 +379,62 @@ namespace easyforge
             float top = std::round(corner.Y);
             return { left, top, std::round(corner.X + size.X) - left, std::round(corner.Y + size.Y) - top };
         }
+    }
+
+    void Canvas::BlurBehind(easyforge::Rectangle area, float radius, float cornerRadius) const
+    {
+        if (!Recorder || !Recorder->Active || area.IsEmpty() || radius <= 0.0f)
+        {
+            return;
+        }
+        internal::DrawList& list = Recorder->Current();
+        float scale = Recorder->PixelsPerPoint();
+        float reach = std::ceil(radius * scale);
+
+        // The area in the target's own pixels, grown by the blur's reach so what is
+        // just outside still blurs in, and kept inside the target.
+        easyforge::Rectangle inner = PixelArea(*Recorder, area);
+        inner.X -= list.Origin.X;
+        inner.Y -= list.Origin.Y;
+        easyforge::Rectangle bounds { 0.0f, 0.0f, list.Size.X, list.Size.Y };
+        easyforge::Rectangle grown = Intersection(
+            { inner.X - reach, inner.Y - reach, inner.Width + reach * 2.0f, inner.Height + reach * 2.0f }, bounds);
+        inner = Intersection(inner, bounds);
+        if (inner.IsEmpty() || grown.IsEmpty())
+        {
+            return;
+        }
+        int width = static_cast<int>(grown.Width);
+        int height = static_cast<int>(grown.Height);
+        std::array<internal::gpu::Texture*, 3> targets =
+            Recorder->Owner.BlurTargets(Recorder->Owner.BlursRecorded++, width, height);
+
+        ShapeInstance instance = internal::Shape(inner.Position() + list.Origin, inner.Size(), Color::White,
+            cornerRadius * scale, 0.0f, Color::Transparent, ShapeMode::Backdrop);
+        instance.Coordinates[0] = (inner.X - grown.X) / grown.Width;
+        instance.Coordinates[1] = (inner.Y - grown.Y) / grown.Height;
+        instance.Coordinates[2] = (inner.Right() - grown.X) / grown.Width;
+        instance.Coordinates[3] = (inner.Bottom() - grown.Y) / grown.Height;
+        Recorder->Add(instance, targets[0], internal::gpu::Sampling::LinearClamp);
+
+        // The shape just added becomes a step of its own that blurs first.
+        internal::DrawStep& step = list.Steps.back();
+        if (step.Count > 1)
+        {
+            --step.Count;
+            internal::DrawStep own;
+            own.Texture = targets[0];
+            own.First = step.First + step.Count;
+            own.Count = 1;
+            list.Steps.push_back(own);
+        }
+        internal::DrawStep& blur = list.Steps.back();
+        blur.Backdrop = true;
+        blur.BlurArea = grown;
+        blur.BlurRadius = radius * scale;
+        blur.BlurTargets[0] = targets[0];
+        blur.BlurTargets[1] = targets[1];
+        blur.BlurTargets[2] = targets[2];
     }
 
     void Canvas::Shaded(const easyforge::Shader& shader, easyforge::Rectangle area, std::vector<ShaderValue> values) const

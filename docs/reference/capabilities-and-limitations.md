@@ -130,8 +130,11 @@ It can:
 - Draw into windows, following their size and scaling, or into images read back
   into memory.
 - Draw anti-aliased rectangles with rounded corners and borders, circles, lines,
-  images (scaled, cut from a sheet, tinted, rounded), and text with kerning,
-  batched into few GPU draws.
+  images (scaled, cut from a sheet, tinted, rounded, or sliced into nine pieces
+  that stretch without distorting), and text with kerning, batched into few GPU
+  draws.
+- Fill shapes with linear gradients, soften their edges into shadows and glows,
+  and blur what is behind an area like frosted glass.
 - Clip to nested rectangles and move and scale what is drawn.
 - Load textures, fonts, and models anywhere, sending them to the GPU once, when
   first drawn, and again only when a texture changes.

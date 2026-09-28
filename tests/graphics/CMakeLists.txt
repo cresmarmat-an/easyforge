@@ -1,6 +1,7 @@
 add_executable(easyforge-graphics-tests
     Main.cpp
     CanvasTests.cpp
+    EffectTests.cpp
     ShaderTests.cpp
     TextAndSceneTests.cpp)
 

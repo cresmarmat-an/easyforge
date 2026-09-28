@@ -5,6 +5,6 @@ namespace easyforge::internal::gpu
 {
     BuiltInShaders ShadersOfBackend()
     {
-        return { direct3d12::ShapeShader, direct3d12::MeshShader };
+        return { direct3d12::ShapeShader, direct3d12::MeshShader, direct3d12::BlurShader };
     }
 }

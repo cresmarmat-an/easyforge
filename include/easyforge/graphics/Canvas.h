@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string_view>
 #include <vector>
 
@@ -19,6 +20,18 @@ namespace easyforge
         class FrameRecorder;
     }
 
+    // Colors that change evenly across a shape.
+    struct LinearGradient
+    {
+        easyforge::Color From = easyforge::Color::White;
+        easyforge::Color To = easyforge::Color::Black;
+
+        // Which way the colors change, in degrees: 0 from left to right, 90 from
+        // top to bottom, 180 from right to left. The first and last colors sit on
+        // the shape's farthest corners.
+        float Angle = 90.0f;
+    };
+
     struct RectangleStyle
     {
         // The top left corner and the size, in points.
@@ -33,6 +46,13 @@ namespace easyforge
         // A border drawn inside the edge.
         float BorderWidth = 0.0f;
         easyforge::Color BorderColor = easyforge::Color::Transparent;
+
+        // Fills the shape with a gradient instead of Color.
+        std::optional<LinearGradient> Gradient;
+
+        // Softens the edge over this many points, half inside and half outside,
+        // as a shadow or a glow does.
+        float Blur = 0.0f;
     };
 
     struct CircleStyle
@@ -40,6 +60,8 @@ namespace easyforge
         easyforge::Color Color = easyforge::Color::White;
         float BorderWidth = 0.0f;
         easyforge::Color BorderColor = easyforge::Color::Transparent;
+        std::optional<LinearGradient> Gradient;
+        float Blur = 0.0f;
     };
 
     struct LineStyle
@@ -67,6 +89,13 @@ namespace easyforge
         easyforge::Color Tint = easyforge::Color::White;
 
         float CornerRadius = 0.0f;
+
+        // Keeps this many pixels at each edge of the image from stretching: the
+        // corners keep their size, the edges stretch only along their length,
+        // and the middle stretches both ways. A frame or a button made from a
+        // small image stays sharp at any size this way. CornerRadius is not used
+        // with a slice.
+        float Slice = 0.0f;
     };
 
     struct TextStyle
@@ -120,6 +149,10 @@ namespace easyforge
         // Draws the scene through its camera, filling the whole canvas or an area.
         void Draw(const Scene& scene) const;
         void Draw(const Scene& scene, easyforge::Rectangle area) const;
+
+        // Blurs what is already drawn under the area, like frosted glass, over
+        // `radius` points. What is drawn afterwards covers it as usual.
+        void BlurBehind(easyforge::Rectangle area, float radius, float cornerRadius = 0.0f) const;
 
         // Runs a shader over an area. Its input.Content is empty; to shade what
         // was drawn, use a layer.

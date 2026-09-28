@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -30,6 +31,10 @@ namespace easyforge::internal
         // The same for a layer's picture.
         gpu::Texture* LayerTarget(std::size_t index, int width, int height);
 
+        // The pictures a blur behind an area is made in: two for the blur, and one
+        // for what was there before.
+        std::array<gpu::Texture*, 3> BlurTargets(std::size_t index, int width, int height);
+
         std::string ErrorText;
         bool Made = false;
         std::shared_ptr<Host> TheHost;
@@ -43,6 +48,10 @@ namespace easyforge::internal
         std::unique_ptr<gpu::Texture> Offscreen;
         std::unique_ptr<gpu::Pipeline> ShapePipeline;
         std::unique_ptr<gpu::Pipeline> MeshPipeline;
+        std::unique_ptr<gpu::Pipeline> BlurPipeline;
+
+        // The shape shader without blending, for shapes that replace what is under them.
+        std::unique_ptr<gpu::Pipeline> ReplacePipeline;
 
         struct SceneTargets
         {
@@ -52,6 +61,10 @@ namespace easyforge::internal
         };
         std::vector<SceneTargets> SceneTargetPool;
         std::vector<std::unique_ptr<gpu::Texture>> LayerTargetPool;
+        std::vector<std::array<std::unique_ptr<gpu::Texture>, 3>> BlurTargetPool;
+
+        // Blurs made so far this frame.
+        std::size_t BlursRecorded = 0;
 
         // Time since the renderer was made, which shaders read as input.Time.
         Clock SinceStart;
@@ -62,6 +75,7 @@ namespace easyforge::internal
     private:
         void DrawScene(gpu::Commands& commands, const ScenePass& pass, SceneTargets& targets);
         void DrawRecorded(gpu::Commands& commands, const internal::DrawList& list, gpu::Texture& target, Color clear);
+        void DrawBlur(gpu::Commands& commands, const DrawStep& step, gpu::Texture& target);
     };
 
     // Samples per pixel for scenes, which smooths the edges of models.

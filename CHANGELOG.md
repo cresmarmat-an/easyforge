@@ -49,6 +49,9 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   with `Canvas::Shaded` and `Canvas::EndLayer`, and checked when a program is
   built with `easyforge_add_shaders` and the `easyforge-shader` tool.
 - Layers in `Canvas`, which fade or shade a group of drawings as one.
+- Linear gradients, softened edges for shadows and glows, images sliced into nine
+  pieces that stretch without distorting, and `Canvas::BlurBehind` for frosted
+  glass.
 - The language reader in `core`: a tokenizer and parser for the syntax the
   script and shader languages share.
 - Assigning braced values such as `{ 0, 0, 0 }` to a `Property` no longer fails

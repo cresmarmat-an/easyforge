@@ -175,6 +175,9 @@ namespace easyforge::internal::gpu
 
         virtual void SetScissor(ScissorRectangle rectangle) = 0;
 
+        // Copies part of a texture into another of the same format, outside a pass.
+        virtual void CopyTexture(Texture& source, ScissorRectangle area, Texture& destination, int x, int y) = 0;
+
         virtual void Draw(std::uint32_t vertexCount, std::uint32_t instanceCount = 1, std::uint32_t firstVertex = 0,
             std::uint32_t firstInstance = 0) = 0;
         virtual void DrawIndexed(std::uint32_t indexCount, std::uint32_t firstIndex = 0, std::int32_t baseVertex = 0) = 0;
@@ -258,6 +261,7 @@ namespace easyforge::internal::gpu
     {
         std::string_view Shape;
         std::string_view Mesh;
+        std::string_view Blur;
     };
 
     BuiltInShaders ShadersOfBackend();
