@@ -5,8 +5,8 @@
 - CMake 3.22 or later.
 - A C++20 compiler whose standard library has `std::format`: Visual Studio 2022
   or later, GCC 13 or later, or Clang 17 or later with libc++ 17.
-- For graphics, a shader compiler for each backend, once `graphics` exists:
-  `dxc` from the Windows SDK for Direct3D 12.
+- Nothing else. `graphics` compiles its shaders while the program runs, with
+  the shader compiler Windows includes.
 
 ## Platforms
 
@@ -15,7 +15,7 @@ network backends.
 
 | Platform | Stage | Uses | Status |
 |---|---|---|---|
-| Windows | 1 | Win32, Direct3D 12, WASAPI, XInput, Winsock | `core`, `assets`, `window`, and `input` available |
+| Windows | 1 | Win32, Direct3D 12, WASAPI, XInput, Winsock | `core`, `assets`, `window`, `input`, and `graphics` available |
 | Linux | 2 | X11, Wayland, Vulkan, ALSA, PulseAudio | Planned |
 | Web | 3 | Emscripten, WebGPU, Web Audio, WebSocket | Planned |
 | macOS and iOS | 4 | Cocoa, UIKit, Metal, CoreAudio | Planned |
@@ -33,10 +33,17 @@ program by itself.
 `xinput1_4.dll` on Windows 8 and later, or `xinput9_1_0.dll`. A computer without
 either has no gamepads, and everything else keeps working.
 
+`graphics` draws with Direct3D 12 on any GPU that supports feature level 11.0,
+which covers GPUs from about 2012 on, and falls back to Windows' software
+renderer when there is none. It links `d3d12`, `dxgi`, `d3dcompiler`, `dcomp`,
+and `dxguid`, all part of Windows. Its tests draw with the software renderer, so
+they give the same pixels on every computer, and run with Direct3D's validation
+layer when the computer has the Graphics Tools feature installed.
+
 ## What has been tested
 
-`core`, `assets`, `window`, and `input` are built and tested on Windows 10 with
-Visual Studio 2026, in both the Debug and Release configurations. The repository's
+`core`, `assets`, `window`, `input`, and `graphics` are built and tested on
+Windows 10 with Visual Studio 2026, in both the Debug and Release configurations. The repository's
 build workflow repeats this on GitHub's Windows runners on every push.
 
 `core` and `assets` use only the C++ standard library apart from two small

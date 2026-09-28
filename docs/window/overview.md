@@ -226,8 +226,8 @@ A title bar view replaces the system's title bar;
 [custom title bars](title-bars.md) explains how.
 
 Libraries that work with any window take it as a `Host`, such as
-[`Controls::New(window)`](../input/overview.md) from `input`, and
-`Renderer::New(window)` from `graphics` when it arrives. A `Window` converts to
+[`Controls::New(window)`](../input/overview.md) from `input` and
+[`Renderer::New(window)`](../graphics/overview.md) from `graphics`. A `Window` converts to
 `std::shared_ptr<Host>` for them, and `window.AsHost()` does the same by name.
 
 ## Without a console window

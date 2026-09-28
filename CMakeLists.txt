@@ -18,6 +18,7 @@ endif()
 include(GNUInstallDirs)
 include(cmake/EasyforgeLibraries.cmake)
 include(cmake/EasyforgeAppIcon.cmake)
+include(cmake/EasyforgeShaders.cmake)
 
 # easyforge does not use C++20 modules, so CMake does not need to look for them.
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)

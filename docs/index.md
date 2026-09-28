@@ -6,9 +6,10 @@ macOS, iOS, Android, and the web. Each library works on its own or together with
 the others, and none of them contains third-party code.
 
 > [!NOTE] In development
-> easyforge is at 0.0.1-alpha. The `core`, `assets`, `window`, and `input`
-> libraries are available and tested on Windows. The other libraries are being written one at
-> a time, and each page below says whether its library is available yet.
+> easyforge is at 0.0.1-alpha. The `core`, `assets`, `window`, `input`, and
+> `graphics` libraries are available and tested on Windows. The other libraries
+> are being written one at a time, and each page below says whether its library
+> is available yet.
 
 ## A first program
 
@@ -44,7 +45,7 @@ easyforge to your own project.
 | [assets](assets/overview.md) | Reads images, 3D models, sounds, and fonts from files | Available |
 | [window](window/overview.md) | Windows, the frame loop, and everything the system sends | Available |
 | [input](input/overview.md) | Named actions from keyboard, mouse, and gamepads | Available |
-| [graphics](graphics/overview.md) | 2D and 3D drawing on Direct3D 12, Vulkan, Metal, and WebGPU | Planned |
+| [graphics](graphics/overview.md) | 2D and 3D drawing, on Direct3D 12 now and Vulkan, Metal, and WebGPU later | Available on Windows |
 | [data](data/overview.md) | A tree-shaped table with change tracking, undo, and saving | Planned |
 | [ui](ui/overview.md) | Interfaces: layout, elements, themes, effects, and displays | Planned |
 | [script](script/overview.md) | The easyforge scripting language, embeddable in any program | Planned |

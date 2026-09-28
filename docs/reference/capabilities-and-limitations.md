@@ -11,7 +11,8 @@ go into more detail.
 | assets | Available and tested on Windows |
 | window | Available and tested on Windows |
 | input | Available and tested on Windows |
-| graphics, data, ui, script, sound, physics, network | Planned, in that order |
+| graphics | Available and tested on Windows, with Direct3D 12 |
+| data, ui, script, sound, physics, network | Planned, in that order |
 
 ## core
 
@@ -121,11 +122,40 @@ It cannot yet:
 - Read gamepads other than through XInput, or anywhere but Windows.
 - Read motion sensors, touchpads, lights, or battery levels of controllers.
 
+## graphics
+
+It can:
+
+- Draw into windows, following their size and scaling, or into images read back
+  into memory.
+- Draw anti-aliased rectangles with rounded corners and borders, circles, lines,
+  images (scaled, cut from a sheet, tinted, rounded), and text with kerning,
+  batched into few GPU draws.
+- Clip to nested rectangles and move and scale what is drawn.
+- Load textures, fonts, and models anywhere, sending them to the GPU once, when
+  first drawn, and again only when a texture changes.
+- Draw 3D scenes of OBJ models with a camera, a sun, and ambient light, smoothed
+  with four samples per pixel, into all or part of a canvas.
+- Pick the fast GPU, the power-saving one, or the software renderer, which draws
+  the same pixels everywhere.
+- Run pixel shaders written in the easyforge shader language over areas, or over
+  layers of what was drawn, with values the program sets; check them when the
+  program is built with `easyforge_add_shaders`.
+- Fade a group of drawings as one with layers.
+
+It cannot yet:
+
+- Draw with Vulkan, Metal, or WebGPU, or run anywhere but Windows.
+- Draw paths, or run shaders on 3D models or with more than one texture.
+- Shape text beyond kerning, wrap it at a width, or draw color emoji.
+- Draw shadows, point lights, transparent objects, or animated models in 3D.
+- Give access to the explicit GPU layer underneath.
+
 ## Platforms
 
 | Platform | Status |
 |---|---|
-| Windows | `core`, `assets`, `window`, and `input` built and tested with Visual Studio 2026 |
+| Windows | `core`, `assets`, `window`, `input`, and `graphics` built and tested with Visual Studio 2026 |
 | Linux | Planned for stage 2 |
 | Web | Planned for stage 3 |
 | macOS and iOS | Planned for stage 4 |

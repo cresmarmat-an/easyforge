@@ -39,6 +39,16 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   gamepad buttons, axes, sticks, and key directions; Xbox controllers through
   XInput with dead zones and rumble; bindings saved as text; and recording and
   exact playback of input.
+- The `graphics` library on Direct3D 12: renderers for windows and for images in
+  memory; a `Canvas` with anti-aliased rounded rectangles, borders, circles,
+  lines, images, and text with kerning, clipping, and transforms; textures,
+  fonts, and models sent to the GPU when first drawn; and 3D scenes of OBJ
+  models lit by a sun.
+- The easyforge shader language: pixel shaders with values, helper functions,
+  loops, and built-in math, compiled to HLSL, drawn over areas or over layers
+  with `Canvas::Shaded` and `Canvas::EndLayer`, and checked when a program is
+  built with `easyforge_add_shaders` and the `easyforge-shader` tool.
+- Layers in `Canvas`, which fade or shade a group of drawings as one.
 - The language reader in `core`: a tokenizer and parser for the syntax the
   script and shader languages share.
 - Assigning braced values such as `{ 0, 0, 0 }` to a `Property` no longer fails

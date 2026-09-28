@@ -17,7 +17,7 @@ ones you use.
 | assets | `easyforge::assets` | `<easyforge/assets.h>` | Available |
 | window | `easyforge::window` | `<easyforge/window.h>` | Available on Windows |
 | input | `easyforge::input` | `<easyforge/input.h>` | Available |
-| graphics | `easyforge::graphics` | `<easyforge/graphics.h>` | Planned |
+| graphics | `easyforge::graphics` | `<easyforge/graphics.h>` | Available on Windows |
 | data | `easyforge::data` | `<easyforge/data.h>` | Planned |
 | ui | `easyforge::ui` | `<easyforge/ui.h>` | Planned |
 | script | `easyforge::script` | `<easyforge/script.h>` | Planned |

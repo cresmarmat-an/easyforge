@@ -12,17 +12,20 @@ configuring, or with `set()` before `FetchContent_MakeAvailable`.
 | `EASYFORGE_BUILD_ASSETS` | `ON` | Builds the `assets` library |
 | `EASYFORGE_BUILD_WINDOW` | `ON` | Builds the `window` library, on platforms it supports |
 | `EASYFORGE_BUILD_INPUT` | `ON` | Builds the `input` library |
+| `EASYFORGE_BUILD_GRAPHICS` | `ON` | Builds the `graphics` library, on platforms it supports |
 
 Every library gets an `EASYFORGE_BUILD_<LIBRARY>` option once it exists.
 Switching off a library that another library needs is an error, and the message
 says which one. On a platform a library does not support yet, such as `window`
-on Linux before stage 2, the library is left out with a message.
+on Linux before stage 2, the library is left out with a message. The same goes
+for `graphics`.
 
 ## Tools
 
 `easyforge-icon`, which [`easyforge_app_icon`](app-icons.md) runs, is defined
-whenever `assets` is built. When easyforge is fetched, it is only compiled if a
-program uses `easyforge_app_icon`.
+whenever `assets` is built, and `easyforge-shader`, which
+[`easyforge_add_shaders`](shaders.md) runs, whenever `graphics` is built. When
+easyforge is fetched, each is only compiled if a program uses its function.
 
 ## Building one library
 

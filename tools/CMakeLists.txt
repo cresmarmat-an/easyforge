@@ -4,3 +4,8 @@
 if(TARGET easyforge::assets)
     add_subdirectory(easyforge-icon)
 endif()
+
+# easyforge-shader, which easyforge_add_shaders runs, the same way.
+if(TARGET easyforge::graphics)
+    add_subdirectory(easyforge-shader)
+endif()

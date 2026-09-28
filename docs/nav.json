@@ -17,6 +17,7 @@
         "installing-and-find-package",
         "build-options",
         "app-icons",
+        "shaders",
         "platform-requirements"
       ]
     },
@@ -88,9 +89,22 @@
       ]
     },
     {
+      "folder": "graphics",
+      "title": "graphics",
+      "pages": [
+        {
+          "page": "overview",
+          "title": "Overview"
+        },
+        "canvas",
+        "textures-and-fonts",
+        "scenes",
+        "shaders"
+      ]
+    },
+    {
       "title": "Planned libraries",
       "pages": [
-        "graphics/overview",
         "data/overview",
         "ui/overview",
         "script/overview",
