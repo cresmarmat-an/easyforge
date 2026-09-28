@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        library: [core, assets, window, input, graphics]
+        library: [core, assets, window, input, graphics, data]
     steps:
       - uses: actions/checkout@v4
       - name: Configure

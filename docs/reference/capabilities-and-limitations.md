@@ -12,7 +12,8 @@ go into more detail.
 | window | Available and tested on Windows |
 | input | Available and tested on Windows |
 | graphics | Available and tested on Windows, with Direct3D 12 |
-| data, ui, script, sound, physics, network | Planned, in that order |
+| data | Available and tested on Windows |
+| ui, script, sound, physics, network | Planned, in that order |
 
 ## core
 
@@ -151,11 +152,34 @@ It cannot yet:
 - Draw shadows, point lights, transparent objects, or animated models in 3D.
 - Give access to the explicit GPU layer underneath.
 
+## data
+
+It can:
+
+- Hold a tree of named nodes with any properties, stored as one column per
+  property, with tree links as row numbers.
+- Hold nothing, booleans, 64-bit whole numbers, numbers, text, vectors, and
+  colors, read as any of those types.
+- Give nodes default values through types, without copying them.
+- Find nodes by path, identifier, property, or type.
+- Record every change in one list that readers can follow by version.
+- Undo and redo named edits, including removed trees, which come back with the
+  same handles.
+- Save to and load from a readable `.tree` text format, reporting the line of
+  anything it cannot read.
+
+It cannot yet:
+
+- Be used from two threads at once.
+- Save only what changed, or save the undo history.
+- Let a type extend another, or change a node's type after it is added.
+- Share a table over a network; that comes with `network`.
+
 ## Platforms
 
 | Platform | Status |
 |---|---|
-| Windows | `core`, `assets`, `window`, `input`, and `graphics` built and tested with Visual Studio 2026 |
+| Windows | `core`, `assets`, `window`, `input`, `graphics`, and `data` built and tested with Visual Studio 2026 |
 | Linux | Planned for stage 2 |
 | Web | Planned for stage 3 |
 | macOS and iOS | Planned for stage 4 |

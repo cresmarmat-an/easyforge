@@ -103,9 +103,23 @@
       ]
     },
     {
+      "folder": "data",
+      "title": "data",
+      "pages": [
+        {
+          "page": "overview",
+          "title": "Overview"
+        },
+        "nodes-and-properties",
+        "values",
+        "types",
+        "changes-and-undo",
+        "tree-files"
+      ]
+    },
+    {
       "title": "Planned libraries",
       "pages": [
-        "data/overview",
         "ui/overview",
         "script/overview",
         "sound/overview",

@@ -16,3 +16,6 @@ tests/**/data/*.ps1 text diff merge eol=lf
 tests/**/data/**/*.obj text diff merge eol=lf
 tests/**/data/**/*.mtl text diff merge eol=lf
 tests/**/data/*.shader text diff merge eol=lf
+
+# The data library's tests sit in tests/data, and are ordinary code.
+tests/data/* text diff merge eol=lf

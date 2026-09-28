@@ -18,7 +18,7 @@ ones you use.
 | window | `easyforge::window` | `<easyforge/window.h>` | Available on Windows |
 | input | `easyforge::input` | `<easyforge/input.h>` | Available |
 | graphics | `easyforge::graphics` | `<easyforge/graphics.h>` | Available on Windows |
-| data | `easyforge::data` | `<easyforge/data.h>` | Planned |
+| data | `easyforge::data` | `<easyforge/data.h>` | Available |
 | ui | `easyforge::ui` | `<easyforge/ui.h>` | Planned |
 | script | `easyforge::script` | `<easyforge/script.h>` | Planned |
 | sound | `easyforge::sound` | `<easyforge/sound.h>` | Planned |

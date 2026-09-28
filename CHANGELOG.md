@@ -53,3 +53,7 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   script and shader languages share.
 - Assigning braced values such as `{ 0, 0, 0 }` to a `Property` no longer fails
   to compile.
+- The `data` library: a tree of named nodes stored as one column per property,
+  values of nine kinds, types that give nodes default values, a list of every
+  change that readers follow by version, named edits that undo and redo, and a
+  readable `.tree` file format.

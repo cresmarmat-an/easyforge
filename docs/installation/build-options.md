@@ -13,6 +13,7 @@ configuring, or with `set()` before `FetchContent_MakeAvailable`.
 | `EASYFORGE_BUILD_WINDOW` | `ON` | Builds the `window` library, on platforms it supports |
 | `EASYFORGE_BUILD_INPUT` | `ON` | Builds the `input` library |
 | `EASYFORGE_BUILD_GRAPHICS` | `ON` | Builds the `graphics` library, on platforms it supports |
+| `EASYFORGE_BUILD_DATA` | `ON` | Builds the `data` library |
 
 Every library gets an `EASYFORGE_BUILD_<LIBRARY>` option once it exists.
 Switching off a library that another library needs is an error, and the message
