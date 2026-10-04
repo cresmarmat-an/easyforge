@@ -51,7 +51,7 @@ easyforge to your own project.
 | [script](script/overview.md) | The easyforge scripting language, embeddable in any program | Available |
 | [sound](sound/overview.md) | Mixing, streaming, effects, and positional sound | Available |
 | [physics](physics/overview.md) | Bodies, collisions, and joints in 2D, later 3D | Available |
-| [network](network/overview.md) | One-way messages and two-way requests between programs | Planned |
+| [network](network/overview.md) | One-way messages and two-way requests between programs | Available on Windows |
 
 ## Where to go next
 

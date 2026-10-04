@@ -9,7 +9,7 @@ endforeach()
 add_subdirectory(headers)
 
 # The bridge headers, where the libraries they join are built.
-if(TARGET easyforge::script AND TARGET easyforge::data)
+if(TARGET easyforge::data AND (TARGET easyforge::script OR TARGET easyforge::network))
     add_subdirectory(bridges)
 endif()
 

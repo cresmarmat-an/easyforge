@@ -17,7 +17,7 @@ go into more detail.
 | script | Available and tested on Windows |
 | sound | Available and tested on Windows, with WASAPI |
 | physics | Available and tested on Windows, in 2D |
-| network | Planned |
+| network | Available and tested on Windows, with Winsock |
 
 ## core
 
@@ -172,6 +172,8 @@ It can:
 - Record every change in one list that readers can follow by version.
 - Undo and redo named edits, including removed trees, which come back with the
   same handles.
+- Be shared between a server and its clients, one way or two ways, through a
+  bridge header.
 - Save to and load from a readable `.tree` text format, reporting the line of
   anything it cannot read.
 
@@ -180,7 +182,6 @@ It cannot yet:
 - Be used from two threads at once.
 - Save only what changed, or save the undo history.
 - Let a type extend another, or change a node's type after it is added.
-- Share a table over a network; that comes with `network`.
 
 ## ui
 
@@ -293,11 +294,37 @@ It cannot yet:
 - Stop fast small bodies passing through thin walls, or let bodies sleep.
 - Give a body more than one shape, or cast shapes other than circles.
 
+## network
+
+It can:
+
+- Run servers that accept a set number of clients, and clients that connect to
+  them, over UDP.
+- Send messages of named values reliably and in order, reliably in any order,
+  or unreliably with the newest of each name winning, and split messages of up
+  to 4 MB.
+- Send requests that get a reply, a refusal with a reason, a timeout, or word
+  that the connection closed.
+- Tell why a connection ended, drop silent connections, and limit how fast each
+  connection sends.
+- Run on the program's thread through `Update`, or on a thread of its own.
+- Drop and delay packets on purpose, to test a program on a poor network.
+- Find servers on the local network.
+- Keep a `data` table the same on a server and its clients, through a bridge
+  header.
+
+It cannot yet:
+
+- Encrypt anything; use it on local networks and with servers you trust.
+- Run anywhere but Windows, use IPv6, or reach a server behind a router without
+  a forwarded port.
+- Run in a browser, which needs WebSocket; that comes with stage 3.
+
 ## Platforms
 
 | Platform | Status |
 |---|---|
-| Windows | `core`, `assets`, `window`, `input`, `graphics`, `data`, `ui`, `script`, `sound`, and `physics` built and tested with Visual Studio 2026 |
+| Windows | `core`, `assets`, `window`, `input`, `graphics`, `data`, `ui`, `script`, `sound`, `physics`, and `network` built and tested with Visual Studio 2026 |
 | Linux | Planned for stage 2 |
 | Web | Planned for stage 3 |
 | macOS and iOS | Planned for stage 4 |

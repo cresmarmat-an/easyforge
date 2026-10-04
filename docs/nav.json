@@ -184,9 +184,19 @@
       ]
     },
     {
-      "title": "Planned libraries",
+      "folder": "network",
+      "title": "network",
       "pages": [
-        "network/overview"
+        {
+          "page": "overview",
+          "title": "Overview"
+        },
+        "servers-and-clients",
+        "messages",
+        "delivery",
+        "requests",
+        "finding-servers",
+        "sharing-tables"
       ]
     },
     {

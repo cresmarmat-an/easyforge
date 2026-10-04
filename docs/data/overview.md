@@ -103,5 +103,5 @@ same row.
   not saved.
 - Types give default values only. A type cannot extend another type, and a
   node's type cannot be changed after it is added.
-- Sharing a table over a network arrives with the `network` library, as a bridge
-  that uses the change list.
+- Tables are shared over a network through a bridge that follows the change
+  list; see [Sharing tables](../network/sharing-tables.md).

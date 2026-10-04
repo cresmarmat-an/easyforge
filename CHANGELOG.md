@@ -107,6 +107,14 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   slider, weld, and motor joints; touch events, sensors, and collision layers;
   ray and circle casts and finding bodies by place; and the same result on every
   run.
+- The `network` library on Winsock: servers and clients over UDP with a
+  handshake, keep-alives, and timeouts; messages of named values sent reliably
+  in order, reliably in any order, or unreliably with the newest winning;
+  messages of up to 4 MB in pieces; requests answered with a reply or a reason;
+  a send rate limit; packet loss and delay on purpose for testing; an optional
+  thread of its own; and finding servers on the local network.
+- The `data_network` bridge, which keeps a `data` table the same on a server
+  and its clients, one way or with each client changing the nodes it added.
 
 ### Fixed
 
