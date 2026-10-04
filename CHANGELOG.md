@@ -116,6 +116,8 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   the local network.
 - The `data_network` bridge, which keeps a `data` table the same on a server
   and its clients, one way or with each client changing the nodes it added.
+- `<easyforge/easyforge.h>`, which includes every library and the bridges at
+  once, for programs that link `easyforge::easyforge`.
 
 ### Fixed
 

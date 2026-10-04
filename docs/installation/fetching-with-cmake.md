@@ -53,7 +53,8 @@ easyforge's own tests are also switched off when it is fetched. Set
 `EASYFORGE_BUILD_TESTS` to `ON` before `FetchContent_MakeAvailable` if you want
 them.
 
-To link every library at once, use `easyforge::easyforge`.
+To link every library at once, use `easyforge::easyforge`, and include
+`<easyforge/easyforge.h>` to have all of their headers.
 
 ## Using a copy on your computer
 

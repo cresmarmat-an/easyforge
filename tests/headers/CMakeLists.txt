@@ -12,6 +12,30 @@ foreach(library IN LISTS built_libraries)
         CONFIGURE_DEPENDS
         "${PROJECT_SOURCE_DIR}/include/easyforge/${library}.h"
         "${PROJECT_SOURCE_DIR}/include/easyforge/${library}/*.h")
+    set(headers_${library} ${headers})
+endforeach()
+
+# The header with everything, and the bridges, where every library is built.
+set(every_library core assets window input graphics data ui script sound physics network)
+set(extra_headers "")
+set(all_built TRUE)
+foreach(library IN LISTS every_library)
+    if(NOT TARGET easyforge::${library})
+        set(all_built FALSE)
+    endif()
+endforeach()
+if(all_built)
+    file(GLOB bridge_headers RELATIVE "${PROJECT_SOURCE_DIR}/include" CONFIGURE_DEPENDS
+        "${PROJECT_SOURCE_DIR}/include/easyforge/bridges/*.h")
+    set(extra_headers easyforge/easyforge.h ${bridge_headers})
+endif()
+
+foreach(library IN LISTS built_libraries ITEMS extra)
+    if(library STREQUAL "extra")
+        set(headers ${extra_headers})
+    else()
+        set(headers ${headers_${library}})
+    endif()
 
     foreach(header IN LISTS headers)
         string(MAKE_C_IDENTIFIER "${header}" name)

@@ -26,7 +26,12 @@ ones you use.
 | network | `easyforge::network` | `<easyforge/network.h>` | Available on Windows |
 
 `easyforge::easyforge` links every library that was built, for when you want
-all of them.
+all of them, and `<easyforge/easyforge.h>` includes every library's header and
+the bridge headers that join some of them:
+
+```cpp
+#include <easyforge/easyforge.h>   // with easyforge::easyforge
+```
 
 ## What depends on what
 
