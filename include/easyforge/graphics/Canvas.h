@@ -53,6 +53,12 @@ namespace easyforge
         // Softens the edge over this many points, half inside and half outside,
         // as a shadow or a glow does.
         float Blur = 0.0f;
+
+        // An area left undrawn, in points, with its own rounded corners: the box
+        // a shadow belongs to, so a see-through box does not show its shadow
+        // through itself. Not used with a gradient.
+        std::optional<easyforge::Rectangle> Hole;
+        float HoleCornerRadius = 0.0f;
     };
 
     struct CircleStyle
@@ -151,8 +157,10 @@ namespace easyforge
         void Draw(const Scene& scene, easyforge::Rectangle area) const;
 
         // Blurs what is already drawn under the area, like frosted glass, over
-        // `radius` points. What is drawn afterwards covers it as usual.
-        void BlurBehind(easyforge::Rectangle area, float radius, float cornerRadius = 0.0f) const;
+        // `radius` points. What is drawn afterwards covers it as usual. With an
+        // opacity below 1, the blur is mixed with what was there: 0.5 is half
+        // blurred.
+        void BlurBehind(easyforge::Rectangle area, float radius, float cornerRadius = 0.0f, float opacity = 1.0f) const;
 
         // Runs a shader over an area. Its input.Content is empty; to shade what
         // was drawn, use a layer.
@@ -160,7 +168,8 @@ namespace easyforge
 
         // Draws everything until the matching EndLayer into a picture of the area,
         // then puts the picture on the canvas: through a shader, or faded, or as
-        // it is. Layers nest.
+        // it is. Layers nest. An area too large for the GPU to hold in one
+        // picture is cut down to the part inside the clip.
         void BeginLayer(easyforge::Rectangle area) const;
         void EndLayer(const LayerStyle& style = {}) const;
 
@@ -177,6 +186,10 @@ namespace easyforge
         // The size of the canvas in points, and pixels per point.
         Vector2 Size() const;
         float Scale() const;
+
+        // Where drawing can still show, in points after the transforms: the
+        // canvas, cut down by every PushClip and layer.
+        easyforge::Rectangle ClipArea() const;
 
     private:
         internal::FrameRecorder* Recorder = nullptr;

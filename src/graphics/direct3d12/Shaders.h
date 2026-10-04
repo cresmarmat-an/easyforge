@@ -154,11 +154,19 @@ float4 PixelMain(Interpolated input) : SV_Target
     if (mode == 4.0)
     {
         // A blur behind an area replaces what was there, so the pipeline does not
-        // blend; the edge mixes the blurred picture with what was there before.
-        // Both pictures reach past the area, so the edge pixels read what is
-        // really under them.
+        // blend; the edge mixes the blurred picture with what was there before,
+        // and so does the fill's alpha, for a blur that fades. Both pictures
+        // reach past the area, so the edge pixels read what is really under them.
         return lerp(Original.Sample(LinearClamp, input.Coordinates), Picture.Sample(LinearClamp, input.Coordinates),
-            coverage);
+            coverage * input.Fill.a);
+    }
+    if (mode == 5.0)
+    {
+        // Left out where the hole is, such as a shadow under a see-through box.
+        float2 holeHalf = input.GradientLine.zw * 0.5;
+        float holeRadius = min(input.Gradient.x, min(holeHalf.x, holeHalf.y));
+        float hole = saturate(0.5 - RoundedBoxDistance(input.Local - input.GradientLine.xy - holeHalf, holeHalf, holeRadius));
+        return Premultiply(input.Fill) * coverage * (1.0 - hole);
     }
 
     float4 fill = Premultiply(input.Fill);
@@ -197,6 +205,11 @@ cbuffer Blur : register(b0)
     float2 Step;
     float Radius;
     float Spread;
+
+    // The area copied in fills the top left of the picture up to here; reads
+    // past it would see what an earlier blur left.
+    float2 Limit;
+    float2 Reserved;
 };
 
 Texture2D Source : register(t0);
@@ -217,17 +230,22 @@ Interpolated VertexMain(uint vertex : SV_VertexID)
     return output;
 }
 
+float4 Read(float2 coordinates)
+{
+    return Source.Sample(LinearClamp, min(coordinates, Limit));
+}
+
 float4 PixelMain(Interpolated input) : SV_Target
 {
-    float4 total = Source.Sample(LinearClamp, input.Coordinates);
+    float4 total = Read(input.Coordinates);
     float weights = 1.0;
     int taps = min((int)ceil(Radius), 96);
     for (int index = 1; index <= taps; ++index)
     {
         float distance = (float)index;
         float weight = exp(-distance * distance / (2.0 * Spread * Spread));
-        total += weight * Source.Sample(LinearClamp, input.Coordinates + Step * distance);
-        total += weight * Source.Sample(LinearClamp, input.Coordinates - Step * distance);
+        total += weight * Read(input.Coordinates + Step * distance);
+        total += weight * Read(input.Coordinates - Step * distance);
         weights += 2.0 * weight;
     }
     return total / weights;

@@ -63,7 +63,7 @@ namespace easyforge
         }
 
         void FrameRecorder::AddShader(ShaderState& shader, Rectangle area, float pixelsPerPoint, gpu::Texture* content,
-            const std::vector<ShaderValue>& values)
+            const std::vector<ShaderValue>& values, Vector2 contentShare)
         {
             gpu::Pipeline* pipeline = shader.On(Owner.Device);
             if (!pipeline)
@@ -88,6 +88,8 @@ namespace easyforge
             frame.Time = Time;
             frame.Scale = pixelsPerPoint;
             frame.HasContent = content ? 1.0f : 0.0f;
+            frame.ContentScale[0] = contentShare.X;
+            frame.ContentScale[1] = contentShare.Y;
 
             DrawStep step;
             step.Pipeline = pipeline;
@@ -169,6 +171,16 @@ namespace easyforge
         if (style.Gradient)
         {
             internal::ApplyGradient(instance, *style.Gradient, style.Size * scale);
+        }
+        else if (style.Hole)
+        {
+            instance.Shape[2] = static_cast<float>(ShapeMode::Holed);
+            Vector2 corner = (style.Hole->Position() - style.Position) * scale;
+            instance.GradientLine[0] = corner.X;
+            instance.GradientLine[1] = corner.Y;
+            instance.GradientLine[2] = style.Hole->Width * scale;
+            instance.GradientLine[3] = style.Hole->Height * scale;
+            instance.Gradient[0] = Max(style.HoleCornerRadius, 0.0f) * scale;
         }
         instance.Shape[3] = Max(style.Blur, 0.0f) * scale;
         Recorder->Add(instance, nullptr, internal::gpu::Sampling::LinearClamp);
@@ -264,9 +276,18 @@ namespace easyforge
                     {
                         continue;
                     }
-                    Vector2 corner = Recorder->ToPixels(style.Position + Vector2 { drawnX[column], drawnY[row] });
-                    ShapeInstance piece = internal::Shape(corner, pieceSize * scale, style.Tint, 0.0f, 0.0f,
-                        Color::Transparent, ShapeMode::Picture);
+                    // The pieces' edges sit on whole pixels, so neighbours share each
+                    // edge pixel fully instead of both covering part of it.
+                    Vector2 from = Recorder->ToPixels(style.Position + Vector2 { drawnX[column], drawnY[row] });
+                    Vector2 to = Recorder->ToPixels(style.Position + Vector2 { drawnX[column + 1], drawnY[row + 1] });
+                    Vector2 corner { std::round(from.X), std::round(from.Y) };
+                    Vector2 pixels { std::round(to.X) - corner.X, std::round(to.Y) - corner.Y };
+                    if (pixels.X <= 0.0f || pixels.Y <= 0.0f)
+                    {
+                        continue;
+                    }
+                    ShapeInstance piece = internal::Shape(corner, pixels, style.Tint, 0.0f, 0.0f, Color::Transparent,
+                        ShapeMode::Picture);
                     piece.Coordinates[0] = sourceX[column] / width;
                     piece.Coordinates[1] = sourceY[row] / height;
                     piece.Coordinates[2] = sourceX[column + 1] / width;
@@ -381,9 +402,9 @@ namespace easyforge
         }
     }
 
-    void Canvas::BlurBehind(easyforge::Rectangle area, float radius, float cornerRadius) const
+    void Canvas::BlurBehind(easyforge::Rectangle area, float radius, float cornerRadius, float opacity) const
     {
-        if (!Recorder || !Recorder->Active || area.IsEmpty() || radius <= 0.0f)
+        if (!Recorder || !Recorder->Active || area.IsEmpty() || radius <= 0.0f || opacity <= 0.0f)
         {
             return;
         }
@@ -393,14 +414,13 @@ namespace easyforge
 
         // The area in the target's own pixels, grown by the blur's reach so what is
         // just outside still blurs in, and kept inside the target.
-        easyforge::Rectangle inner = PixelArea(*Recorder, area);
-        inner.X -= list.Origin.X;
-        inner.Y -= list.Origin.Y;
+        easyforge::Rectangle whole = PixelArea(*Recorder, area);
+        whole.X -= list.Origin.X;
+        whole.Y -= list.Origin.Y;
         easyforge::Rectangle bounds { 0.0f, 0.0f, list.Size.X, list.Size.Y };
         easyforge::Rectangle grown = Intersection(
-            { inner.X - reach, inner.Y - reach, inner.Width + reach * 2.0f, inner.Height + reach * 2.0f }, bounds);
-        inner = Intersection(inner, bounds);
-        if (inner.IsEmpty() || grown.IsEmpty())
+            { whole.X - reach, whole.Y - reach, whole.Width + reach * 2.0f, whole.Height + reach * 2.0f }, bounds);
+        if (Intersection(whole, bounds).IsEmpty() || grown.IsEmpty())
         {
             return;
         }
@@ -408,13 +428,22 @@ namespace easyforge
         int height = static_cast<int>(grown.Height);
         std::array<internal::gpu::Texture*, 3> targets =
             Recorder->Owner.BlurTargets(Recorder->Owner.BlursRecorded++, width, height);
+        if (!targets[0] || !targets[1] || !targets[2])
+        {
+            return;
+        }
 
-        ShapeInstance instance = internal::Shape(inner.Position() + list.Origin, inner.Size(), Color::White,
-            cornerRadius * scale, 0.0f, Color::Transparent, ShapeMode::Backdrop);
-        instance.Coordinates[0] = (inner.X - grown.X) / grown.Width;
-        instance.Coordinates[1] = (inner.Y - grown.Y) / grown.Height;
-        instance.Coordinates[2] = (inner.Right() - grown.X) / grown.Width;
-        instance.Coordinates[3] = (inner.Bottom() - grown.Y) / grown.Height;
+        // The shape keeps the whole area, so its corners stay round where it
+        // passes the edge of the target; the clip leaves out what is past it. The
+        // blurred area fills the top left of pictures that may be larger.
+        float pictureWidth = static_cast<float>(targets[0]->Width());
+        float pictureHeight = static_cast<float>(targets[0]->Height());
+        ShapeInstance instance = internal::Shape(whole.Position() + list.Origin, whole.Size(),
+            Color { 1.0f, 1.0f, 1.0f, Min(opacity, 1.0f) }, cornerRadius * scale, 0.0f, Color::Transparent, ShapeMode::Backdrop);
+        instance.Coordinates[0] = (whole.X - grown.X) / pictureWidth;
+        instance.Coordinates[1] = (whole.Y - grown.Y) / pictureHeight;
+        instance.Coordinates[2] = (whole.Right() - grown.X) / pictureWidth;
+        instance.Coordinates[3] = (whole.Bottom() - grown.Y) / pictureHeight;
         Recorder->Add(instance, targets[0], internal::gpu::Sampling::LinearClamp);
 
         // The shape just added becomes a step of its own that blurs first.
@@ -454,6 +483,15 @@ namespace easyforge
             return;
         }
         easyforge::Rectangle pixels = PixelArea(*Recorder, area);
+
+        // A picture larger than the GPU can hold keeps only what can show.
+        constexpr float largest = 8192.0f;
+        if (pixels.Width > largest || pixels.Height > largest)
+        {
+            pixels = Intersection(pixels, Recorder->Clips.back());
+            pixels.Width = Min(pixels.Width, largest);
+            pixels.Height = Min(pixels.Height, largest);
+        }
         int width = Max(static_cast<int>(pixels.Width), 1);
         int height = Max(static_cast<int>(pixels.Height), 1);
         std::size_t index = Recorder->Lists.size();
@@ -482,11 +520,19 @@ namespace easyforge
         Recorder->FinishedLayers.push_back(index);
         easyforge::Rectangle area = Recorder->LayerAreas[index - 1];
         internal::gpu::Texture* picture = Recorder->Lists[index].Target;
+        if (!picture)
+        {
+            Log(LogLevel::Warning, "a layer of {} by {} pixels could not be made, so it is not drawn", area.Width, area.Height);
+            return;
+        }
 
+        // The layer fills the top left of a picture that may be larger.
+        float shareX = area.Width / static_cast<float>(picture->Width());
+        float shareY = area.Height / static_cast<float>(picture->Height());
         if (style.Shader)
         {
             Recorder->Used.push_back(style.Shader.State());
-            Recorder->AddShader(*style.Shader.State(), area, Recorder->PixelsPerPoint(), picture, style.Values);
+            Recorder->AddShader(*style.Shader.State(), area, Recorder->PixelsPerPoint(), picture, style.Values, { shareX, shareY });
             return;
         }
         // The picture holds colors multiplied by alpha, so fading multiplies every
@@ -494,8 +540,8 @@ namespace easyforge
         float opacity = Clamp(style.Opacity, 0.0f, 1.0f);
         ShapeInstance instance = internal::Shape(area.Position(), area.Size(), Color { 1.0f, 1.0f, 1.0f, opacity }, 0.0f,
             0.0f, Color::Transparent, ShapeMode::PremultipliedPicture);
-        instance.Coordinates[2] = 1.0f;
-        instance.Coordinates[3] = 1.0f;
+        instance.Coordinates[2] = shareX;
+        instance.Coordinates[3] = shareY;
         Recorder->Add(instance, picture, internal::gpu::Sampling::LinearClamp);
     }
 
@@ -565,5 +611,24 @@ namespace easyforge
     float Canvas::Scale() const
     {
         return Recorder ? Recorder->Scale : 1.0f;
+    }
+
+    easyforge::Rectangle Canvas::ClipArea() const
+    {
+        if (!Recorder || !Recorder->Active)
+        {
+            return {};
+        }
+        // The clip is in frame pixels; the layer being drawn holds only its own area.
+        easyforge::Rectangle clip = Recorder->Clips.back();
+        const internal::DrawList& list = Recorder->Lists[Recorder->ListStack.back()];
+        if (Recorder->ListStack.size() > 1)
+        {
+            clip = Intersection(clip, { list.Origin.X, list.Origin.Y, list.Size.X, list.Size.Y });
+        }
+        const FrameRecorder::Placement& placement = Recorder->Transforms.back();
+        float pixelsPerPoint = Recorder->PixelsPerPoint();
+        Vector2 corner = (clip.Position() / Recorder->Scale - placement.Offset) / Max(placement.Scale, 0.0001f);
+        return { corner.X, corner.Y, clip.Width / pixelsPerPoint, clip.Height / pixelsPerPoint };
     }
 }

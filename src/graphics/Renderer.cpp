@@ -35,7 +35,24 @@ namespace easyforge
                 float Step[2];
                 float Radius;
                 float Spread;
+
+                // The last place to read, in texture coordinates: the picture can be
+                // larger than the area copied into its top left.
+                float Limit[2];
+                float Reserved[2];
             };
+
+            // Pictures for layers and blurs are made in steps of this many pixels,
+            // so an area that grows or shrinks a little keeps its picture.
+            constexpr int PictureStep = 64;
+
+            int Stepped(int size)
+            {
+                return (Max(size, 1) + PictureStep - 1) / PictureStep * PictureStep;
+            }
+
+            // Frames a picture may go unused before it is let go.
+            constexpr std::uint64_t PictureFrames = 120;
 
             constexpr std::array<gpu::VertexAttribute, 3> MeshAttributes = { {
                 { "POSITION", gpu::VertexFormat::Float3, 0 },
@@ -236,12 +253,16 @@ namespace easyforge
             {
                 LayerTargetPool.resize(index + 1);
             }
-            std::unique_ptr<gpu::Texture>& target = LayerTargetPool[index];
-            if (!target || target->Width() != width || target->Height() != height)
+            PooledPicture& pooled = LayerTargetPool[index];
+            int pictureWidth = Stepped(width);
+            int pictureHeight = Stepped(height);
+            if (!pooled.Picture || pooled.Picture->Width() != pictureWidth || pooled.Picture->Height() != pictureHeight)
             {
-                target = Device->CreateTexture({ .Width = width, .Height = height, .RenderTarget = true, .Name = "layer" });
+                pooled.Picture =
+                    Device->CreateTexture({ .Width = pictureWidth, .Height = pictureHeight, .RenderTarget = true, .Name = "layer" });
             }
-            return target.get();
+            pooled.LastFrame = FrameNumber;
+            return pooled.Picture.get();
         }
 
         std::array<gpu::Texture*, 3> RendererState::BlurTargets(std::size_t index, int width, int height)
@@ -250,29 +271,56 @@ namespace easyforge
             {
                 BlurTargetPool.resize(index + 1);
             }
-            std::array<std::unique_ptr<gpu::Texture>, 3>& targets = BlurTargetPool[index];
-            for (std::unique_ptr<gpu::Texture>& target : targets)
+            std::array<PooledPicture, 3>& targets = BlurTargetPool[index];
+            int pictureWidth = Stepped(width);
+            int pictureHeight = Stepped(height);
+            for (PooledPicture& target : targets)
             {
-                if (!target || target->Width() != width || target->Height() != height)
+                if (!target.Picture || target.Picture->Width() != pictureWidth || target.Picture->Height() != pictureHeight)
                 {
-                    target = Device->CreateTexture({ .Width = width, .Height = height, .RenderTarget = true, .Name = "blur" });
+                    target.Picture =
+                        Device->CreateTexture({ .Width = pictureWidth, .Height = pictureHeight, .RenderTarget = true, .Name = "blur" });
+                }
+                target.LastFrame = FrameNumber;
+            }
+            return { targets[0].Picture.get(), targets[1].Picture.get(), targets[2].Picture.get() };
+        }
+
+        void RendererState::LetGoOfUnusedPictures()
+        {
+            for (PooledPicture& pooled : LayerTargetPool)
+            {
+                if (pooled.Picture && pooled.LastFrame + PictureFrames < FrameNumber)
+                {
+                    pooled.Picture.reset();
                 }
             }
-            return { targets[0].get(), targets[1].get(), targets[2].get() };
+            for (std::array<PooledPicture, 3>& targets : BlurTargetPool)
+            {
+                for (PooledPicture& pooled : targets)
+                {
+                    if (pooled.Picture && pooled.LastFrame + PictureFrames < FrameNumber)
+                    {
+                        pooled.Picture.reset();
+                    }
+                }
+            }
         }
 
         void RendererState::DrawBlur(gpu::Commands& commands, const DrawStep& step, gpu::Texture& target)
         {
             gpu::Texture& first = *step.BlurTargets[0];
             gpu::Texture& second = *step.BlurTargets[1];
-            gpu::ScissorRectangle area { static_cast<int>(step.BlurArea.X), static_cast<int>(step.BlurArea.Y), first.Width(),
-                first.Height() };
+            gpu::ScissorRectangle area { static_cast<int>(step.BlurArea.X), static_cast<int>(step.BlurArea.Y),
+                static_cast<int>(step.BlurArea.Width), static_cast<int>(step.BlurArea.Height) };
             commands.CopyTexture(target, area, first, 0, 0);
             commands.CopyTexture(target, area, *step.BlurTargets[2], 0, 0);
 
             // Across into the second picture, then down back into the first.
-            BlurConstants constants { { 1.0f / static_cast<float>(first.Width()), 0.0f }, step.BlurRadius,
-                Max(step.BlurRadius * 0.5f, 0.5f) };
+            float pictureWidth = static_cast<float>(first.Width());
+            float pictureHeight = static_cast<float>(first.Height());
+            BlurConstants constants { { 1.0f / pictureWidth, 0.0f }, step.BlurRadius, Max(step.BlurRadius * 0.5f, 0.5f),
+                { (step.BlurArea.Width - 0.5f) / pictureWidth, (step.BlurArea.Height - 0.5f) / pictureHeight }, {} };
             for (int pass = 0; pass < 2; ++pass)
             {
                 gpu::Texture& from = pass == 0 ? first : second;
@@ -285,7 +333,7 @@ namespace easyforge
                 commands.Draw(4);
                 commands.EndPass();
                 constants.Step[0] = 0.0f;
-                constants.Step[1] = 1.0f / static_cast<float>(first.Height());
+                constants.Step[1] = 1.0f / pictureHeight;
             }
         }
 
@@ -438,8 +486,12 @@ namespace easyforge
             }
             for (std::size_t index : frame.FinishedLayers)
             {
+                // A layer whose picture could not be made is left out.
                 const internal::DrawList& layer = frame.Lists[index];
-                DrawRecorded(commands, layer, *layer.Target, Color::Transparent);
+                if (layer.Target)
+                {
+                    DrawRecorded(commands, layer, *layer.Target, Color::Transparent);
+                }
             }
 
             gpu::Texture& target = Surface ? Surface->CurrentTexture() : *Offscreen;
@@ -449,6 +501,8 @@ namespace easyforge
             frame.Lists.clear();
             frame.Scenes.clear();
             frame.Used.clear();
+            ++FrameNumber;
+            LetGoOfUnusedPictures();
         }
     }
 

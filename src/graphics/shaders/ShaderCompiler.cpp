@@ -655,6 +655,8 @@ namespace easyforge::internal
     float Scale;
     float HasContent;
     float Unused;
+    float2 ContentScale;
+    float2 Reserved;
 )hlsl";
                 for (const ShaderValueSlot& value : Values)
                 {
@@ -674,9 +676,11 @@ struct PixelInput
 };
 
 // The content holds colors multiplied by alpha; shaders work with plain colors.
+// It fills the top left of its picture, and reads stop at its edge pixels.
 float4 SampleContent(float2 coordinates)
 {
-    float4 color = Content.Sample(LinearClamp, coordinates);
+    float2 edge = 0.5 / max(AreaSize, 1.0);
+    float4 color = Content.Sample(LinearClamp, clamp(coordinates, edge, 1.0 - edge) * ContentScale);
     return color.a > 0.0 ? float4(color.rgb / color.a, color.a) : float4(0.0, 0.0, 0.0, 0.0);
 }
 

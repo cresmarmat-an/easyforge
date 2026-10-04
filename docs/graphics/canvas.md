@@ -69,6 +69,17 @@ distance to the outline, so it costs no more than a sharp shape. For small
 shapes with a large blur it is an approximation, a little stronger than a true
 blur would be.
 
+```cpp
+// A shadow that only shows outside a see-through card.
+canvas.Rectangle({ .Position = { 40, 46 }, .Size = { 240, 140 }, .Color = Color::Black.WithAlpha(0.35f),
+    .CornerRadius = 12, .Blur = 18, .Hole = Rectangle { 40, 40, 240, 140 }, .HoleCornerRadius = 12 });
+```
+
+`Hole` leaves a rounded rectangle undrawn, in points like the shape itself. A
+shadow under a box that is partly see-through would otherwise show through the
+box; with the box as its hole, it only shows around it. A hole is not used
+together with a gradient.
+
 ### Circles
 
 `canvas.Circle(center, radius, style)`, where `CircleStyle` has `Color`,
@@ -152,7 +163,9 @@ Everything drawn between `BeginLayer` and `EndLayer` goes into a picture of the
 area, which `EndLayer` then puts on the canvas. With `.Opacity`, the group fades
 as one, so where its shapes overlap there is no darker patch. With `.Shader`,
 every pixel of the picture goes through a [shader](shaders.md), which reads it
-as `input.Content`. Layers nest, and only what is inside the area is kept.
+as `input.Content`. Layers nest, and only what is inside the area is kept. An
+area too large for the GPU to hold in one picture, such as a faded list many
+screens long, is cut down to the part inside the clip.
 
 | LayerStyle | Default | Meaning |
 |---|---|---|
@@ -164,7 +177,7 @@ as `input.Content`. Layers nest, and only what is inside the area is kept.
 
 ```cpp
 canvas.Image(photo, { .Size = canvas.Size() });
-canvas.BlurBehind({ 40, 40, 320, 200 }, 20, 12);    // area, radius, corner radius
+canvas.BlurBehind({ 40, 40, 320, 200 }, 20, 12);    // area, radius, corner radius, and opacity, 1 if left out
 canvas.Rectangle({ .Position = { 40, 40 }, .Size = { 320, 200 }, .Color = Color::White.WithAlpha(0.4f),
     .CornerRadius = 12 });
 ```
@@ -174,7 +187,9 @@ glass, and puts the blurred picture in its place, with rounded corners when
 given a corner radius. What is drawn afterwards covers it as usual, so a
 see-through rectangle on top tints the glass. The blur reaches `radius` points
 and takes in what is just outside the area, so the edges blend with their
-surroundings.
+surroundings. An opacity below 1 mixes the blur with what was there, for glass
+that fades in. Where the area passes the edge of the canvas, its corners stay
+round.
 
 To blur, the GPU has to finish drawing what is under the area first, so each
 `BlurBehind` splits the frame's drawing in two. A few per frame are fine; one
@@ -196,7 +211,9 @@ canvas.PopClip();
 ```
 
 Clip areas nest: each is cut down to the one before it. They are axis-aligned
-rectangles.
+rectangles. `canvas.ClipArea()` is where drawing can still show, in points after
+the transforms: the canvas cut down by every clip and by the layer being drawn.
+Code that draws a lot can skip what lies outside it.
 
 ## Moving and scaling
 

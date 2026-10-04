@@ -163,3 +163,57 @@ EASYFORGE_TEST(BlurBehindWorksInLayersAndAtScale)
     // The rounded corner leaves the corner of the area as it was: white.
     EASYFORGE_EXPECT(Channel(image, 41, 21, 1) > 250);
 }
+
+EASYFORGE_TEST(HolesBlurStrengthAndSlicesAtFractions)
+{
+    // A shape with a hole leaves the hole undrawn, even where it is soft.
+    Renderer renderer = Offscreen(100, 60);
+    ImageData holed = Picture(renderer, [](Canvas& canvas) {
+        canvas.Rectangle({ .Position = { 10, 10 }, .Size = { 80, 40 }, .Color = Color::White, .Blur = 8,
+            .Hole = easyforge::Rectangle { 20, 20, 60, 20 }, .HoleCornerRadius = 4 });
+    });
+    EASYFORGE_EXPECT(Channel(holed, 50, 30, 0) < 3);
+    EASYFORGE_EXPECT(Channel(holed, 14, 30, 0) > 60);
+
+    // A blur at half strength is between the sharp picture and the full blur.
+    ImageData half = Picture(renderer, [](Canvas& canvas) {
+        canvas.Rectangle({ .Position = { 0, 0 }, .Size = { 50, 60 } });
+        canvas.BlurBehind({ 20, 10, 60, 40 }, 8, 0.0f, 0.5f);
+    });
+    int edge = Channel(half, 46, 30, 1);
+    EASYFORGE_EXPECT(edge < 252 && edge > 160);
+
+    // Sliced pieces at a fractional position meet without a see-through seam.
+    Texture frame = Texture::FromImage(Frame(), { .Smooth = false });
+    Renderer sliced = Offscreen(60, 40);
+    ImageData image = Picture(sliced, [&](Canvas& canvas) {
+        canvas.Image(frame, { .Position = { 0.5f, 0.5f }, .Size = { 40.3f, 30.6f }, .Slice = 2 });
+    }, Color::White);
+    for (int x = 4; x < 38; ++x)
+    {
+        EASYFORGE_EXPECT(image.ColorAt(x, 15).Red < 0.05f);
+    }
+
+    // The clip area follows clips and transforms.
+    Renderer clipped = Offscreen(100, 100);
+    Picture(clipped, [](Canvas& canvas) {
+        canvas.PushClip({ 10, 20, 30, 40 });
+        canvas.PushTransform({ 10, 0 }, 2.0f);
+        easyforge::Rectangle area = canvas.ClipArea();
+        EASYFORGE_EXPECT_EQUAL(area.X, 0.0f);
+        EASYFORGE_EXPECT_EQUAL(area.Y, 10.0f);
+        EASYFORGE_EXPECT_EQUAL(area.Width, 15.0f);
+        EASYFORGE_EXPECT_EQUAL(area.Height, 20.0f);
+        canvas.PopTransform();
+        canvas.PopClip();
+    });
+
+    // A layer far larger than any picture is cut down to what shows.
+    Renderer large = Offscreen(100, 100);
+    ImageData big = Picture(large, [](Canvas& canvas) {
+        canvas.BeginLayer({ 0, -20000, 100, 40000 });
+        canvas.Rectangle({ .Position = { 0, 0 }, .Size = { 100, 100 }, .Color = Color::Hex("#00FF00") });
+        canvas.EndLayer({ .Opacity = 0.5f });
+    });
+    EASYFORGE_EXPECT(Near(Channel(big, 50, 50, 1), 128, 8));
+}

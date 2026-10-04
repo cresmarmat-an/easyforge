@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -60,8 +61,17 @@ namespace easyforge::internal
             std::unique_ptr<gpu::Texture> Resolved;
         };
         std::vector<SceneTargets> SceneTargetPool;
-        std::vector<std::unique_ptr<gpu::Texture>> LayerTargetPool;
-        std::vector<std::array<std::unique_ptr<gpu::Texture>, 3>> BlurTargetPool;
+
+        // Layer and blur pictures, kept between frames, and let go after going
+        // unused for a while.
+        struct PooledPicture
+        {
+            std::unique_ptr<gpu::Texture> Picture;
+            std::uint64_t LastFrame = 0;
+        };
+        std::vector<PooledPicture> LayerTargetPool;
+        std::vector<std::array<PooledPicture, 3>> BlurTargetPool;
+        std::uint64_t FrameNumber = 0;
 
         // Blurs made so far this frame.
         std::size_t BlursRecorded = 0;
@@ -76,6 +86,7 @@ namespace easyforge::internal
         void DrawScene(gpu::Commands& commands, const ScenePass& pass, SceneTargets& targets);
         void DrawRecorded(gpu::Commands& commands, const internal::DrawList& list, gpu::Texture& target, Color clear);
         void DrawBlur(gpu::Commands& commands, const DrawStep& step, gpu::Texture& target);
+        void LetGoOfUnusedPictures();
     };
 
     // Samples per pixel for scenes, which smooths the edges of models.

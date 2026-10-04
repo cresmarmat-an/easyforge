@@ -59,6 +59,11 @@ namespace easyforge::internal
         float Scale = 1.0f;
         float HasContent = 0.0f;
         float Unused = 0.0f;
+
+        // The content fills this share of its picture, from the top left: the
+        // picture can be larger, so its size changes less often.
+        float ContentScale[2] { 1.0f, 1.0f };
+        float Reserved[2] {};
     };
 
     // Compiles shader source. On failure the error lists every problem, one a

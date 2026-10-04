@@ -47,6 +47,11 @@ namespace easyforge::internal
         Glyph = 2,
         PremultipliedPicture = 3,
         Backdrop = 4,
+
+        // Solid, without the rounded rectangle given in place of a gradient:
+        // GradientLine holds its corner and size in the shape's pixels, and
+        // Gradient its corner radius first.
+        Holed = 5,
     };
 
     // One step of drawing a list: shapes in a row that use the same texture, or
@@ -118,8 +123,10 @@ namespace easyforge::internal
         void Add(ShapeInstance instance, gpu::Texture* texture, gpu::Sampling sampling);
 
         // Adds a custom shader step over an area given in frame pixels.
+        // A content picture can be larger than the area; `contentShare` is the part
+        // of it the area fills, from the top left.
         void AddShader(ShaderState& shader, Rectangle area, float pixelsPerPoint, gpu::Texture* content,
-            const std::vector<ShaderValue>& values);
+            const std::vector<ShaderValue>& values, Vector2 contentShare = { 1.0f, 1.0f });
 
         // Points, after the transforms, to frame pixels.
         Vector2 ToPixels(Vector2 point) const;
