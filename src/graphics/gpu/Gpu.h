@@ -200,6 +200,10 @@ namespace easyforge::internal::gpu
 
         // Reads what was shown last, or an empty image before the first frame.
         virtual ImageData ReadLastShown() = 0;
+
+        // Returns when the surface can take another image without waiting, or
+        // after `seconds` at most. Surfaces that cannot tell return at once.
+        virtual void WaitUntilReady(float seconds) { (void)seconds; }
     };
 
     // One renderer's frames: its commands, and the memory for data that lives

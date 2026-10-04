@@ -98,6 +98,16 @@ namespace easyforge
 
     void Window::RunOneFrame()
     {
+        // A renderer that paces frames is waited on first, so the frame starts
+        // as soon as the screen can take it and input is read as late as it can be.
+        for (const std::shared_ptr<WindowState>& window : internal::OpenWindows())
+        {
+            if (window->Pacer && window->Platform && window->Platform->IsVisible() && !window->Platform->IsMinimized())
+            {
+                window->Pacer->WaitForNextFrame(0.1f);
+            }
+        }
+
         internal::HandlePlatformMessages();
         internal::RunFramesOfOpenWindows();
 

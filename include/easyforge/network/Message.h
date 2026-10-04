@@ -17,6 +17,15 @@
 
 namespace easyforge
 {
+    namespace internal::networking
+    {
+        class Endpoint;
+    }
+
+    // Seconds on this computer's steady clock, which never jumps when the date
+    // or time is changed: the clock Message::SentAt and Smoothed use.
+    double NetworkTime();
+
     enum class MessageValueKind
     {
         Nothing,
@@ -181,9 +190,20 @@ namespace easyforge
         std::vector<std::uint8_t> Encode() const;
         static std::optional<Message> Decode(std::span<const std::uint8_t> bytes);
 
-        bool operator==(const Message& other) const = default;
+        // When the other end sent the message, on this computer's clock (see
+        // NetworkTime): the moment it would have arrived with no more delay
+        // along the way than the least seen on the connection, so values sent
+        // at even times have evenly spaced times here however unevenly they
+        // arrive. 0 for a message made on this computer. Smoothed uses it.
+        double SentAt() const { return Sent; }
+
+        // Two messages are equal when they hold the same names and values.
+        bool operator==(const Message& other) const { return Fields == other.Fields; }
 
     private:
         std::vector<std::pair<std::string, MessageValue>> Fields;
+        double Sent = 0.0;
+
+        friend class internal::networking::Endpoint;
     };
 }

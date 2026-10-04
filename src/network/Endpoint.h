@@ -121,6 +121,9 @@ namespace easyforge::internal::networking
         static void Work(std::weak_ptr<Endpoint> endpoint);
 
         double Now() const;
+
+        // This endpoint's time as NetworkTime.
+        double ToNetworkTime(double time) const;
         std::uint64_t NewSalt();
         void UpdateNow();
         void ReceivePackets(double now);

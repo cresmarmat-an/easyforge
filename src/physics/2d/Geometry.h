@@ -79,6 +79,17 @@ namespace easyforge::internal::physics2d
         return Unrotate(pose.Turn, world - pose.Position);
     }
 
+    // Between two poses: `amount` 0 is the first, 1 the second. The turn takes
+    // the shorter way round.
+    inline Pose Blend(const Pose& first, const Pose& second, float amount)
+    {
+        Rotation turn { first.Turn.Cosine + (second.Turn.Cosine - first.Turn.Cosine) * amount,
+            first.Turn.Sine + (second.Turn.Sine - first.Turn.Sine) * amount };
+        float length = std::sqrt(turn.Cosine * turn.Cosine + turn.Sine * turn.Sine);
+        turn = length > 0.0001f ? Rotation { turn.Cosine / length, turn.Sine / length } : (amount < 0.5f ? first.Turn : second.Turn);
+        return { first.Position + (second.Position - first.Position) * amount, turn };
+    }
+
     // The second pose seen from the first.
     inline Pose Between(const Pose& first, const Pose& second)
     {

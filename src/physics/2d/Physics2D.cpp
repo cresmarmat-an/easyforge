@@ -330,6 +330,24 @@ namespace easyforge
         return resolved ? Unapply(resolved.Body->Origin, world) : world;
     }
 
+    Vector2 Body2D::SmoothPosition() const
+    {
+        Resolved resolved = Resolve(*Reference);
+        return resolved ? resolved.World->SmoothOrigin(*resolved.Body).Position : Vector2 {};
+    }
+
+    float Body2D::SmoothRotation() const
+    {
+        Resolved resolved = Resolve(*Reference);
+        return resolved ? resolved.World->SmoothOrigin(*resolved.Body).Turn.Angle() : 0.0f;
+    }
+
+    Vector2 Body2D::SmoothWorldPoint(Vector2 local) const
+    {
+        Resolved resolved = Resolve(*Reference);
+        return resolved ? Apply(resolved.World->SmoothOrigin(*resolved.Body), local) : local;
+    }
+
     void Body2D::ApplyForce(Vector2 force) const
     {
         Resolved resolved = Resolve(*Reference);
@@ -574,6 +592,22 @@ namespace easyforge
                       static_cast<WorldState2D*>(owner)->Substeps = std::clamp(value, 1, 64);
                   }
               }),
+          StepSeconds(state.get(),
+              [](const void* owner) { return owner ? static_cast<const WorldState2D*>(owner)->StepSeconds : 0.0f; },
+              [](void* owner, const float& value) {
+                  if (owner && std::isfinite(value) && value > 0.0f)
+                  {
+                      static_cast<WorldState2D*>(owner)->StepSeconds = value;
+                  }
+              }),
+          MaximumStepsPerUpdate(state.get(),
+              [](const void* owner) { return owner ? static_cast<const WorldState2D*>(owner)->MaximumStepsPerUpdate : 0; },
+              [](void* owner, const int& value) {
+                  if (owner)
+                  {
+                      static_cast<WorldState2D*>(owner)->MaximumStepsPerUpdate = std::max(value, 1);
+                  }
+              }),
           State(std::move(state))
     {
     }
@@ -605,6 +639,8 @@ namespace easyforge
     {
         Gravity.Rebind(State.get());
         Substeps.Rebind(State.get());
+        StepSeconds.Rebind(State.get());
+        MaximumStepsPerUpdate.Rebind(State.get());
     }
 
     Physics2D::operator bool() const
@@ -789,6 +825,16 @@ namespace easyforge
         joint.Correction = std::clamp(settings.Correction, 0.0f, 1.0f);
         joint.Collide = settings.Collide;
         return Joint2D(AddedJoint(State, joint));
+    }
+
+    int Physics2D::Update(float seconds) const
+    {
+        // Kept for the whole update: a touch handler may let go of this handle.
+        if (std::shared_ptr<WorldState2D> kept = State)
+        {
+            return kept->Update(seconds);
+        }
+        return 0;
     }
 
     void Physics2D::Step(float seconds) const

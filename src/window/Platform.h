@@ -67,6 +67,10 @@ namespace easyforge::internal
 
         virtual easyforge::Monitor CurrentMonitor() const = 0;
 
+        // The refresh rate of the screen the window is on, in hertz, or 0 when
+        // the platform cannot tell. Cheaper than CurrentMonitor.
+        virtual float RefreshRate() const = 0;
+
         // Destroys the platform's window and frees this object, at once or, when
         // the platform is still inside one of its messages, once it returns. The
         // window reports nothing more after this.

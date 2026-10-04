@@ -19,8 +19,51 @@ namespace easyforge::internal::networking
         }
     }
 
-    Peer::Peer(double now) : BudgetTime(now), LastHeard(now)
+    Peer::Peer(double now) : BudgetTime(now), LastHeard(now), Began(now), WindowStarted(now)
     {
+    }
+
+    double Peer::StampedTime(double now, std::uint32_t stamp)
+    {
+        // Packets can arrive out of order, so the stamp is read against the
+        // newest one, either way, and only a newer one moves it on.
+        double seconds = static_cast<double>(stamp) / 1000.0;
+        if (StampSeen)
+        {
+            auto ahead = static_cast<std::int32_t>(stamp - NewestStamp);
+            seconds = NewestStampSeconds + static_cast<double>(ahead) / 1000.0;
+            if (ahead > 0)
+            {
+                NewestStamp = stamp;
+                NewestStampSeconds = seconds;
+            }
+        }
+        else
+        {
+            StampSeen = true;
+            NewestStamp = stamp;
+            NewestStampSeconds = seconds;
+        }
+
+        if (now - WindowStarted >= ClockWindowSeconds)
+        {
+            LowestDifference[1] = LowestDifference[0];
+            DifferenceSeen[1] = DifferenceSeen[0];
+            DifferenceSeen[0] = false;
+            WindowStarted = now;
+        }
+        double difference = now - seconds;
+        if (!DifferenceSeen[0] || difference < LowestDifference[0])
+        {
+            LowestDifference[0] = difference;
+            DifferenceSeen[0] = true;
+        }
+        double lowest = LowestDifference[0];
+        if (DifferenceSeen[1])
+        {
+            lowest = std::min(lowest, LowestDifference[1]);
+        }
+        return seconds + lowest;
     }
 
     void Peer::Queue(Channel channel, std::vector<std::uint8_t> bytes)
@@ -75,12 +118,15 @@ namespace easyforge::internal::networking
         return count;
     }
 
-    void Peer::WriteHeader(std::vector<std::uint8_t>& packet, std::uint64_t token, std::uint16_t sequence) const
+    void Peer::WriteHeader(std::vector<std::uint8_t>& packet, std::uint64_t token, std::uint16_t sequence, double now) const
     {
         ByteWriter writer(packet);
         writer.WriteBytes(Magic);
         writer.Write8(static_cast<std::uint8_t>(PacketKind::Data));
         writer.Write64(token);
+        // Milliseconds wrap after 49 days; the other end reads them against the
+        // newest it has, so wrapping does not matter.
+        writer.Write32(static_cast<std::uint32_t>(static_cast<std::uint64_t>(std::max(now - Began, 0.0) * 1000.0)));
         writer.Write16(sequence);
 
         // Before anything has arrived, the packet "before 0" is named, which the
@@ -130,7 +176,7 @@ namespace easyforge::internal::networking
             std::vector<std::uint8_t> packet;
             packet.reserve(PacketLimit);
             std::uint16_t sequence = NextSequence++;
-            WriteHeader(packet, token, sequence);
+            WriteHeader(packet, token, sequence, now);
             PacketRecord& record = Records[sequence % Window];
             record.Sequence = sequence;
             record.Used = true;
@@ -280,6 +326,7 @@ namespace easyforge::internal::networking
 
     bool Peer::Receive(double now, ByteReader& reader, bool keepAlive, std::vector<DeliveredMessage>& delivered)
     {
+        std::uint32_t stamp = reader.Read32();
         std::uint16_t sequence = reader.Read16();
         std::uint16_t newest = reader.Read16();
         std::uint32_t bits = reader.Read32();
@@ -287,6 +334,7 @@ namespace easyforge::internal::networking
         {
             return false;
         }
+        PacketSentAt = StampedTime(now, stamp);
 
         LastHeard = now;
         NoteReceived(sequence);

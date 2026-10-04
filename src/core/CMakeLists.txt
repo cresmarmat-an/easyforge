@@ -1,6 +1,7 @@
 easyforge_add_library(core
     SOURCES
         Color.cpp
+        FrameTimer.cpp
         Jobs.cpp
         Keys.cpp
         language/Parser.cpp

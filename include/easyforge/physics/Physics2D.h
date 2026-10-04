@@ -26,6 +26,15 @@ namespace easyforge
         // Passes the solver makes within each step. More make tall stacks and
         // chains stiffer, and steps slower.
         int Substeps = 4;
+
+        // The length of each step Update runs, in seconds. Steps of one length
+        // keep the world stable and give the same result every run.
+        float StepSeconds = 1.0f / 60.0f;
+
+        // The most steps one Update runs. After a long pause, such as a window
+        // being dragged, the world falls behind a little instead of the program
+        // spending ever longer catching up.
+        int MaximumStepsPerUpdate = 8;
     };
 
     // A world of 2D bodies that collide, rest on each other, and are joined
@@ -35,8 +44,9 @@ namespace easyforge
     //     physics.AddBox({ .Size = { 50, 1 }, .Type = BodyType::Static });
     //     Body2D crate = physics.AddBox({ .Position = { 0, 10 }, .Size = { 1, 1 } });
     //
-    //     physics.Step(1.0f / 60.0f);
-    //     Vector2 position = crate.Position;
+    //     window.OnFrame = [&](float deltaSeconds) { physics.Update(deltaSeconds); };
+    //     Vector2 shown = crate.SmoothPosition();   // for drawing
+    //     Vector2 exact = crate.Position;           // for game rules
     //
     // The same steps with the same bodies give the same result every run. A
     // world is used from one thread at a time. Physics2D is a handle: copies
@@ -66,9 +76,18 @@ namespace easyforge
         Joint2D AddWeldJoint(const WeldJointSettings& settings) const;
         Joint2D AddMotorJoint(const MotorJointSettings& settings) const;
 
-        // Moves the world on by the given seconds. Steps of the same length
-        // every time, such as 1/60, keep it stable and repeatable; then the
-        // touches of the step are reported.
+        // Moves the world on by the seconds since the last frame, in as many
+        // steps of StepSeconds as fit, and keeps the rest for the next call.
+        // Returns how many steps ran. Draw bodies at SmoothPosition and
+        // SmoothRotation, which blend the last two steps by the time kept, so
+        // motion is even at any frame rate. The touches of each step are
+        // reported after it.
+        int Update(float seconds) const;
+
+        // Moves the world on by exactly one step of the given seconds, for
+        // programs that keep time themselves. Steps of the same length every
+        // time keep the world stable and repeatable. After Step, the smooth
+        // position of every body is its position.
         void Step(float seconds) const;
 
         // The first body a ray meets within a distance. A ray that starts inside
@@ -88,6 +107,8 @@ namespace easyforge
 
         Property<Vector2> Gravity;
         Property<int> Substeps;
+        Property<float> StepSeconds;
+        Property<int> MaximumStepsPerUpdate;
 
     private:
         explicit Physics2D(std::shared_ptr<internal::WorldState2D> state);

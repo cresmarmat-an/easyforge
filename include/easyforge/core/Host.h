@@ -152,6 +152,17 @@ namespace easyforge
         virtual void FrameEnded() = 0;
     };
 
+    // Decides when a host's next frame may start, such as a renderer waiting
+    // until the screen can take another image.
+    class FramePacer
+    {
+    public:
+        virtual ~FramePacer() = default;
+
+        // Returns when the next frame should start, or after `seconds` at most.
+        virtual void WaitForNextFrame(float seconds) = 0;
+    };
+
     // The window side of a View: what views and other libraries can ask of the
     // window they work with. easyforge's Window implements it, and so can a
     // window from another library that wants to show easyforge views.
@@ -213,5 +224,11 @@ namespace easyforge
         // A view's preferred size changed, such as a title bar made taller. The
         // host asks its views again and places them before the next frame.
         virtual void RequestPlacement() {}
+
+        // A renderer that claimed the surface can pace the host's frames: the
+        // host then waits on the pacer at the start of each frame, before it
+        // reads input, so what is shown is as fresh as it can be. nullptr
+        // removes it. A host that runs frames its own way may ignore this.
+        virtual void SetFramePacer(FramePacer* pacer) { (void)pacer; }
     };
 }

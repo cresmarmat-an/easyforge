@@ -1,6 +1,7 @@
 add_executable(easyforge-core-tests
     Main.cpp
     ColorTests.cpp
+    FrameTimerTests.cpp
     JobsTests.cpp
     KeyTests.cpp
     LanguageTests.cpp

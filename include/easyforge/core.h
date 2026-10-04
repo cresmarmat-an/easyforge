@@ -9,6 +9,7 @@
 #include <easyforge/core/Color.h>
 #include <easyforge/core/Event.h>
 #include <easyforge/core/Formatting.h>
+#include <easyforge/core/FrameTimer.h>
 #include <easyforge/core/Host.h>
 #include <easyforge/core/Jobs.h>
 #include <easyforge/core/Keys.h>

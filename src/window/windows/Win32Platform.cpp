@@ -145,6 +145,21 @@ namespace easyforge::internal
         }
     }
 
+    float MonitorRefreshRate(HMONITOR handle)
+    {
+        MONITORINFOEXW information {};
+        information.cbSize = sizeof(information);
+        DEVMODEW mode {};
+        mode.dmSize = sizeof(mode);
+        // 0 and 1 mean the hardware's default rate, which the system does not name.
+        if (GetMonitorInfoW(handle, &information) && EnumDisplaySettingsW(information.szDevice, ENUM_CURRENT_SETTINGS, &mode) &&
+            mode.dmDisplayFrequency > 1)
+        {
+            return static_cast<float>(mode.dmDisplayFrequency);
+        }
+        return 0.0f;
+    }
+
     Monitor DescribeMonitor(HMONITOR handle)
     {
         return Describe(handle, ScreenNames());

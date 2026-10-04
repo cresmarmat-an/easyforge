@@ -142,6 +142,7 @@ namespace easyforge::internal
             return;
         }
         SurfaceClaimed = false;
+        Pacer = nullptr;
         if (Platform)
         {
             Platform->SurfaceClaimed(false);
@@ -352,7 +353,18 @@ namespace easyforge::internal
             PlacementWanted = false;
             PlaceViews();
         }
-        float delta = static_cast<float>(FrameClock.Restart());
+        double measured = FrameClock.Restart();
+        // Frames shown in step with the screen get steady times. The screen is
+        // looked up about once a second, which also catches a window moved to
+        // a screen with another rate.
+        bool withScreen = VerticalSyncEnabled && Platform->IsVisible() && !Platform->IsMinimized();
+        if (withScreen != TimedWithScreen || --FramesUntilRefreshCheck <= 0)
+        {
+            TimedWithScreen = withScreen;
+            FramesUntilRefreshCheck = 60;
+            Timing.SetRefreshRate(withScreen ? Platform->RefreshRate() : 0.0f);
+        }
+        float delta = static_cast<float>(Timing.Next(measured));
 
         ++Dispatching;
         std::size_t count = Listeners.size();

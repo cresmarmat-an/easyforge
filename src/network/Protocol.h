@@ -2,11 +2,12 @@
 
 // The packet format both ends share.
 //
-// Every packet starts with "EFN1" and a kind. Data packets then carry the
+// Every packet starts with "EFN2" and a kind. Data packets then carry the
 // connection's token (the client's salt and the server's salt combined), the
-// packet's sequence number, the newest sequence received from the other end,
-// and 32 bits for the packets received before that one. After the header come
-// message entries:
+// sender's clock in milliseconds since its connection began (wrapping after 49
+// days), the packet's sequence number, the newest sequence received from the
+// other end, and 32 bits for the packets received before that one. After the
+// header come message entries:
 //
 //     flags u8: channel in bits 0 and 1, bit 2 set for a fragment
 //     identifier: u16 on the reliable channels, u32 on the unreliable one
@@ -22,7 +23,9 @@
 
 namespace easyforge::internal::networking
 {
-    inline constexpr std::uint8_t Magic[4] = { 'E', 'F', 'N', '1' };
+    // The wire format's own revision, which changes when packets change shape.
+    // It is not the library's version.
+    inline constexpr std::uint8_t Magic[4] = { 'E', 'F', 'N', '2' };
 
     enum class PacketKind : std::uint8_t
     {
@@ -72,7 +75,11 @@ namespace easyforge::internal::networking
     // The largest packet sent, which fits the smallest common path without
     // being split by the network.
     inline constexpr std::size_t PacketLimit = 1200;
-    inline constexpr std::size_t DataHeaderSize = 21;
+    inline constexpr std::size_t DataHeaderSize = 25;
+
+    // How long the lowest clock difference seen is remembered. Clocks of two
+    // computers drift apart slowly and routes change, so old lows are let go.
+    inline constexpr double ClockWindowSeconds = 4.0;
 
     // Messages larger than this go in fragments.
     inline constexpr std::size_t FragmentSize = 1000;

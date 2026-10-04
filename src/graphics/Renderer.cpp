@@ -91,7 +91,17 @@ namespace easyforge
             }
             if (TheHost && ClaimedSurface)
             {
+                TheHost->SetFramePacer(nullptr);
                 TheHost->ReleaseSurface();
+            }
+        }
+
+        void RendererState::WaitForNextFrame(float seconds)
+        {
+            if (Surface)
+            {
+                Surface->WaitUntilReady(seconds);
+                WaitedForFrame = true;
             }
         }
 
@@ -136,6 +146,7 @@ namespace easyforge
                     return Failure(surface.Error());
                 }
                 Surface = std::move(surface).Get();
+                TheHost->SetFramePacer(this);
             }
             else
             {
@@ -469,6 +480,12 @@ namespace easyforge
                 frame.Used.clear();
                 return;
             }
+
+            if (Surface && !WaitedForFrame)
+            {
+                Surface->WaitUntilReady(0.1f);
+            }
+            WaitedForFrame = false;
 
             gpu::Commands& commands = Context->BeginFrame();
             for (std::size_t index = 0; index < frame.Scenes.size(); ++index)

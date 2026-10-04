@@ -62,7 +62,11 @@ namespace easyforge::internal
         return Body2D(std::move(reference));
     }
 
-    WorldState2D::WorldState2D(const Physics2DSettings& settings) : Gravity(settings.Gravity), Substeps(std::max(settings.Substeps, 1))
+    WorldState2D::WorldState2D(const Physics2DSettings& settings)
+        : Gravity(settings.Gravity),
+          Substeps(std::clamp(settings.Substeps, 1, 64)),
+          StepSeconds(std::isfinite(settings.StepSeconds) && settings.StepSeconds > 0.0f ? settings.StepSeconds : 1.0f / 60.0f),
+          MaximumStepsPerUpdate(std::max(settings.MaximumStepsPerUpdate, 1))
     {
     }
 
@@ -111,6 +115,7 @@ namespace easyforge::internal
         body.Size = definition.Size;
         body.Length = definition.Length;
         body.Origin = { definition.Position, Rotation::FromAngle(definition.Rotation) };
+        body.PreviousOrigin = body.Origin;
         body.Density = std::max(definition.Density, 0.0f);
         body.Friction = std::max(definition.Friction, 0.0f);
         body.Restitution = std::max(definition.Restitution, 0.0f);
@@ -185,6 +190,8 @@ namespace easyforge::internal
     {
         BodyData& body = Bodies[static_cast<std::size_t>(index)];
         body.Center = Apply(body.Origin, body.LocalCenter);
+        // Placed, not moved: drawing jumps there too instead of sliding.
+        body.PreviousOrigin = body.Origin;
         if (Tree.Move(body.Proxy, ComputeExtent(body.Outline, body.Origin)))
         {
             Moved.push_back(index);
@@ -417,12 +424,47 @@ namespace easyforge::internal
         {
             return;
         }
+        for (BodyData& body : Bodies)
+        {
+            body.PreviousOrigin = body.Origin;
+        }
+        StepShare = 1.0f;
         std::vector<TouchEvent> events;
         FindNewContacts();
         UpdateContacts(events);
         Solve(seconds);
         FinishBodies();
         Report(events);
+    }
+
+    int WorldState2D::Update(float seconds)
+    {
+        if (!(seconds > 0.0f) || !std::isfinite(seconds))
+        {
+            return 0;
+        }
+        double step = StepSeconds;
+        Waiting += seconds;
+        int steps = 0;
+        while (Waiting >= step && steps < MaximumStepsPerUpdate)
+        {
+            Waiting -= step;
+            Step(StepSeconds);
+            ++steps;
+        }
+        if (Waiting >= step)
+        {
+            // Too far behind: let the whole steps go and keep only the part of
+            // a step, so the world slows down instead of falling further behind.
+            Waiting = std::fmod(Waiting, step);
+        }
+        StepShare = static_cast<float>(std::clamp(Waiting / step, 0.0, 1.0));
+        return steps;
+    }
+
+    Pose WorldState2D::SmoothOrigin(const BodyData& body) const
+    {
+        return StepShare >= 1.0f ? body.Origin : Blend(body.PreviousOrigin, body.Origin, StepShare);
     }
 
     void WorldState2D::FinishBodies()

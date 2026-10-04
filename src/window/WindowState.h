@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <easyforge/core/Clock.h>
+#include <easyforge/core/FrameTimer.h>
 
 #include "Platform.h"
 
@@ -47,6 +48,7 @@ namespace easyforge::internal
         void RemoveListener(HostListener& listener) override;
         std::shared_ptr<void>& Shared(std::string_view name) override;
         void RequestPlacement() override { PlacementWanted = true; }
+        void SetFramePacer(FramePacer* pacer) override { Pacer = pacer; }
 
         // Called by the platform window.
         void Report(Event& event);
@@ -67,6 +69,7 @@ namespace easyforge::internal
         bool Transparent = false;
         bool VerticalSyncEnabled = true;
         bool SurfaceClaimed = false;
+        FramePacer* Pacer = nullptr;
         bool MouseLocked = false;
         std::string Title;
         std::string IconPath;
@@ -103,6 +106,10 @@ namespace easyforge::internal
 
         std::map<std::string, std::shared_ptr<void>, std::less<>> SharedObjects;
         Clock FrameClock;
+        // Evens out frame times while frames are shown in step with the screen.
+        FrameTimer Timing;
+        int FramesUntilRefreshCheck = 0;
+        bool TimedWithScreen = false;
         bool InFrame = false;
         bool PlacementWanted = false;
     };

@@ -354,6 +354,10 @@ namespace easyforge::internal::direct3d12
         {
             Owner.WaitUntilIdle();
             Buffers = {};
+            if (Ready)
+            {
+                CloseHandle(Ready);
+            }
         }
 
         void Resize(int width, int height) override;
@@ -361,6 +365,7 @@ namespace easyforge::internal::direct3d12
         int Height() const override { return SurfaceHeight; }
         gpu::Texture& CurrentTexture() override { return *Buffers[SwapChain->GetCurrentBackBufferIndex()]; }
         ImageData ReadLastShown() override;
+        void WaitUntilReady(float seconds) override;
 
         void TakeBuffers();
         void Present(bool verticalSync);
@@ -375,6 +380,10 @@ namespace easyforge::internal::direct3d12
         int SurfaceHeight = 0;
         UINT Flags = 0;
         UINT LastShown = ~0u;
+
+        // Signaled when the swap chain can take another frame; with at most one
+        // frame waiting to be shown, that is right after the screen shows one.
+        HANDLE Ready = nullptr;
     };
 
     void Surface::TakeBuffers()
@@ -406,6 +415,14 @@ namespace easyforge::internal::direct3d12
         SurfaceHeight = height;
         LastShown = ~0u;
         TakeBuffers();
+    }
+
+    void Surface::WaitUntilReady(float seconds)
+    {
+        if (Ready)
+        {
+            WaitForSingleObjectEx(Ready, static_cast<DWORD>(std::clamp(seconds, 0.0f, 10.0f) * 1000.0f), TRUE);
+        }
     }
 
     void Surface::Present(bool verticalSync)
@@ -1334,7 +1351,8 @@ namespace easyforge::internal::direct3d12
         auto surface = std::make_unique<Surface>(*this);
         surface->SurfaceWidth = std::max(width, 1);
         surface->SurfaceHeight = std::max(height, 1);
-        surface->Flags = TearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+        surface->Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT |
+                         (TearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 
         DXGI_SWAP_CHAIN_DESC1 description {};
         description.Width = static_cast<UINT>(surface->SurfaceWidth);
@@ -1379,6 +1397,10 @@ namespace easyforge::internal::direct3d12
         {
             return Failure("Direct3D 12 could not make a swap chain for the window (" + Describe(result) + ")");
         }
+        // One frame at most waits to be shown, which keeps what is shown close to
+        // the input it answers.
+        surface->SwapChain->SetMaximumFrameLatency(1);
+        surface->Ready = surface->SwapChain->GetFrameLatencyWaitableObject();
         // The window library handles full screen itself.
         Factory->MakeWindowAssociation(window, DXGI_MWA_NO_ALT_ENTER);
         surface->TakeBuffers();

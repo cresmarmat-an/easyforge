@@ -13,11 +13,20 @@
 
 namespace easyforge::internal
 {
-    class RendererState
+    // Paces its window's frames when it draws into one: each frame starts when
+    // the screen can take another image.
+    class RendererState final : public FramePacer
     {
     public:
         RendererState() = default;
-        ~RendererState();
+        ~RendererState() override;
+
+        void WaitForNextFrame(float seconds) override;
+
+        // Whether the host waited on this renderer since its last frame. When
+        // it did not, as in another library's window or while the system runs
+        // its own loop for a window being dragged, the renderer waits itself.
+        bool WaitedForFrame = false;
 
         Result<> Start(std::shared_ptr<Host> host, const RendererSettings& settings);
 

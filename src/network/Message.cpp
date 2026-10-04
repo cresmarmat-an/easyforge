@@ -1,6 +1,7 @@
 #include <easyforge/network/Message.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 
 #include "Encoding.h"
@@ -229,6 +230,11 @@ namespace easyforge
             }
         }
         return bytes;
+    }
+
+    double NetworkTime()
+    {
+        return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
     }
 
     std::optional<Message> Message::Decode(std::span<const std::uint8_t> bytes)

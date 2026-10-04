@@ -72,6 +72,9 @@ namespace easyforge::internal::physics2d
 
         // The origin the shape is placed around, and the center of mass.
         Pose Origin;
+
+        // The origin at the start of the last step, for drawing between steps.
+        Pose PreviousOrigin;
         Vector2 LocalCenter;
         Vector2 Center;
 
@@ -193,6 +196,13 @@ namespace easyforge::internal
         std::weak_ptr<WorldState2D> Self;
         Vector2 Gravity;
         int Substeps = 4;
+        float StepSeconds = 1.0f / 60.0f;
+        int MaximumStepsPerUpdate = 8;
+
+        // Time Update has kept for the next step, and how far into that step it
+        // is, from 0 to 1, which smooth poses blend by.
+        double Waiting = 0.0;
+        float StepShare = 1.0f;
 
         std::vector<physics2d::BodyData> Bodies;
         std::vector<physics2d::JointData> Joints;
@@ -211,6 +221,10 @@ namespace easyforge::internal
         void Retyped(int index);
 
         void Step(float seconds);
+        int Update(float seconds);
+
+        // A body's origin to draw at, between its last two steps.
+        physics2d::Pose SmoothOrigin(const physics2d::BodyData& body) const;
 
         RayHit2D CastRay(Vector2 origin, Vector2 direction, float distance, float radius, std::uint32_t layers);
         std::vector<int> BodiesAt(Vector2 point, std::uint32_t layers);

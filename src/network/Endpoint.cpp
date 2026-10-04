@@ -180,6 +180,11 @@ namespace easyforge::internal::networking
         }
     }
 
+    double Endpoint::ToNetworkTime(double time) const
+    {
+        return std::chrono::duration<double>(Start.time_since_epoch()).count() + time;
+    }
+
     double Endpoint::Now() const
     {
         return std::chrono::duration<double>(std::chrono::steady_clock::now() - Start).count();
@@ -449,8 +454,10 @@ namespace easyforge::internal::networking
             // A damaged packet still delivers what came before the damage.
             std::vector<DeliveredMessage> delivered;
             slot.Link->Receive(now, reader, kind == PacketKind::KeepAlive, delivered);
+            double sentAt = ToNetworkTime(slot.Link->LastPacketSentAt());
             for (DeliveredMessage& message : delivered)
             {
+                message.SentAt = sentAt;
                 HandleDelivered(index, std::move(message));
             }
             if (slot.Connected && slot.Link->AckOverdue())
@@ -603,6 +610,7 @@ namespace easyforge::internal::networking
             {
                 return;
             }
+            body->Sent = delivered.SentAt;
             Events.push_back([handler = handler->second, connection = MakeConnection(index), body = std::move(*body)] {
                 (*handler)(connection, body);
             });
@@ -619,6 +627,10 @@ namespace easyforge::internal::networking
             // Every answer is sent from an event, refusals too, so replies leave in
             // the order the requests came.
             std::optional<Message> body = Message::Decode(reader.ReadBytes(reader.Remaining()));
+            if (body)
+            {
+                body->Sent = delivered.SentAt;
+            }
             auto handler = RequestHandlers.find(name);
             std::shared_ptr<RequestHandler> answering = handler == RequestHandlers.end() ? nullptr : handler->second;
             std::string refusal;
@@ -660,6 +672,7 @@ namespace easyforge::internal::networking
                 std::optional<Message> body = Message::Decode(reader.ReadBytes(reader.Remaining()));
                 if (body)
                 {
+                    body->Sent = delivered.SentAt;
                     reply.Message = std::move(*body);
                 }
                 else

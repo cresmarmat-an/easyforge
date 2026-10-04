@@ -208,6 +208,15 @@ namespace easyforge
         Vector2 WorldPoint(Vector2 local) const;
         Vector2 LocalPoint(Vector2 world) const;
 
+        // Where to draw the body: between its places at the last two steps, by
+        // how far the world's clock is into the next step (see
+        // Physics2D::Update), so it moves evenly at any frame rate. Game rules
+        // should read Position and Rotation, which are exact. Placing the body
+        // by setting Position or Rotation moves the smooth place with it at once.
+        Vector2 SmoothPosition() const;
+        float SmoothRotation() const;
+        Vector2 SmoothWorldPoint(Vector2 local) const;
+
         // A force acts over the next step, at the center of mass or at a point in
         // the world. An impulse changes the velocity at once.
         void ApplyForce(Vector2 force) const;

@@ -170,6 +170,11 @@ namespace easyforge::internal
             return DescribeMonitor(MonitorFromWindow(Handle, MONITOR_DEFAULTTONEAREST));
         }
 
+        float RefreshRate() const override
+        {
+            return MonitorRefreshRate(MonitorFromWindow(Handle, MONITOR_DEFAULTTONEAREST));
+        }
+
         void Destroy() override;
 
         HWND Handle = nullptr;

@@ -40,8 +40,9 @@ Link `easyforge::physics`. It needs only `core`.
   collision layers, rays, circle casts, and finding bodies by place.
 - [Joints](joints.md): rods and springs, hinges, sliders, welds, and motor
   joints.
-- [Stepping](stepping.md): units, steps and substeps, staying the same on every
-  run, and how the solver works.
+- [Stepping](stepping.md): moving the world on each frame with `Update`,
+  drawing bodies smoothly at any frame rate, single steps and substeps, units,
+  staying the same on every run, and how the solver works.
 
 [Example 08](https://github.com/cresmarmat-an/easyforge-examples/tree/main/08-physics)
 stacks boxes and drops more where you click, in two worlds that stay the same

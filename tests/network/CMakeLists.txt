@@ -4,6 +4,7 @@ add_executable(easyforge-network-tests
     DeliveryTests.cpp
     MessageTests.cpp
     RequestTests.cpp
+    SmoothingTests.cpp
     ThreadTests.cpp)
 
 target_link_libraries(easyforge-network-tests PRIVATE easyforge::network)

@@ -26,6 +26,11 @@ namespace easyforge::internal::networking
         std::uint32_t Sequence = 0;
 
         std::vector<std::uint8_t> Bytes;
+
+        // When the other end sent the packet that completed it, as NetworkTime:
+        // when it would have arrived with no more delay along the way than the
+        // least seen.
+        double SentAt = 0.0;
     };
 
     class Peer
@@ -55,6 +60,13 @@ namespace easyforge::internal::networking
         // Counts the connection as heard from now, as when it is accepted.
         void Heard(double now) { LastHeard = now; }
         float RoundTrip() const { return static_cast<float>(SmoothedRoundTrip); }
+
+        // When the other end sent the last packet read, on this end's clock.
+        double LastPacketSentAt() const { return PacketSentAt; }
+
+        // The other end's time on this end's clock, for a packet stamped with
+        // `stamp` and received `now`.
+        double StampedTime(double now, std::uint32_t stamp);
 
         // Messages queued or sent and not yet acknowledged.
         std::size_t Unacknowledged() const;
@@ -114,7 +126,7 @@ namespace easyforge::internal::networking
         void NoteReceived(std::uint16_t sequence);
         void ReceiveOrdered(Piece piece, std::vector<DeliveredMessage>& delivered);
         void ReceiveUnordered(Piece piece, std::vector<DeliveredMessage>& delivered);
-        void WriteHeader(std::vector<std::uint8_t>& packet, std::uint64_t token, std::uint16_t sequence) const;
+        void WriteHeader(std::vector<std::uint8_t>& packet, std::uint64_t token, std::uint16_t sequence, double now) const;
 
         // Sending.
         std::array<SendChannel, 2> Sending;
@@ -146,5 +158,22 @@ namespace easyforge::internal::networking
 
         double SmoothedRoundTrip = 0.1;
         bool MeasuredRoundTrip = false;
+
+        // This end's clock when the connection began, which stamps count from.
+        double Began = 0.0;
+
+        // The other end's clock: its newest stamp, and that stamp in seconds
+        // without wrapping.
+        bool StampSeen = false;
+        std::uint32_t NewestStamp = 0;
+        double NewestStampSeconds = 0.0;
+
+        // The lowest difference between the two clocks in the current and the
+        // previous window of ClockWindowSeconds. The packet that took the least
+        // time along the way sets it, so later packets show how late they are.
+        double LowestDifference[2] = { 0.0, 0.0 };
+        bool DifferenceSeen[2] = { false, false };
+        double WindowStarted = 0.0;
+        double PacketSentAt = 0.0;
     };
 }
