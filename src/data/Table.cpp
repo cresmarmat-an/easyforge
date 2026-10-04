@@ -107,6 +107,19 @@ namespace easyforge
         return Cell(Owner, Slot, Generation, std::string(property));
     }
 
+    DataValue Node::Get(std::string_view property) const
+    {
+        return Valid() ? Owner->Read(Slot, property) : DataValue();
+    }
+
+    void Node::Set(std::string_view property, const DataValue& value) const
+    {
+        if (Valid())
+        {
+            Owner->SetProperty(Slot, std::string(property), value.IsNothing() ? std::nullopt : std::optional(value));
+        }
+    }
+
     Node Node::Add(std::string_view name, std::string_view type) const
     {
         if (!Valid())

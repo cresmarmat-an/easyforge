@@ -90,6 +90,11 @@ namespace easyforge
 
         Cell operator[](std::string_view property) const;
 
+        // Reads and sets a property directly, as a cell does, for code that reads
+        // many properties in a row. Setting nothing clears the node's own value.
+        DataValue Get(std::string_view property) const;
+        void Set(std::string_view property, const DataValue& value) const;
+
         // Adds a child at the end of this node's children, optionally with a type
         // and starting values.
         Node Add(std::string_view name, std::string_view type = {}) const;

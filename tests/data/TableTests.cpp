@@ -115,6 +115,21 @@ EASYFORGE_TEST(CellsWorkLikeVariables)
     EASYFORGE_EXPECT(!player["Score"].Exists());
 }
 
+EASYFORGE_TEST(NodesReadAndSetDirectly)
+{
+    Table game = Table::New();
+    game.DefineType("Enemy", { { "Health", 100 } });
+    Node goblin = game.Add("Goblin", "Enemy");
+    EASYFORGE_EXPECT_EQUAL(goblin.Get("Health"), DataValue(100));
+    goblin.Set("Health", 40);
+    EASYFORGE_EXPECT_EQUAL(goblin.Get("Health"), DataValue(40));
+    EASYFORGE_EXPECT_EQUAL(goblin["Health"].As<int>(), 40);
+    goblin.Set("Health", DataValue());
+    EASYFORGE_EXPECT_EQUAL(goblin.Get("Health"), DataValue(100));
+    EASYFORGE_EXPECT(goblin.Get("Speed").IsNothing());
+    EASYFORGE_EXPECT(Node().Get("Health").IsNothing());
+}
+
 EASYFORGE_TEST(TypesGiveValuesToTheirNodes)
 {
     Table game = Table::New();

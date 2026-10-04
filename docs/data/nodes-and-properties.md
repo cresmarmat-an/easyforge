@@ -64,6 +64,7 @@ to separate levels, but `Child` still finds it.
 | `node["Best"] = node["Score"]` | Copies one value into another property |
 | `node["Health"].Clear()` | Removes the node's own value |
 | `node["Health"].Exists()`, `node.Has("Health")` | True when the node or its type has the property |
+| `node.Get("Health")`, `node.Set("Health", 100)` | Reads or sets a `DataValue` directly, without making a cell |
 
 Write the type you read into. `auto health = node["Health"];` keeps the cell
 itself, which reads the current value each time it is used.

@@ -126,9 +126,9 @@ namespace easyforge::internal
         void DefineType(const std::string& name, std::vector<std::pair<std::string, DataValue>> values);
 
         // The node's own value, or its type's, or nothing.
-        std::optional<DataValue> OwnValue(std::uint32_t slot, const std::string& property) const;
-        std::optional<DataValue> TypeValue(std::uint32_t slot, const std::string& property) const;
-        DataValue Read(std::uint32_t slot, const std::string& property) const;
+        std::optional<DataValue> OwnValue(std::uint32_t slot, std::string_view property) const;
+        std::optional<DataValue> TypeValue(std::uint32_t slot, std::string_view property) const;
+        DataValue Read(std::uint32_t slot, std::string_view property) const;
 
         std::uint32_t FindChild(std::uint32_t parent, std::string_view name) const;
         std::vector<std::uint32_t> ChildrenOf(std::uint32_t parent) const;

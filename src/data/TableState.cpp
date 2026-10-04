@@ -229,7 +229,7 @@ namespace easyforge::internal
         }
     }
 
-    std::optional<DataValue> TableState::OwnValue(std::uint32_t slot, const std::string& property) const
+    std::optional<DataValue> TableState::OwnValue(std::uint32_t slot, std::string_view property) const
     {
         auto column = Columns.find(property);
         if (column == Columns.end() || slot >= column->second.Present.size() || !column->second.Present[slot])
@@ -239,7 +239,7 @@ namespace easyforge::internal
         return column->second.Values[slot];
     }
 
-    std::optional<DataValue> TableState::TypeValue(std::uint32_t slot, const std::string& property) const
+    std::optional<DataValue> TableState::TypeValue(std::uint32_t slot, std::string_view property) const
     {
         const std::string& type = Rows[slot].Type;
         if (type.empty())
@@ -261,7 +261,7 @@ namespace easyforge::internal
         return std::nullopt;
     }
 
-    DataValue TableState::Read(std::uint32_t slot, const std::string& property) const
+    DataValue TableState::Read(std::uint32_t slot, std::string_view property) const
     {
         if (std::optional<DataValue> own = OwnValue(slot, property))
         {
