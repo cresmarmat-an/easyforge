@@ -21,7 +21,7 @@ ones you use.
 | data | `easyforge::data` | `<easyforge/data.h>` | Available |
 | ui | `easyforge::ui` | `<easyforge/ui.h>` | Available on Windows |
 | script | `easyforge::script` | `<easyforge/script.h>` | Available |
-| sound | `easyforge::sound` | `<easyforge/sound.h>` | Planned |
+| sound | `easyforge::sound` | `<easyforge/sound.h>` | Available on Windows |
 | physics | `easyforge::physics` | `<easyforge/physics.h>` | Planned |
 | network | `easyforge::network` | `<easyforge/network.h>` | Planned |
 

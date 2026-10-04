@@ -156,9 +156,22 @@
       ]
     },
     {
+      "folder": "sound",
+      "title": "sound",
+      "pages": [
+        {
+          "page": "overview",
+          "title": "Overview"
+        },
+        "playing-sounds",
+        "buses-and-effects",
+        "positional-sound",
+        "devices-and-offline-mixing"
+      ]
+    },
+    {
       "title": "Planned libraries",
       "pages": [
-        "sound/overview",
         "physics/overview",
         "network/overview"
       ]

@@ -92,6 +92,12 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
 - Bridge headers that let scripts drive a `ui` interface
   (`<easyforge/bridges/ui_script.h>`) and change a `data` table
   (`<easyforge/bridges/data_script.h>`).
+- The `sound` library: a mixer on its own thread that programs control from any
+  thread without it ever waiting; sounds from memory or streamed from WAV and
+  QOA files, with volume, pan, pitch, looping, fades, pausing, and starting part
+  way; buses with volume, mute, low-pass and high-pass filters, and echo; sounds
+  placed around a listener; output through WASAPI that follows the default
+  device; and offline mixing into memory.
 - `OnPress`, `OnMove`, and `OnRelease` on `ui::DrawingArea`, in the points
   `OnDraw` uses.
 

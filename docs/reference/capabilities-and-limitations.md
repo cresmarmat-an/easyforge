@@ -15,7 +15,8 @@ go into more detail.
 | data | Available and tested on Windows |
 | ui | Available and tested on Windows |
 | script | Available and tested on Windows |
-| sound, physics, network | Planned, in that order |
+| sound | Available and tested on Windows, with WASAPI |
+| physics, network | Planned, in that order |
 
 ## core
 
@@ -247,11 +248,34 @@ It cannot yet:
   built.
 - Step through a script in a debugger.
 
+## sound
+
+It can:
+
+- Mix up to 512 sounds at once on a thread of its own that never waits on the
+  program, controlled from any thread.
+- Play sounds from memory or streamed from WAV and QOA files, at any volume,
+  pan, and pitch, looping, fading, paused, or started part way.
+- Group sounds into buses with their own volume, mute, low-pass and high-pass
+  filters, and echo.
+- Place sounds in the world around a listener, panned by direction and quieter
+  with distance.
+- Play to the default output device through WASAPI, following it when it
+  changes, and carry on without one.
+- Mix offline into memory, the same every time, for tests and files.
+
+It cannot yet:
+
+- Play to a device anywhere but Windows, choose a device other than the
+  default, or record.
+- Play to more than two speakers, or tell sounds ahead from sounds behind.
+- Add reverb, Doppler shift, or loop points inside a sound.
+
 ## Platforms
 
 | Platform | Status |
 |---|---|
-| Windows | `core`, `assets`, `window`, `input`, `graphics`, `data`, `ui`, and `script` built and tested with Visual Studio 2026 |
+| Windows | `core`, `assets`, `window`, `input`, `graphics`, `data`, `ui`, `script`, and `sound` built and tested with Visual Studio 2026 |
 | Linux | Planned for stage 2 |
 | Web | Planned for stage 3 |
 | macOS and iOS | Planned for stage 4 |
