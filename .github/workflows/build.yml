@@ -13,7 +13,7 @@ jobs:
       matrix:
         configuration: [Debug, Release]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Configure
         run: cmake -S . -B build
       - name: Build
@@ -31,7 +31,7 @@ jobs:
       matrix:
         library: [core, assets, window, input, graphics, data, ui, script, sound, physics, network]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Configure
         run: cmake -S . -B build -D EASYFORGE_ONLY=${{ matrix.library }}
       - name: Build

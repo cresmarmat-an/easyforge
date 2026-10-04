@@ -679,6 +679,51 @@ def description_of(body_html):
     return text if len(text) <= 160 else text[:157].rsplit(" ", 1)[0] + "..."
 
 
+def version_text():
+    """The version in CMakeLists.txt, with its label when it has one: "0.0.1"."""
+    text = (REPOSITORY / "CMakeLists.txt").read_text(encoding="utf-8")
+    number = re.search(r"project\(easyforge\s+VERSION\s+([\d.]+)", text)
+    label = re.search(r'set\(EASYFORGE_VERSION_LABEL\s+"([^"]*)"\)', text)
+    if not number:
+        return ""
+    return number.group(1) + (f"-{label.group(1)}" if label and label.group(1) else "")
+
+
+def render_hero(body, root):
+    """The home page's opening: its title and first paragraph, beside the logo.
+    Gives the hero and the body without them."""
+    match = re.match(r"\s*<h1\b[^>]*>(.*?)</h1>\s*<p>(.*?)</p>", body, re.S)
+    if not match:
+        return "", body
+    title = re.sub(r'<a class="anchor".*?</a>', "", match.group(1), flags=re.S)
+    version = version_text()
+    facts = [f"Version {version}"] if version else []
+    facts += ["C++20", "No third-party code", "MIT"]
+    separator = '<span class="eyebrow-separator" aria-hidden="true"></span>'
+    eyebrow = separator.join(f"<span>{html.escape(fact)}</span>" for fact in facts)
+    hero = f"""<section class="hero" aria-labelledby="hero-title">
+    <div class="hero-text">
+        <p class="eyebrow">{eyebrow}</p>
+        <h1 id="hero-title"><span class="accent">{title}</span></h1>
+        <p class="hero-lead">{match.group(2)}</p>
+        <div class="cta-row">
+            <a class="btn btn-primary" href="{root}getting-started/introduction.html">Get started
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            <a class="btn btn-soft" href="{EXAMPLES_URL}">See the examples</a>
+        </div>
+    </div>
+    <div class="hero-logo">
+        <div class="logo-float">
+            <picture>
+                <source srcset="{root}logo.webp" type="image/webp">
+                <img src="{root}logo.png" alt="The easyforge logo: an anvil with braces on its face" width="600" height="310">
+            </picture>
+        </div>
+    </div>
+</section>"""
+    return hero, body[match.end():]
+
+
 def fill(template, values):
     return re.sub(r"\{\{(\w+)\}\}", lambda match: values.get(match.group(1), ""), template)
 
@@ -698,6 +743,9 @@ def build(output, strict):
         renderer = MarkdownRenderer(site, page)
         body = renderer.render(page.text)
         root = relative_root(path)
+        hero = ""
+        if path == "index.md":
+            hero, body = render_hero(body, root)
         title = "easyforge" if path == "index.md" else f"{page.title} · easyforge"
         document = fill(template, {
             "title": html.escape(title),
@@ -710,6 +758,8 @@ def build(output, strict):
             "edit": html.escape(page.edit_url),
             "repository": REPOSITORY_URL,
             "examples": EXAMPLES_URL,
+            "hero": hero,
+            "kind": "home" if path == "index.md" else "page",
         })
         destination = output / page.output
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -727,9 +777,10 @@ def build(output, strict):
         "repository": REPOSITORY_URL,
         "examples": EXAMPLES_URL,
         "edit": REPOSITORY_URL,
+        "kind": "page",
     }), encoding="utf-8")
 
-    for asset in ("style.css", "script.js"):
+    for asset in ("style.css", "script.js", "particles.js", "icon-32.png", "icon-180.png", "icon-192.png", "logo.png", "logo.webp"):
         shutil.copy2(SITE_DIRECTORY / asset, output / asset)
     for file in site.docs.rglob("*"):
         if file.is_file() and file.suffix != ".md" and file.name != "nav.json":
