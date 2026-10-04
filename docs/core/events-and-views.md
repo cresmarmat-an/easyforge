@@ -95,6 +95,7 @@ another library can implement `Host` to show easyforge views.
 | `ClipboardText()`, `SetClipboardText(text)` | The clipboard |
 | `AddListener(listener)`, `RemoveListener(listener)` | See below |
 | `Shared(name)` | One object per host that libraries share, found by name |
+| `RequestPlacement()` | A view wants another size: the host asks its views again and places them before the next frame |
 
 `Shared` is how two parts of a program find the same object for one window
 without a global. `graphics` keeps a window's renderer there, so the `ui` in the

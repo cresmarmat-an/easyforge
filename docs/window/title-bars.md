@@ -34,7 +34,8 @@ Assigning a view to `window.TitleBar`:
 - asks the view how tall it is, with `PreferredSize`, and places it across the
   top. The `Content` view is placed below it.
 - asks the view what each point of it is, with `HitTest`, whenever the mouse is
-  over it.
+  over it. Points below the title bar are the content's, and the view is not
+  asked about them.
 
 Assigning `nullptr` brings the system's title bar back.
 
@@ -68,7 +69,9 @@ unless the window is maximized or not resizable.
 
 ## Writing a title bar view
 
-A title bar view is a [`View`](../core/events-and-views.md#views) that reports
+[`ui::TitleBar`](../ui/title-bars.md) is a title bar view with everything below
+done for you. To write your own, a title bar view is a
+[`View`](../core/events-and-views.md#views) that reports
 its height and its areas. This one leaves drawing aside and has a caption and
 three buttons at the right, each 46 points wide:
 

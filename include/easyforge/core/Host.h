@@ -128,7 +128,8 @@ namespace easyforge
         virtual Vector2 PreferredSize(Vector2 available) const { return available; }
 
         // For a title bar: what the point, in points from the top left of the
-        // window, is part of.
+        // window, is part of. The window asks only about points inside the title
+        // bar.
         virtual HitArea HitTest(Vector2 point) const
         {
             (void)point;
@@ -208,5 +209,9 @@ namespace easyforge
         // One object per host that libraries share, found by a name such as
         // "easyforge.graphics.renderer". Starts empty.
         virtual std::shared_ptr<void>& Shared(std::string_view name) = 0;
+
+        // A view's preferred size changed, such as a title bar made taller. The
+        // host asks its views again and places them before the next frame.
+        virtual void RequestPlacement() {}
     };
 }

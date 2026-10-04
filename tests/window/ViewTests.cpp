@@ -46,14 +46,11 @@ namespace
 
         Vector2 PreferredSize(Vector2 available) const override { return { available.X, PreferredHeight }; }
 
-        // A title bar 40 points tall: a close button at the right end, a
-        // maximize button left of it, and everything else dragging the window.
+        // A close button at the right end, a maximize button left of it, and
+        // everything else dragging the window. Points below the title bar are
+        // the window's to sort out.
         HitArea HitTest(Vector2 point) const override
         {
-            if (point.Y >= 40)
-            {
-                return HitArea::Content;
-            }
             if (point.X >= Area.Width - 40)
             {
                 return HitArea::CloseButton;

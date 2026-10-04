@@ -243,6 +243,7 @@ namespace easyforge::internal
                 titleBarHeight = Clamp(TitleBarView->PreferredSize(size).Y, 0.0f, size.Y);
             }
             TitleBarView->Place({ 0.0f, 0.0f, size.X, titleBarHeight });
+            TitleBarHeight = titleBarHeight;
         }
         if (ContentView)
         {
@@ -315,11 +316,27 @@ namespace easyforge::internal
 
     HitArea WindowState::TitleBarHitTest(Vector2 point) const
     {
-        if (!TitleBarShown())
+        // Below the title bar is the content, whatever the title bar's view says.
+        if (!TitleBarShown() || point.Y >= TitleBarHeight)
         {
             return HitArea::Content;
         }
         return TitleBarView->HitTest(point);
+    }
+
+    WindowState::~WindowState()
+    {
+        // A window still open when the program ends is destroyed without Close.
+        // Its views go first, while the rest of the window is there for them.
+        if (std::shared_ptr<View> view = std::move(TitleBarView))
+        {
+            view->Detach();
+        }
+        if (std::shared_ptr<View> view = std::move(ContentView))
+        {
+            view->Detach();
+        }
+        SharedObjects.clear();
     }
 
     void WindowState::RunFrame()
@@ -330,6 +347,11 @@ namespace easyforge::internal
         }
         std::shared_ptr<WindowState> keepAlive = shared_from_this();
         InFrame = true;
+        if (PlacementWanted)
+        {
+            PlacementWanted = false;
+            PlaceViews();
+        }
         float delta = static_cast<float>(FrameClock.Restart());
 
         ++Dispatching;

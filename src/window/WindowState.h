@@ -18,6 +18,8 @@ namespace easyforge::internal
     class WindowState final : public Host, public std::enable_shared_from_this<WindowState>
     {
     public:
+        ~WindowState() override;
+
         // Opens the platform window and adds it to the open windows.
         Result<> Open(const WindowSettings& settings);
 
@@ -44,6 +46,7 @@ namespace easyforge::internal
         void AddListener(HostListener& listener) override;
         void RemoveListener(HostListener& listener) override;
         std::shared_ptr<void>& Shared(std::string_view name) override;
+        void RequestPlacement() override { PlacementWanted = true; }
 
         // Called by the platform window.
         void Report(Event& event);
@@ -79,6 +82,9 @@ namespace easyforge::internal
         std::shared_ptr<View> ContentView;
         std::shared_ptr<View> TitleBarView;
 
+        // How tall the title bar was placed, in points.
+        float TitleBarHeight = 0.0f;
+
         std::function<void(float)> FrameCallback;
         std::function<void(const Event&)> EventCallback;
         std::function<bool()> CloseCallback;
@@ -98,6 +104,7 @@ namespace easyforge::internal
         std::map<std::string, std::shared_ptr<void>, std::less<>> SharedObjects;
         Clock FrameClock;
         bool InFrame = false;
+        bool PlacementWanted = false;
     };
 
     // Every open window, in the order they were opened.
