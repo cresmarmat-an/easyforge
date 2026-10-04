@@ -102,6 +102,12 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   `OnDraw` uses.
 - `Rotation` on `RectangleStyle` and `ImageStyle`, which turns a rectangle or an
   image about its center.
+- The `physics` library: 2D bodies with circles, boxes, capsules, and convex
+  polygons; a sub-stepped soft solver that keeps stacks still; distance, hinge,
+  slider, weld, and motor joints; touch events, sensors, and collision layers;
+  ray and circle casts and finding bodies by place; and the same result on every
+  run.
+
 ### Fixed
 
 - A window asked its title bar view about points below the title bar, so a

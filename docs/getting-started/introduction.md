@@ -22,7 +22,7 @@ ones you use.
 | ui | `easyforge::ui` | `<easyforge/ui.h>` | Available on Windows |
 | script | `easyforge::script` | `<easyforge/script.h>` | Available |
 | sound | `easyforge::sound` | `<easyforge/sound.h>` | Available on Windows |
-| physics | `easyforge::physics` | `<easyforge/physics.h>` | Planned |
+| physics | `easyforge::physics` | `<easyforge/physics.h>` | Available |
 | network | `easyforge::network` | `<easyforge/network.h>` | Planned |
 
 `easyforge::easyforge` links every library that was built, for when you want

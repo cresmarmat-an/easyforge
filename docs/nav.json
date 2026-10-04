@@ -170,9 +170,22 @@
       ]
     },
     {
+      "folder": "physics",
+      "title": "physics",
+      "pages": [
+        {
+          "page": "overview",
+          "title": "Overview"
+        },
+        "bodies-and-shapes",
+        "collisions-and-queries",
+        "joints",
+        "stepping"
+      ]
+    },
+    {
       "title": "Planned libraries",
       "pages": [
-        "physics/overview",
         "network/overview"
       ]
     },

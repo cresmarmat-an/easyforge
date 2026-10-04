@@ -1,0 +1,9 @@
+easyforge_add_library(physics
+    SOURCES
+        2d/Collide.cpp
+        2d/Geometry.cpp
+        2d/Joints.cpp
+        2d/Physics2D.cpp
+        2d/Solver.cpp
+        2d/Tree.cpp
+        2d/World.cpp)

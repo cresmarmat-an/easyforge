@@ -30,7 +30,7 @@ one arrives with its tests, its documentation, and an example.
 | `ui` | Interfaces: layout, elements, themes, effects, and displays | Available |
 | `script` | The easyforge scripting language, embeddable in any program | Available |
 | `sound` | Mixing, streaming, effects, and positional sound | Available |
-| `physics` | Bodies, collisions, and joints in 2D, later 3D | Planned |
+| `physics` | Bodies, collisions, and joints in 2D, later 3D | Available |
 | `network` | One-way messages and two-way requests between programs | Planned |
 
 ## A first program

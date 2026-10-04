@@ -16,7 +16,8 @@ go into more detail.
 | ui | Available and tested on Windows |
 | script | Available and tested on Windows |
 | sound | Available and tested on Windows, with WASAPI |
-| physics, network | Planned, in that order |
+| physics | Available and tested on Windows, in 2D |
+| network | Planned |
 
 ## core
 
@@ -271,11 +272,32 @@ It cannot yet:
 - Play to more than two speakers, or tell sounds ahead from sounds behind.
 - Add reverb, Doppler shift, or loop points inside a sound.
 
+## physics
+
+It can:
+
+- Simulate 2D bodies with circles, boxes, capsules, and convex polygons with
+  rounded corners: static, kinematic, and dynamic.
+- Keep stacks and pyramids still with a sub-stepped soft solver, with friction
+  and bouncing.
+- Join bodies with rods and springs, hinges and sliders with limits and motors,
+  welds, and motor joints.
+- Report touches with where, which way, and how hard, run sensors, and filter
+  collisions by layers.
+- Cast rays and circles, and find the bodies at a point or in an area.
+- Give the same result on every run from the same steps.
+
+It cannot yet:
+
+- Simulate 3D; that is stage 6.
+- Stop fast small bodies passing through thin walls, or let bodies sleep.
+- Give a body more than one shape, or cast shapes other than circles.
+
 ## Platforms
 
 | Platform | Status |
 |---|---|
-| Windows | `core`, `assets`, `window`, `input`, `graphics`, `data`, `ui`, `script`, and `sound` built and tested with Visual Studio 2026 |
+| Windows | `core`, `assets`, `window`, `input`, `graphics`, `data`, `ui`, `script`, `sound`, and `physics` built and tested with Visual Studio 2026 |
 | Linux | Planned for stage 2 |
 | Web | Planned for stage 3 |
 | macOS and iOS | Planned for stage 4 |
