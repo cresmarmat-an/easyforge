@@ -1,9 +1,11 @@
 # easyforge
 
-C++ libraries for windows, input, graphics, interfaces, sound, physics,
-networking, data, and scripting, written from scratch for Windows, Linux,
-macOS, iOS, Android, and the web. Each library works on its own or together with
-the others, and none of them contains third-party code.
+C++20 libraries for apps and games, written from scratch.
+
+easyforge covers windows, input, graphics, interfaces, sound, physics,
+networking, data, and scripting, for Windows, Linux, macOS, iOS, Android, and
+the web. Each library works on its own or together with the others, and none of
+them contains third-party code.
 
 > [!NOTE] Windows first
 > easyforge 0.0.1 has every library, tested on Windows. Linux, the web, macOS

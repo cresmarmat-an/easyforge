@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto" data-root="{{root}}" data-search="{{search_url}}">
+<head>
+{{> head}}
+  <script type="application/ld+json">{{structured_data}}</script>
+</head>
+<body id="top">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div id="progress" aria-hidden="true"></div>
+  <canvas id="background" aria-hidden="true"></canvas>
+
+{{> header}}
+
+  <main id="main">
+    <section class="hero container" aria-labelledby="home-title">
+      <div class="hero-text">
+        <a class="version-chip reveal" href="{{changelog_page}}"><span class="dot" aria-hidden="true"></span>Version {{version}}</a>
+        <h1 class="reveal" id="home-title"><span class="accent">{{name}}</span></h1>
+        <p class="tagline reveal">{{tagline}}</p>
+        <div class="lead reveal">
+{{lead}}
+        </div>
+        <div class="action-row reveal">
+          <a class="button button-primary" href="{{docs_home}}">
+            Get started
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+          <a class="button button-soft" href="{{repository}}">
+            {{github_icon}}
+            View on GitHub
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-visual reveal" aria-hidden="true">
+        <div class="hero-logo">
+          <picture>
+            <source srcset="{{assets}}img/logo.webp" type="image/webp" />
+            <img src="{{assets}}img/logo.png" alt="" width="{{logo_width}}" height="{{logo_height}}" fetchpriority="high" />
+          </picture>
+        </div>
+      </div>
+    </section>
+
+{{sections}}
+
+    <section class="section container" id="documentation" aria-labelledby="documentation-title">
+      <div class="section-head">
+        <div class="section-copy reveal">
+          <p class="section-tag">Documentation</p>
+          <h2 id="documentation-title">Find what you need</h2>
+          <p class="section-sub">Every page, grouped by topic. Press <kbd>/</kbd> to search them all.</p>
+        </div>
+      </div>
+      <div class="category-grid">
+{{categories}}
+      </div>
+    </section>
+
+    <section class="section container" id="more" aria-label="Latest release and examples">
+      <div class="pair">
+        <article class="pair-card reveal">
+          <div class="pair-head">
+            <img class="pair-logo" src="{{assets}}img/icon-96.png" alt="" width="52" height="52" />
+            <h3>{{release_title}}</h3>
+          </div>
+{{release_text}}
+          <a class="button button-soft button-small" href="{{changelog_page}}">
+            Read the changelog
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+        </article>
+        <article class="examples-card reveal">
+          <h3>Examples</h3>
+          <p>Small programs that use the libraries, each in its own folder and built the same way your own project would build them.</p>
+          <ul>
+{{example_links}}
+          </ul>
+        </article>
+      </div>
+    </section>
+  </main>
+
+{{> footer}}
+{{> search}}
+
+  <script src="{{assets}}js/particles.js?v={{asset_version}}" defer></script>
+  <script src="{{assets}}js/docs.js?v={{asset_version}}" defer></script>
+</body>
+</html>

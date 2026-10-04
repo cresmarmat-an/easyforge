@@ -96,7 +96,7 @@ target_link_libraries(my_program PRIVATE easyforge::window)
 
 Only the libraries you link are compiled. easyforge needs CMake 3.22 or later
 and a C++20 compiler; on Windows that is Visual Studio 2022 or later.
-[Installation](https://cresmarmat-an.github.io/easyforge/installation/fetching-with-cmake.html)
+[Installation](https://cresmarmat-an.github.io/easyforge/installation/fetching-with-cmake/)
 also covers installing it once and using `find_package`, and every build option.
 
 ## Building and testing
@@ -112,8 +112,8 @@ ctest --test-dir build -C Debug --output-on-failure
 The documentation is at
 **[cresmarmat-an.github.io/easyforge](https://cresmarmat-an.github.io/easyforge/)**.
 Its pages are the Markdown files in [`docs/`](docs), and the site is rebuilt
-every time they change. The
-[roadmap](https://cresmarmat-an.github.io/easyforge/reference/roadmap.html) says
+from the repository on every push to `main`. The
+[roadmap](https://cresmarmat-an.github.io/easyforge/reference/roadmap/) says
 what the later stages add.
 
 ## License
