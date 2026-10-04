@@ -139,14 +139,16 @@ Other things a window can tell you or do:
 `window.Run()` handles what the system sends and runs frames until that window
 closes. Each frame it:
 
-1. Delivers the events that arrived since the last frame, to the views, the
+1. When a renderer from `graphics` draws into the window, waits until the
+   screen can take another image, so input is read as late as possible.
+2. Delivers the events that arrived since the last frame, to the views, the
    [listeners](../core/events-and-views.md#listeners), and `OnEvent`, in that
    order.
-2. Calls `OnFrame` with the seconds since the last frame.
-3. Calls `Frame` on the title bar view, then the content view, which is where
+3. Calls `OnFrame` with the seconds since the last frame, evened out as below.
+4. Calls `Frame` on the title bar view, then the content view, which is where
    `ui` and `graphics` draw.
-4. Waits for the screen's next refresh, unless `VerticalSync` is off or a
-   renderer from `graphics` is already waiting for it.
+5. Without a renderer, waits for the screen's next refresh, unless
+   `VerticalSync` is off.
 
 While the person drags an edge or moves the window, Windows holds the program
 in a loop of its own. `window` keeps running frames during that time, so the
@@ -154,6 +156,23 @@ content keeps drawing at the new size instead of freezing.
 
 A minimized or hidden window still runs frames, about 60 a second, so timers
 and network code keep going.
+
+### Frame times
+
+The screen shows frames at even intervals, but the time measured between them
+wobbles by a millisecond or two, and now and then one frame starts late and the
+next one early. While `VerticalSync` is on and the window shows, the seconds
+given to `OnFrame`, to views, and to listeners are whole refreshes of the
+screen instead: 1/60 of a second on a 60 hertz screen, every frame, and two
+refreshes for a frame that really took two. What is rounded off is carried into
+later frames, so no time is lost or added over a minute or an hour, and the
+true rate of the screen is followed, so a screen that runs at 59.94 hertz stays
+exact. A long pause, such as a breakpoint, comes through as measured. With
+`VerticalSync` off, frames get the time as measured.
+
+Animations, physics, and anything else moved by `deltaSeconds` move evenly as a
+result. [FrameTimer](../core/measuring-time.md#steady-frame-times) in `core`
+does the evening out, for programs that run frames themselves.
 
 Programs that already have a loop of their own call
 `Window::RunOneFrame()` instead of `Run`. It does one round of the steps above

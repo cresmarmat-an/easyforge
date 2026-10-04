@@ -7,9 +7,13 @@ namespace easyforge
 {
     namespace
     {
-        // A frame further than this share of a refresh from a whole number of
-        // refreshes is taken as measured.
+        // How close to the next whole refresh a frame must be to count as
+        // reaching it, as a share of a refresh.
         constexpr double SnapWindow = 0.25;
+
+        // The most time carried from one frame to the next, in refreshes. More
+        // than that, and the frames are out of step with the screen.
+        constexpr double MostCarried = 1.0;
 
         // The most refreshes a single frame is snapped to; longer frames are
         // stalls and are taken as measured.
@@ -44,6 +48,7 @@ namespace easyforge
             StatedInterval = stated;
             Interval = stated;
             Carried = 0.0;
+            ShortFrames = 0;
         }
     }
 
@@ -58,21 +63,42 @@ namespace easyforge
             return measuredSeconds;
         }
 
-        double total = measuredSeconds + Carried;
-        double refreshes = std::round(total / Interval);
-        if (refreshes >= 1.0 && refreshes <= MostRefreshes)
+        // Frames that keep coming faster than the screen refreshes are not
+        // being shown in step with it, whatever was said.
+        ShortFrames = measuredSeconds < Interval * (1.0 - SnapWindow) ? ShortFrames + 1 : 0;
+        if (ShortFrames >= 3)
         {
-            double snapped = refreshes * Interval;
-            double leftover = total - snapped;
+            double total = std::max(measuredSeconds + Carried, 0.0);
+            Carried = 0.0;
+            return total;
+        }
+
+        // An extra frame within one refresh, such as one the system asks for
+        // while a window is resized, is reported as measured.
+        double total = measuredSeconds + Carried;
+        if (total < Interval * SnapWindow)
+        {
+            Carried = std::min(total, 0.0);
+            return std::max(total, 0.0);
+        }
+
+        // A frame counts as the whole refreshes it covers, rounding up only
+        // when close to the next one. A frame that started late and the early
+        // one after it are then one refresh each, as the screen showed them,
+        // with the difference carried between them.
+        double refreshes = std::max(1.0, std::floor(total / Interval + SnapWindow));
+        double leftover = total - refreshes * Interval;
+        if (refreshes <= MostRefreshes && std::abs(leftover) <= Interval * MostCarried)
+        {
+            // Small leftovers that keep leaning one way mean the interval is off.
             if (std::abs(leftover) <= Interval * SnapWindow)
             {
-                // Leftovers that keep leaning one way mean the interval is off.
                 Interval += leftover / refreshes * FollowShare;
                 Interval = std::clamp(Interval, StatedInterval * (1.0 - MostDrift), StatedInterval * (1.0 + MostDrift));
-                double released = leftover * ReleaseShare;
-                Carried = leftover - released;
-                return snapped + released;
             }
+            double released = leftover * ReleaseShare;
+            Carried = leftover - released;
+            return refreshes * Interval + released;
         }
 
         // Out of step with the screen: report everything measured, with what

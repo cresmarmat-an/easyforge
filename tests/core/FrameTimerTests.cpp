@@ -102,6 +102,44 @@ EASYFORGE_TEST(FrameTimerKeepsHitchesAndStalls)
     EASYFORGE_EXPECT_NEAR(timer.Next(1.0 / 60.0), 1.0 / 60.0, 0.0003);
 }
 
+EASYFORGE_TEST(FrameTimerEvensOutALateFrameAndTheEarlyOneAfter)
+{
+    // As measured on a 60 hertz screen: a frame that started 9 milliseconds
+    // late, and the next one on time again. The screen showed both evenly.
+    FrameTimer timer;
+    timer.SetRefreshRate(60.0f);
+    for (int frame = 0; frame < 120; ++frame)
+    {
+        timer.Next(1.0 / 60.0);
+    }
+    EASYFORGE_EXPECT_NEAR(timer.Next(0.0257), 1.0 / 60.0, 0.0006);
+    EASYFORGE_EXPECT_NEAR(timer.Next(0.0076), 1.0 / 60.0, 0.0006);
+    EASYFORGE_EXPECT_NEAR(timer.Next(1.0 / 60.0), 1.0 / 60.0, 0.0006);
+
+    // The other way round: early first, then late.
+    EASYFORGE_EXPECT_NEAR(timer.Next(0.0076), 1.0 / 60.0, 0.0006);
+    EASYFORGE_EXPECT_NEAR(timer.Next(0.0257), 1.0 / 60.0, 0.0006);
+}
+
+EASYFORGE_TEST(FrameTimerLetsFramesOutOfStepPassThrough)
+{
+    // Told the screen runs at 60 hertz, but frames keep coming every 5
+    // milliseconds: they are not shown in step with it.
+    FrameTimer timer;
+    timer.SetRefreshRate(60.0f);
+    double total = 0.0;
+    for (int frame = 0; frame < 30; ++frame)
+    {
+        double reported = timer.Next(0.005);
+        total += reported;
+        if (frame >= 3)
+        {
+            EASYFORGE_EXPECT_NEAR(reported, 0.005, 0.0001);
+        }
+    }
+    EASYFORGE_EXPECT_NEAR(total, 0.15, 0.02);
+}
+
 EASYFORGE_TEST(FrameTimerSnapsFramesThatSkipRefreshes)
 {
     // A program that manages about 100 frames a second on a 144 hertz screen

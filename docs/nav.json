@@ -196,6 +196,7 @@
         "messages",
         "delivery",
         "requests",
+        "smoothing",
         "finding-servers",
         "sharing-tables"
       ]

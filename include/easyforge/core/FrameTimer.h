@@ -37,5 +37,6 @@ namespace easyforge
         double StatedInterval = 0.0;
         double Interval = 0.0;
         double Carried = 0.0;
+        int ShortFrames = 0;
     };
 }

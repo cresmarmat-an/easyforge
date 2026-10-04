@@ -63,6 +63,14 @@ it is new, and so does reading with `[]` from a message that is not `const`, as
 `std::map` does. The messages handlers receive are `const`, so this matters only
 for messages a program builds itself; `Get(name)` reads without adding.
 
+## When it was sent
+
+A message that arrived knows when the other end sent it: `message.SentAt()`, in
+seconds on this computer's clock (`NetworkTime()`), and 0 for a message made on
+this computer. [Smoothing values](smoothing.md) uses it to play values back as
+evenly as they were sent. Two messages are equal when they hold the same names
+and values, whenever they were sent.
+
 ## As bytes
 
 `Encode()` turns a message into bytes and `Message::Decode(bytes)` turns them

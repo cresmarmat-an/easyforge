@@ -81,7 +81,9 @@ drawn in two windows is only sent to the GPU once.
 
 A window's renderer follows the window: each frame is the window's current size,
 in its current scaling, and waits for the screen when the window's
-`VerticalSync` is on. A window made with `Transparent` gets a renderer that
+`VerticalSync` is on. At most one finished frame waits to be shown, and the
+window starts each frame when the screen can take another, before reading
+input, so what is shown answers input as soon as the screen allows. A window made with `Transparent` gets a renderer that
 draws with alpha, and what is drawn with alpha below 1 shows what is behind the
 window.
 

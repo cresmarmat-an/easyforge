@@ -1046,11 +1046,13 @@ def inline_text(markdown):
 
 
 def latest_release(site):
-    """The newest "## " section of the changelog: its heading and first paragraph."""
+    """The newest released "## " section of the changelog: its heading and
+    first paragraph. An "Unreleased" section is work not yet in a release."""
     page = site.pages.get("reference/changelog.md")
     if not page:
         return site.project.name + " " + site.project.version, f"<p>{html.escape(site.project.description)}</p>"
     _, sections = split_home(page.text)
+    sections = [(heading, lines) for heading, lines in sections if plain_text(heading).strip().lower() != "unreleased"]
     if not sections:
         return site.project.name + " " + site.project.version, ""
     heading, lines = sections[0]

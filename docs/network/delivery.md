@@ -46,6 +46,12 @@ nothing but acknowledgements is not acknowledged in turn, and a quiet connection
 sends a keep-alive four times a second, which the other end does answer, so
 silence means the other end is gone and the round trip stays measured.
 
+Every packet also carries the sender's clock, in milliseconds since the
+connection began. The receiver keeps the smallest difference it has seen
+between that clock and its own over the last few seconds, which belongs to the
+quickest packet, and stamps each message with when it would have arrived that
+quickly: `Message::SentAt`.
+
 ## Testing on a poor network
 
 ```cpp

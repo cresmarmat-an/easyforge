@@ -96,6 +96,7 @@ another library can implement `Host` to show easyforge views.
 | `AddListener(listener)`, `RemoveListener(listener)` | See below |
 | `Shared(name)` | One object per host that libraries share, found by name |
 | `RequestPlacement()` | A view wants another size: the host asks its views again and places them before the next frame |
+| `SetFramePacer(pacer)` | A renderer that claimed the surface gives the host a `FramePacer`; the host calls `pacer->WaitForNextFrame(seconds)` at the start of each frame, before reading input. `nullptr` removes it |
 
 `Shared` is how two parts of a program find the same object for one window
 without a global. `graphics` keeps a window's renderer there, so the `ui` in the

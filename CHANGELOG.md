@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `FrameTimer` in `core` turns measured frame times into whole refreshes of the
+  screen, carrying what it rounds off, and follows the screen's true rate.
+- `Physics2D::Update` runs fixed steps from each frame's time, with
+  `StepSeconds` and `MaximumStepsPerUpdate` settings, and bodies have
+  `SmoothPosition`, `SmoothRotation`, and `SmoothWorldPoint` for drawing
+  evenly at any frame rate.
+- `Smoothed` and `SmoothedAngle` in `network` show values another program sends
+  again and again smoothly, however unevenly they arrive, and
+  `Message::SentAt` tells when a received message was sent.
+- `FramePacer` and `Host::SetFramePacer` in `core`, so a renderer can start its
+  window's frames when the screen can take another image.
+
+### Changed
+
+- Windows give `OnFrame` steady frame times while frames are shown in step with
+  the screen.
+- A window with a renderer now starts each frame when the screen can take
+  another image, before reading input, and at most one finished frame waits to
+  be shown, so what is shown answers input sooner.
+- Packets carry the sender's clock. The wire format's revision marker is now
+  `EFN2`, so programs built with 0.0.1 cannot talk to programs built with this
+  change.
+
 ## 0.0.1
 
 The first release: every library, built and tested on Windows.

@@ -74,6 +74,8 @@ Link `easyforge::network`. It needs only `core`.
 - [Delivery](delivery.md): reliable, unreliable, and unordered messages, large
   messages, the send rate, and testing on a poor network on purpose.
 - [Requests](requests.md): asking, answering, refusing, and timeouts.
+- [Smoothing values](smoothing.md): showing values another program sends again
+  and again, such as positions, evenly however unevenly they arrive.
 - [Finding servers](finding-servers.md): servers on the local network, found
   without typing an address.
 - [Sharing tables](sharing-tables.md): keeping a `data` table the same on a
