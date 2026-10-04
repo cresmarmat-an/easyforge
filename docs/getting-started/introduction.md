@@ -20,7 +20,7 @@ ones you use.
 | graphics | `easyforge::graphics` | `<easyforge/graphics.h>` | Available on Windows |
 | data | `easyforge::data` | `<easyforge/data.h>` | Available |
 | ui | `easyforge::ui` | `<easyforge/ui.h>` | Available on Windows |
-| script | `easyforge::script` | `<easyforge/script.h>` | Planned |
+| script | `easyforge::script` | `<easyforge/script.h>` | Available |
 | sound | `easyforge::sound` | `<easyforge/sound.h>` | Planned |
 | physics | `easyforge::physics` | `<easyforge/physics.h>` | Planned |
 | network | `easyforge::network` | `<easyforge/network.h>` | Planned |

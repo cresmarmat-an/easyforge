@@ -1,0 +1,9 @@
+-- Enemies a game can spawn.
+
+print("enemies loaded")
+
+constant Kinds = ["goblin", "troll"]
+
+function Describe(kind) returns string then
+    return "a {kind}"
+end

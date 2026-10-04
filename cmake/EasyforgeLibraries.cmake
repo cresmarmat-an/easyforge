@@ -154,7 +154,7 @@ function(easyforge_install_package)
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/easyforge)
 
     install(TARGETS easyforge_easyforge EXPORT easyforgeTargets)
-    foreach(tool IN ITEMS easyforge_icon_tool easyforge_shader_tool)
+    foreach(tool IN ITEMS easyforge_icon_tool easyforge_shader_tool easyforge_script_tool)
         if(TARGET ${tool})
             install(TARGETS ${tool} EXPORT easyforgeTargets RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
         endif()
@@ -181,5 +181,6 @@ function(easyforge_install_package)
         "${PROJECT_BINARY_DIR}/easyforgeConfigVersion.cmake"
         "${PROJECT_SOURCE_DIR}/cmake/EasyforgeAppIcon.cmake"
         "${PROJECT_SOURCE_DIR}/cmake/EasyforgeShaders.cmake"
+        "${PROJECT_SOURCE_DIR}/cmake/EasyforgeScripts.cmake"
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/easyforge)
 endfunction()

@@ -6,6 +6,7 @@ find_dependency(Threads)
 include("${CMAKE_CURRENT_LIST_DIR}/easyforgeTargets.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/EasyforgeAppIcon.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/EasyforgeShaders.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/EasyforgeScripts.cmake")
 
 # The libraries in this installation. find_package(easyforge COMPONENTS ...)
 # fails if a component asked for is not one of them.

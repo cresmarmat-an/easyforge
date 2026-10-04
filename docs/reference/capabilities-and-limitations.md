@@ -14,7 +14,8 @@ go into more detail.
 | graphics | Available and tested on Windows, with Direct3D 12 |
 | data | Available and tested on Windows |
 | ui | Available and tested on Windows |
-| script, sound, physics, network | Planned, in that order |
+| script | Available and tested on Windows |
+| sound, physics, network | Planned, in that order |
 
 ## core
 
@@ -217,11 +218,40 @@ It cannot yet:
 - Shape text for scripts such as Arabic, or show color emoji.
 - Run anywhere but Windows, since it draws with `graphics`.
 
+## script
+
+It can:
+
+- Run the easyforge language: variables and constants, functions that keep
+  the names around them, lists, tables, colors, types of your own, errors that
+  can be caught, and modules that import each other.
+- Check names, constants, and the types written in a script before it runs,
+  and report every problem with its file, line, and column.
+- Run functions across frames with `spawn`, `wait`, and `yield`.
+- Give scripts C++ functions, values, and objects of your own, and call script
+  functions from C++, including callbacks a script handed over.
+- Be used from C and from languages that call C.
+- Stop runaway scripts with limits on memory, instructions, and call depth,
+  collect memory scripts no longer use, and keep scripts away from files and
+  the network.
+- Let scripts drive a `ui` interface and change a `data` table, through bridge
+  headers.
+- Check scripts during the build, and run them or try the language at a prompt
+  with `easyforge-script`.
+
+It cannot yet:
+
+- Be used from two threads at once.
+- Key tables by anything but names, or sort with an order of your own.
+- Let scripts make new interface elements; they change the ones the program
+  built.
+- Step through a script in a debugger.
+
 ## Platforms
 
 | Platform | Status |
 |---|---|
-| Windows | `core`, `assets`, `window`, `input`, `graphics`, `data`, and `ui` built and tested with Visual Studio 2026 |
+| Windows | `core`, `assets`, `window`, `input`, `graphics`, `data`, `ui`, and `script` built and tested with Visual Studio 2026 |
 | Linux | Planned for stage 2 |
 | Web | Planned for stage 3 |
 | macOS and iOS | Planned for stage 4 |

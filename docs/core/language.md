@@ -36,7 +36,8 @@ numbers, text in quotes, color codes such as `#FF8000`, and symbols. Comments
 are left out: `--` runs to the end of the line, and `--[[` runs to the next
 `]]`, even inside a line. Each token has its `Spelling`, its `Where` (line and
 column, from 1), and whether it `StartsLine`. The last token is always
-`EndOfFile`.
+`EndOfFile`. A UTF-8 byte order mark at the very start, which some editors
+write, is skipped.
 
 `IsKeyword(word)` tells whether a word is reserved: `function`, `returns`,
 `then`, `end`, `variable`, `constant`, `value`, `if`, `else`, `while`, `for`,
@@ -72,6 +73,7 @@ never read as part of the line before it.
 ## Limitations
 
 - The reader checks syntax only. Whether names exist and types match is up to
-  each language: the shader compiler in `graphics`, and `script`.
+  each language: the shader compiler in `graphics`, and
+  [`script`](../script/overview.md).
 - Source is read as UTF-8; names may contain any letters beyond ASCII, but
   columns count bytes, not characters.

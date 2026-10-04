@@ -18,6 +18,7 @@
         "build-options",
         "app-icons",
         "shaders",
+        "scripts",
         "platform-requirements"
       ]
     },
@@ -140,9 +141,23 @@
       ]
     },
     {
+      "folder": "script",
+      "title": "script",
+      "pages": [
+        {
+          "page": "overview",
+          "title": "Overview"
+        },
+        "language",
+        "values",
+        "embedding",
+        "c-interface",
+        "interfaces-and-tables"
+      ]
+    },
+    {
       "title": "Planned libraries",
       "pages": [
-        "script/overview",
         "sound/overview",
         "physics/overview",
         "network/overview"

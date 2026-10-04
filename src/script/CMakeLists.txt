@@ -1,0 +1,11 @@
+easyforge_add_library(script
+    SOURCES
+        Analysis.cpp
+        Builtins.cpp
+        CInterface.cpp
+        Compiler.cpp
+        EngineState.cpp
+        Heap.cpp
+        Machine.cpp
+        ScriptEngine.cpp
+        ScriptValue.cpp)

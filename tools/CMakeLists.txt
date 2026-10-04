@@ -9,3 +9,8 @@ endif()
 if(TARGET easyforge::graphics)
     add_subdirectory(easyforge-shader)
 endif()
+
+# easyforge-script, which runs and checks scripts and opens a prompt.
+if(TARGET easyforge::script)
+    add_subdirectory(easyforge-script)
+endif()

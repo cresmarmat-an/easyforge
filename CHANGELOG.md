@@ -78,6 +78,20 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   animated properties; keyboard focus, tooltips, and drag and drop; and labels
   that follow values in a data table. Every element is stored as a node of a
   data table.
+- The `script` library: the easyforge scripting language, with variables and
+  constants, closures, lists, tables, colors, types of your own, errors that
+  `try` catches, modules that import each other, and functions that run across
+  frames with `spawn`, `wait`, and `yield`. Names, constants, and written types
+  are checked before a script runs. Programs give scripts functions, values,
+  and objects of their own, call script functions back, and set limits on
+  memory and instructions.
+- A C interface to the script engine, for C and for languages that call C.
+- The `easyforge-script` tool, which runs scripts, checks them, and opens a
+  prompt, and `easyforge_add_scripts`, which checks a program's scripts when it
+  is built.
+- Bridge headers that let scripts drive a `ui` interface
+  (`<easyforge/bridges/ui_script.h>`) and change a `data` table
+  (`<easyforge/bridges/data_script.h>`).
 
 ### Fixed
 
@@ -88,3 +102,5 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
 - A layer larger than the GPU could hold stopped the frame; it is now cut down
   to what shows.
 - Sliced images showed thin seams at fractional positions.
+- The language reader treated a byte order mark at the start of a file, which
+  some editors write, as an unknown character.

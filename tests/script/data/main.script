@@ -1,0 +1,3 @@
+import "enemies"
+
+return enemies.Describe(enemies.Kinds[2])

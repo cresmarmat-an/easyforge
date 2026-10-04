@@ -8,6 +8,11 @@ endforeach()
 
 add_subdirectory(headers)
 
+# The bridge headers, where the libraries they join are built.
+if(TARGET easyforge::script AND TARGET easyforge::data)
+    add_subdirectory(bridges)
+endif()
+
 # Public headers must not use names that windows.h turns into macros.
 add_test(NAME public-header-names
     COMMAND ${CMAKE_COMMAND}

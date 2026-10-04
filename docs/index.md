@@ -48,7 +48,7 @@ easyforge to your own project.
 | [graphics](graphics/overview.md) | 2D and 3D drawing, on Direct3D 12 now and Vulkan, Metal, and WebGPU later | Available on Windows |
 | [data](data/overview.md) | A tree-shaped table with change tracking, undo, and saving | Available |
 | [ui](ui/overview.md) | Interfaces: layout, elements, themes, effects, and displays | Available on Windows |
-| [script](script/overview.md) | The easyforge scripting language, embeddable in any program | Planned |
+| [script](script/overview.md) | The easyforge scripting language, embeddable in any program | Available |
 | [sound](sound/overview.md) | Mixing, streaming, effects, and positional sound | Planned |
 | [physics](physics/overview.md) | Bodies, collisions, and joints in 2D, later 3D | Planned |
 | [network](network/overview.md) | One-way messages and two-way requests between programs | Planned |
