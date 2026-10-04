@@ -1,10 +1,6 @@
 # Changelog
 
-Every change to easyforge that affects people using it is listed here, newest
-first. Version numbers follow [Semantic Versioning](https://semver.org); before
-1.0.0, any release can change the interface.
-
-## 0.0.1 (2026-10-05)
+## 0.0.1
 
 The first release: every library, built and tested on Windows.
 

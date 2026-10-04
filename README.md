@@ -14,24 +14,23 @@ SDK.
 
 ## Status
 
-easyforge **0.0.1** is the first release. Every library below is written,
-tested, and documented, with an example for each, on Windows. Linux, the web,
-macOS and iOS, and Android follow in later stages, and 3D grows in the last
-one.
+Every library below is written, tested, and documented, with an example for
+each, on Windows. Linux, the web, macOS and iOS, and Android follow in later
+stages, and 3D grows in the last one.
 
-| Library | What it does | Status |
-|---|---|---|
-| `core` | Math, colors, properties, results, logging, background jobs, testing | Available |
-| `assets` | Reads images, 3D models, sounds, and fonts from files | Available |
-| `window` | Windows, the frame loop, and everything the system sends | Available |
-| `input` | Named actions from keyboard, mouse, and gamepads | Available |
-| `graphics` | 2D and 3D drawing, on Direct3D 12 now and Vulkan, Metal, and WebGPU later | Available |
-| `data` | A tree-shaped table with change tracking, undo, and saving | Available |
-| `ui` | Interfaces: layout, elements, themes, effects, and displays | Available |
-| `script` | The easyforge scripting language, embeddable in any program | Available |
-| `sound` | Mixing, streaming, effects, and positional sound | Available |
-| `physics` | Bodies, collisions, and joints in 2D, later 3D | Available |
-| `network` | One-way messages and two-way requests between programs | Available |
+| Library | What it does |
+|---|---|
+| `core` | Math, colors, properties, results, logging, background jobs, testing |
+| `assets` | Reads images, 3D models, sounds, and fonts from files |
+| `window` | Windows, the frame loop, and everything the system sends |
+| `input` | Named actions from keyboard, mouse, and gamepads |
+| `graphics` | 2D and 3D drawing, on Direct3D 12 now and Vulkan, Metal, and WebGPU later |
+| `data` | A tree-shaped table with change tracking, undo, and saving |
+| `ui` | Interfaces: layout, elements, themes, effects, and displays |
+| `script` | The easyforge scripting language, embeddable in any program |
+| `sound` | Mixing, streaming, effects, and positional sound |
+| `physics` | Bodies, collisions, and joints in 2D, later 3D |
+| `network` | One-way messages and two-way requests between programs |
 
 ## A first program
 
@@ -113,8 +112,9 @@ ctest --test-dir build -C Debug --output-on-failure
 The documentation is at
 **[cresmarmat-an.github.io/easyforge](https://cresmarmat-an.github.io/easyforge/)**.
 Its pages are the Markdown files in [`docs/`](docs), and the site is rebuilt
-every time they change. [`DESIGN.md`](DESIGN.md) describes the whole plan,
-including what the later stages add.
+every time they change. The
+[roadmap](https://cresmarmat-an.github.io/easyforge/reference/roadmap.html) says
+what the later stages add.
 
 ## License
 

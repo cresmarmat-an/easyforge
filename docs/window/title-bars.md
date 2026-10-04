@@ -20,8 +20,9 @@ window.TitleBar = ui::TitleBar({
 });
 ```
 
-`ui` arrives in a later step. This page explains what the window does with any
-title bar view, which is also how to write one without `ui`.
+[ui's title bars](../ui/title-bars.md) cover that side. This page explains what
+the window does with any title bar view, which is also how to write one without
+`ui`.
 
 ## What the window does
 

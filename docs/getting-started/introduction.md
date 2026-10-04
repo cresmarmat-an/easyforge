@@ -61,6 +61,7 @@ details and what has been tested.
 Each page starts with code you can copy, then goes through what the feature can
 do and what it cannot. Code examples assume `using namespace easyforge;`.
 
-The whole design, including what the later stages add, is in
-[DESIGN.md](https://github.com/cresmarmat-an/easyforge/blob/main/DESIGN.md) in
-the repository.
+[Names and patterns](names-and-patterns.md) covers the conventions every
+library follows, [how the libraries connect](how-the-libraries-connect.md)
+explains how they work together without depending on each other, and the
+[roadmap](../reference/roadmap.md) says what the later stages add.

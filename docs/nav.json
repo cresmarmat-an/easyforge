@@ -6,7 +6,8 @@
       "pages": [
         "introduction",
         "first-window",
-        "names-and-patterns"
+        "names-and-patterns",
+        "how-the-libraries-connect"
       ]
     },
     {
@@ -204,6 +205,7 @@
       "title": "Reference",
       "pages": [
         "capabilities-and-limitations",
+        "roadmap",
         "changelog",
         "license"
       ]

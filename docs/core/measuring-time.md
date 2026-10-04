@@ -32,8 +32,8 @@ not affect it.
 ## Limitations
 
 - A `Clock` measures time; it is not a timer that calls you back. For work that
-  runs later, see [background jobs](background-jobs.md), and once `window` exists,
-  its frame callback.
+  runs later, see [background jobs](background-jobs.md), or a window's
+  [frame callback](../window/overview.md).
 - The result is a `double`. Converting to `float` for per-frame arithmetic is
   fine, but keep long totals, such as the time since the program started, in
   `double`; after a few hours a `float` can no longer count single milliseconds.
