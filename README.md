@@ -14,10 +14,10 @@ SDK.
 
 ## Status
 
-easyforge is at **0.0.1-alpha**. The `core`, `assets`, `window`, `input`,
-`graphics`, `data`, and `ui` libraries are finished and tested on Windows. The
-other libraries are being built one at a time, in the order listed below; each
-one arrives with its tests, its documentation, and an example.
+easyforge **0.0.1** is the first release. Every library below is written,
+tested, and documented, with an example for each, on Windows. Linux, the web,
+macOS and iOS, and Android follow in later stages, and 3D grows in the last
+one.
 
 | Library | What it does | Status |
 |---|---|---|
@@ -89,7 +89,7 @@ Fetch it with CMake and link the libraries you use:
 include(FetchContent)
 FetchContent_Declare(easyforge
     GIT_REPOSITORY https://github.com/cresmarmat-an/easyforge.git
-    GIT_TAG main)
+    GIT_TAG v0.0.1)
 FetchContent_MakeAvailable(easyforge)
 
 target_link_libraries(my_program PRIVATE easyforge::window)
@@ -114,7 +114,7 @@ The documentation is at
 **[cresmarmat-an.github.io/easyforge](https://cresmarmat-an.github.io/easyforge/)**.
 Its pages are the Markdown files in [`docs/`](docs), and the site is rebuilt
 every time they change. [`DESIGN.md`](DESIGN.md) describes the whole plan,
-including the libraries that are not written yet.
+including what the later stages add.
 
 ## License
 

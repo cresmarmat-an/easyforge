@@ -5,11 +5,11 @@ networking, data, and scripting, written from scratch for Windows, Linux,
 macOS, iOS, Android, and the web. Each library works on its own or together with
 the others, and none of them contains third-party code.
 
-> [!NOTE] In development
-> easyforge is at 0.0.1-alpha. The `core`, `assets`, `window`, `input`,
-> `graphics`, `data`, and `ui` libraries are available and tested on Windows.
-> The other libraries are being written one at a time, and each page below says
-> whether its library is available yet.
+> [!NOTE] Windows first
+> easyforge 0.0.1 has every library, tested on Windows. Linux, the web, macOS
+> and iOS, and Android come in later stages; [Capabilities and
+> limitations](reference/capabilities-and-limitations.md) lists what works
+> today.
 
 ## A first program
 
@@ -33,7 +33,7 @@ int main()
 }
 ```
 
-It prints `[information] easyforge 0.0.1-alpha: the corner is 2.24 away`.
+It prints `[information] easyforge 0.0.1: the corner is 2.24 away`.
 [Fetching with CMake](installation/fetching-with-cmake.md) shows how to add
 easyforge to your own project.
 

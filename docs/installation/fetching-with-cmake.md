@@ -10,7 +10,7 @@ project(my_program LANGUAGES CXX)
 include(FetchContent)
 FetchContent_Declare(easyforge
     GIT_REPOSITORY https://github.com/cresmarmat-an/easyforge.git
-    GIT_TAG main
+    GIT_TAG v0.0.1
     GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(easyforge)
 
@@ -39,9 +39,9 @@ cmake --build build --config Debug
 
 ## Choosing a version
 
-`GIT_TAG main` follows the newest code. easyforge is at 0.0.1-alpha, and until
-the first release that is the only choice. Once `v0.0.1` is tagged, use
-`GIT_TAG v0.0.1` so your build does not change under you.
+`GIT_TAG v0.0.1` builds that release, so your build does not change under you.
+`GIT_TAG main` follows the newest code instead, with whatever has changed since
+the last release; the [changelog](../reference/changelog.md) says what.
 
 ## Only what you link is built
 

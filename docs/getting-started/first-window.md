@@ -15,7 +15,7 @@ project(first_window LANGUAGES CXX)
 include(FetchContent)
 FetchContent_Declare(easyforge
     GIT_REPOSITORY https://github.com/cresmarmat-an/easyforge.git
-    GIT_TAG main)
+    GIT_TAG v0.0.1)
 FetchContent_MakeAvailable(easyforge)
 
 add_executable(first_window main.cpp)

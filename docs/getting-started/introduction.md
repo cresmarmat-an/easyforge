@@ -61,6 +61,6 @@ details and what has been tested.
 Each page starts with code you can copy, then goes through what the feature can
 do and what it cannot. Code examples assume `using namespace easyforge;`.
 
-The design of the libraries that are not written yet is in
+The whole design, including what the later stages add, is in
 [DESIGN.md](https://github.com/cresmarmat-an/easyforge/blob/main/DESIGN.md) in
 the repository.

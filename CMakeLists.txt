@@ -7,7 +7,7 @@ project(easyforge
     LANGUAGES CXX)
 
 # The part of the version after the numbers. Empty for an official release.
-set(EASYFORGE_VERSION_LABEL "alpha")
+set(EASYFORGE_VERSION_LABEL "")
 
 if(EASYFORGE_VERSION_LABEL)
     set(EASYFORGE_VERSION_TEXT "${PROJECT_VERSION}-${EASYFORGE_VERSION_LABEL}")

@@ -51,8 +51,8 @@ quaternions, rectangles, and colors. `core.h` includes it, which is what lets
 easyforge::Version.Major    // 0
 easyforge::Version.Minor    // 0
 easyforge::Version.Patch    // 1
-easyforge::Version.Label    // "alpha"; empty for an official release
-easyforge::VersionText      // "0.0.1-alpha"
+easyforge::Version.Label    // ""; text such as "alpha" before a release
+easyforge::VersionText      // "0.0.1"
 ```
 
 All of these are `constexpr`, so they can be used in `static_assert` and other

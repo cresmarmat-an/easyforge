@@ -1,6 +1,6 @@
 # Capabilities and limitations
 
-What easyforge 0.0.1-alpha can and cannot do, in one place. Each library's pages
+What easyforge 0.0.1 can and cannot do, in one place. Each library's pages
 go into more detail.
 
 ## Libraries
