@@ -164,9 +164,6 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:24px
 .lead .callout{margin:18px 0 0;font-size:.95rem}
 .action-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:30px}
 .hero-text>*{max-width:100%}
-.version-chip{display:inline-flex;align-items:center;gap:8px;margin:0 0 20px;padding:7px 14px;border-radius:999px;box-shadow:var(--shadow-inset-small);font-size:.84rem;font-weight:600;color:var(--text-soft);text-decoration:none}
-.version-chip:hover{color:var(--accent)}
-.version-chip .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 h1 .accent{background:linear-gradient(100deg,var(--accent) 20%,var(--gradient-second) 42%,var(--gradient-third) 58%,var(--accent) 80%);background-size:220% auto;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:sheen 7s linear infinite}
 @keyframes sheen{to{background-position:220% center}}
 
@@ -206,8 +203,10 @@ h1 .accent{background:linear-gradient(100deg,var(--accent) 20%,var(--gradient-se
 .feature-icon{display:inline-grid;place-items:center;width:48px;height:48px;border-radius:15px;box-shadow:var(--shadow-inset-small);color:var(--accent)}
 .feature-status{padding:4px 11px;border-radius:999px;box-shadow:var(--shadow-inset-small);font-size:.74rem;font-weight:600;color:var(--muted)}
 
-.category-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:clamp(18px,2.4vw,26px);align-items:start}
-.category-card{position:relative;display:flex;flex-direction:column;gap:6px;padding:22px 22px 18px;border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow-out);transition:box-shadow 240ms var(--ease-out),transform 200ms var(--ease-out)}
+/* The cards differ in length, so they stack down columns, each right under the
+   one above it, instead of sitting in rows that leave gaps under short cards. */
+.category-grid{columns:3 300px;column-gap:clamp(18px,2.4vw,26px)}
+.category-card{position:relative;display:flex;flex-direction:column;gap:6px;break-inside:avoid;margin:0 0 clamp(18px,2.4vw,26px);padding:22px 22px 18px;border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow-out);transition:box-shadow 240ms var(--ease-out),transform 200ms var(--ease-out)}
 .category-card h3{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px;font-size:1.15rem}
 .category-card h3 a{text-decoration:none}
 .category-card h3 a:hover{color:var(--accent)}

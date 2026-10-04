@@ -16,26 +16,26 @@ them contains third-party code.
 ## A first program
 
 ```cpp
-#include <easyforge/core.h>
+#include <easyforge/window.h>
 
 using namespace easyforge;
 
 int main()
 {
-    Transform crate = {
-        .Position = { 0.0f, 2.0f, 0.0f },
-        .Rotation = Quaternion::FromAngles(0.0f, Radians(45.0f), 0.0f),
+    Window window = Window::New({ .Title = "Notes", .Icon = "icon.png", .Width = 1280, .Height = 720 });
+
+    window.OnEvent = [window](const Event& event) {
+        if (event.Type == EventType::KeyPressed && event.Key == Key::Escape)
+        {
+            window.Close();
+        }
     };
 
-    Job<float> distance = Jobs::Shared().Run([crate] {
-        return Length(crate.ApplyToPoint({ 1.0f, 0.0f, 0.0f }));
-    });
-
-    Log("easyforge {}: the corner is {:.2f} away", VersionText, distance.Get());
+    window.Run();
 }
 ```
 
-It prints `[information] easyforge 0.0.1: the corner is 2.24 away`.
+That is an empty window that closes with Escape.
 [Fetching with CMake](installation/fetching-with-cmake.md) shows how to add
 easyforge to your own project.
 

@@ -17,7 +17,8 @@ repository is all it takes to change the site:
 - docs/logo.png is the logo, the icons, and the picture shown with shared links.
 - CMakeLists.txt gives the name, version, and description; LICENSE the license,
   author, and year; README.md the examples link; CHANGELOG.md the changelog page
-  and the latest release on the home page.
+  and the latest release on the home page. The examples card's description is
+  the opening paragraph of the examples repository's README, read from GitHub.
 - The repository's address comes from GitHub Actions, or from git's origin.
 
 Broken links and missing headings are printed as warnings. With --strict they
@@ -35,6 +36,7 @@ import re
 import shutil
 import subprocess
 import sys
+import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -1027,6 +1029,22 @@ def home_section(site, renderer, heading, lines):
             f'      <div class="prose home-prose reveal">\n{body}\n      </div>\n    </section>')
 
 
+def inline_text(markdown):
+    """Inline Markdown as text that keeps its code spans, for short lines on
+    cards, where a link would lead somewhere the card does not."""
+    pieces = []
+    for piece in re.split(r"(`+[^`]+`+)", markdown):
+        if piece.startswith("`"):
+            pieces.append(f"<code>{html.escape(piece.strip('`').strip())}</code>")
+            continue
+        piece = re.sub(r"\\(.)", r"\1", piece)
+        piece = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", piece)
+        piece = re.sub(r"<[^>]+>", "", piece)
+        piece = re.sub(r"(\*\*|__|\*|_)(\S.*?\S|\S)\1", r"\2", piece)
+        pieces.append(html.escape(piece))
+    return re.sub(r"\s+", " ", "".join(pieces)).strip()
+
+
 def latest_release(site):
     """The newest "## " section of the changelog: its heading and first paragraph."""
     page = site.pages.get("reference/changelog.md")
@@ -1043,9 +1061,37 @@ def latest_release(site):
         title = f"{site.project.name} {title}"
     text = ""
     if paragraphs:
-        words = html.escape(plain_text(" ".join(line.strip() for line in paragraphs[0])))
-        text = f"          <p>{words}</p>"
+        text = f"          <p>{inline_text(' '.join(line.strip() for line in paragraphs[0]))}</p>"
     return title, text
+
+
+def opening_paragraph(text):
+    """The first paragraph of a Markdown file, before its first "## " heading."""
+    opening, _ = split_home(text)
+    for block in blocks_of(opening):
+        if not (FENCE.match(block[0]) or QUOTE.match(block[0]) or HEADING.match(block[0])
+                or LIST_ITEM.match(block[0]) or HTML_BLOCK.match(block[0])):
+            return " ".join(line.strip() for line in block)
+    return ""
+
+
+def examples_summary(project):
+    """The opening paragraph of the examples repository's README, read from
+    GitHub as the site is built, so the home page describes the examples the
+    way their own repository does. Empty when it cannot be read."""
+    match = re.match(r"^https://github\.com/([^/]+)/([^/#?]+?)/?$", project.examples)
+    if not match:
+        return ""
+    address = f"https://raw.githubusercontent.com/{match.group(1)}/{match.group(2)}/HEAD/README.md"
+    try:
+        request = urllib.request.Request(address, headers={"User-Agent": f"{project.name}-documentation"})
+        with urllib.request.urlopen(request, timeout=20) as response:
+            readme = response.read().decode("utf-8").replace("\r\n", "\n")
+    except (OSError, ValueError) as error:
+        print(f"note: {address} could not be read ({error}), so the examples card shows only its link",
+              file=sys.stderr)
+        return ""
+    return inline_text(opening_paragraph(readme))
 
 
 # Images ------------------------------------------------------------------------
@@ -1249,8 +1295,8 @@ def build(output, strict, site_url):
                           f'<span class="category-count">{len(entries)}</span></h3><ul>{links}</ul></article>')
     release_title, release_text = latest_release(site)
     examples_name = project.examples.rstrip("/").rsplit("/", 1)[-1]
-    example_links = (f'            <li><a href="{html.escape(project.examples)}">{html.escape(examples_name)}{ARROW_OUT}</a></li>\n'
-                     f'            <li><a href="{html.escape(project.repository)}">{html.escape(project.name)}{ARROW_OUT}</a></li>')
+    example_links = f'            <li><a href="{html.escape(project.examples)}">{html.escape(examples_name)}{ARROW_OUT}</a></li>'
+    examples_text = examples_summary(project)
     structured_data = json.dumps({
         "@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": project.name,
         "description": project.description, "url": project.site_url, "codeRepository": project.repository,
@@ -1271,6 +1317,7 @@ def build(output, strict, site_url):
         "release_title": html.escape(release_title),
         "release_text": release_text,
         "example_links": example_links,
+        "examples_text": f"          <p>{examples_text}</p>" if examples_text else "",
         "structured_data": structured_data,
     })
     write(output / "index.html", render("home.html", values, partials))

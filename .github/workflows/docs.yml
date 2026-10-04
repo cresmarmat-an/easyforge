@@ -3,10 +3,13 @@ name: Documentation
 # Builds the documentation site from the repository and publishes it with
 # GitHub Pages on every push to main, so a change anywhere in the repository
 # (a page, the changelog, the version, the logo) is online a minute or two
-# later. It can also be run by hand from the Actions tab.
+# later. It also runs once a day, which brings in changes to the examples
+# repository's README, and can be run by hand from the Actions tab.
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: "17 3 * * *"
   workflow_dispatch:
 
 permissions:
