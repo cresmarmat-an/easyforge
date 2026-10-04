@@ -219,6 +219,29 @@ ui::DrawingArea({
 left inside its padding, and drawing is cut to that box. `OnDraw` can take just
 the canvas, or the canvas and the area's size in points.
 
+```cpp
+std::vector<Vector2> dots;
+ui::DrawingArea board({
+    .Width = ui::Fill,
+    .Height = ui::Fill,
+    .OnDraw = [&dots](Canvas& canvas) {
+        for (Vector2 dot : dots)
+        {
+            canvas.Circle(dot, 6, { .Color = Color::Hex("#6FC3FF") });
+        }
+    },
+    .OnPress = [&dots](Vector2 point) { dots.push_back(point); },
+});
+```
+
+`OnPress`, `OnMove`, and `OnRelease` follow the pointer in the same points as
+`OnDraw`. `OnPress` comes when the area is pressed with the left button or a
+finger. `OnMove` comes when the pointer moves over the area, and also outside
+it while the area is held, so a drag can be followed to its end. `OnRelease`
+comes when the press ends, wherever it ends. An area with any of them takes the
+presses on it, so they do not reach the program's own controls; without them,
+presses pass through, as they do on a scene view.
+
 ## 3D scenes
 
 ```cpp

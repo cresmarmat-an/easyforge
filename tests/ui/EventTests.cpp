@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <vector>
+
 #include "Helpers.h"
 
 using namespace easyforge;
@@ -45,6 +48,47 @@ EASYFORGE_TEST(BoxesTakeTheirClicks)
     // interface; a label has no box.
     EASYFORGE_EXPECT(screen.Click({ 50, 50 }));
     EASYFORGE_EXPECT(!screen.Click({ label.Frame().Center().X, label.Frame().Center().Y }));
+}
+
+EASYFORGE_TEST(DrawingAreasFollowThePointer)
+{
+    std::vector<Vector2> presses;
+    std::vector<Vector2> moves;
+    std::vector<Vector2> releases;
+    ui::DrawingArea plain({ .Width = 100, .Height = 100 });
+    ui::DrawingArea area({
+        .Width = 100,
+        .Height = 100,
+        .Padding = 10,
+        .OnPress = [&](Vector2 point) { presses.push_back(point); },
+        .OnMove = [&](Vector2 point) { moves.push_back(point); },
+        .OnRelease = [&](Vector2 point) { releases.push_back(point); },
+    });
+    Screen screen(300, 300, ui::Row({ .Padding = 20, .Alignment = ui::Alignment::Start, .Children = { plain, area } }));
+    screen.Frame();
+
+    // Without pointer functions an area lets clicks through.
+    EASYFORGE_EXPECT(!screen.Click({ 70, 70 }));
+
+    // Points count from inside the padding, as OnDraw's do, and the area keeps
+    // the pointer while it is held.
+    EASYFORGE_EXPECT(screen.Press({ 150, 60 }));
+    screen.Move({ 170, 80 });
+    screen.Move({ 290, 290 });
+    screen.Release({ 290, 290 });
+    EASYFORGE_REQUIRE(presses.size() == 1);
+    EASYFORGE_EXPECT_EQUAL(presses[0], (Vector2 { 20, 30 }));
+    EASYFORGE_REQUIRE(moves.size() >= 2);
+    EASYFORGE_EXPECT(std::find(moves.begin(), moves.end(), Vector2 { 40, 50 }) != moves.end());
+    EASYFORGE_EXPECT_EQUAL(moves.back(), (Vector2 { 160, 260 }));
+    EASYFORGE_REQUIRE(releases.size() == 1);
+    EASYFORGE_EXPECT_EQUAL(releases[0], (Vector2 { 160, 260 }));
+
+    // Set later, as properties.
+    int later = 0;
+    plain.OnPress = [&](Vector2) { ++later; };
+    EASYFORGE_EXPECT(screen.Click({ 70, 70 }));
+    EASYFORGE_EXPECT_EQUAL(later, 1);
 }
 
 EASYFORGE_TEST(TabMovesTheKeyboard)

@@ -673,6 +673,14 @@ namespace easyforge::ui
         // Called every frame the area is on screen. Points start at the area's
         // top left inside its padding, and drawing is cut to that box.
         DrawFunction OnDraw;
+
+        // Called when the area is pressed with the left button or a finger,
+        // when the pointer moves over it or while it is held, and when it is
+        // let go, with the point in the same coordinates as OnDraw. Setting any
+        // of them makes the area take the presses on it.
+        std::function<void(Vector2)> OnPress;
+        std::function<void(Vector2)> OnMove;
+        std::function<void(Vector2)> OnRelease;
     };
 
     // An area to draw into with a Canvas, as with a renderer of your own.
@@ -683,6 +691,7 @@ namespace easyforge::ui
     //         .OnDraw = [](Canvas& canvas) {
     //             canvas.Line({ 0, 0 }, { 100, 50 }, { .Color = Color::White, .Width = 2 });
     //         },
+    //         .OnPress = [](Vector2 point) { /* point is where it was pressed */ },
     //     })
     class DrawingArea : public Element
     {
@@ -693,6 +702,9 @@ namespace easyforge::ui
         DrawingArea& operator=(const DrawingArea& other);
 
         Property<DrawFunction> OnDraw;
+        Property<std::function<void(Vector2)>> OnPress;
+        Property<std::function<void(Vector2)>> OnMove;
+        Property<std::function<void(Vector2)>> OnRelease;
 
         static constexpr std::string_view KindName = "DrawingArea";
 

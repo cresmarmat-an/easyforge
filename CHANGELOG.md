@@ -92,6 +92,8 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
 - Bridge headers that let scripts drive a `ui` interface
   (`<easyforge/bridges/ui_script.h>`) and change a `data` table
   (`<easyforge/bridges/data_script.h>`).
+- `OnPress`, `OnMove`, and `OnRelease` on `ui::DrawingArea`, in the points
+  `OnDraw` uses.
 
 ### Fixed
 
