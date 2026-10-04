@@ -51,7 +51,11 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
 - Layers in `Canvas`, which fade or shade a group of drawings as one.
 - Linear gradients, softened edges for shadows and glows, images sliced into nine
   pieces that stretch without distorting, and `Canvas::BlurBehind` for frosted
-  glass.
+  glass, at full or part strength.
+- Rectangles with a hole left undrawn, for shadows under see-through boxes, and
+  `Canvas::ClipArea`, where drawing can still show.
+- `Host::RequestPlacement`, which a view calls when it wants another size, such
+  as a title bar made taller.
 - The language reader in `core`: a tokenizer and parser for the syntax the
   script and shader languages share.
 - Assigning braced values such as `{ 0, 0, 0 }` to a `Property` no longer fails
@@ -60,3 +64,27 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   values of nine kinds, types that give nodes default values, a list of every
   change that readers follow by version, named edits that undo and redo, and a
   readable `.tree` file format.
+- `Node::Get` and `Node::Set`, which read and set a property without making a
+  cell.
+- The `ui` library: rows, columns, stacks, panels, grids, and scrolling with
+  sizes in points, shares, fill, or fit; labels, images, buttons, checkboxes,
+  toggles, sliders, progress bars, text fields and text areas with input
+  methods, drawing areas, and 3D scene views; dropdowns, menus, and dialogs;
+  lists, and trees that follow a data table; custom title bars with the window's
+  own buttons; displays that switch with fades, slides, scaling, or a shader, go
+  back, or show as tabs; backgrounds, shadows, glows, outlines, gradients,
+  frosted glass, color adjustment, masks, and custom shaders on any element;
+  light and dark themes that follow the system, animate, and load from files;
+  animated properties; keyboard focus, tooltips, and drag and drop; and labels
+  that follow values in a data table. Every element is stored as a node of a
+  data table.
+
+### Fixed
+
+- A window asked its title bar view about points below the title bar, so a
+  title bar view that did not check the height made the whole window drag.
+- A window still open when the program ended detached its views after the rest
+  of the window was gone.
+- A layer larger than the GPU could hold stopped the frame; it is now cut down
+  to what shows.
+- Sliced images showed thin seams at fractional positions.

@@ -13,7 +13,8 @@ go into more detail.
 | input | Available and tested on Windows |
 | graphics | Available and tested on Windows, with Direct3D 12 |
 | data | Available and tested on Windows |
-| ui, script, sound, physics, network | Planned, in that order |
+| ui | Available and tested on Windows |
+| script, sound, physics, network | Planned, in that order |
 
 ## core
 
@@ -178,11 +179,49 @@ It cannot yet:
 - Let a type extend another, or change a node's type after it is added.
 - Share a table over a network; that comes with `network`.
 
+## ui
+
+It can:
+
+- Lay out rows, columns, stacks, panels, grids, and scrolling areas, with sizes
+  in points, shares of the parent, fill, or fit, padding, margins, gaps,
+  alignment, and distribution, laying out again only when something changed.
+- Show labels with wrapping, images with fits and slices, buttons in three
+  styles, checkboxes, toggles, sliders, progress bars, text fields and text
+  areas with selection, clipboard, undo, and input methods, drawing areas, and
+  3D scenes.
+- Show dropdowns, menus with shortcuts and separators, and dialogs that keep the
+  keyboard until they close.
+- Show lists to choose from, and trees of a data table's nodes that follow its
+  changes.
+- Draw a window's title bar, with the window's own buttons and snap layouts.
+- Switch between displays with fades, slides, scaling, or a shader, go back, or
+  show pages as tabs.
+- Put backgrounds (colors, gradients, sliced images), borders, shadows, glows,
+  outlines, gradients, frosted glass, color adjustment, masks, and custom
+  shaders on any element.
+- Follow the system's light or dark theme, switch themes gradually, and load
+  them from files.
+- Animate opacity, position, and scale; move the keyboard with Tab; show
+  tooltips; drag text from element to element and take files dropped from the
+  system; and keep clicks and keys the interface used from the rest of the
+  program.
+- Show values from a data table as they change, and store the interface itself
+  as a data table.
+
+It cannot yet:
+
+- Show menus inside menus, choose several rows of a list at once, or drag to
+  other programs.
+- Show the system's own menus or file dialogs.
+- Shape text for scripts such as Arabic, or show color emoji.
+- Run anywhere but Windows, since it draws with `graphics`.
+
 ## Platforms
 
 | Platform | Status |
 |---|---|
-| Windows | `core`, `assets`, `window`, `input`, `graphics`, and `data` built and tested with Visual Studio 2026 |
+| Windows | `core`, `assets`, `window`, `input`, `graphics`, `data`, and `ui` built and tested with Visual Studio 2026 |
 | Linux | Planned for stage 2 |
 | Web | Planned for stage 3 |
 | macOS and iOS | Planned for stage 4 |

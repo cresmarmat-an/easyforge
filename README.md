@@ -15,9 +15,9 @@ SDK.
 ## Status
 
 easyforge is at **0.0.1-alpha**. The `core`, `assets`, `window`, `input`,
-`graphics`, and `data` libraries are finished and tested on Windows. The other
-libraries are being built one at a time, in the order listed below; each one
-arrives with its tests, its documentation, and an example.
+`graphics`, `data`, and `ui` libraries are finished and tested on Windows. The
+other libraries are being built one at a time, in the order listed below; each
+one arrives with its tests, its documentation, and an example.
 
 | Library | What it does | Status |
 |---|---|---|
@@ -27,7 +27,7 @@ arrives with its tests, its documentation, and an example.
 | `input` | Named actions from keyboard, mouse, and gamepads | Available |
 | `graphics` | 2D and 3D drawing, on Direct3D 12 now and Vulkan, Metal, and WebGPU later | Available |
 | `data` | A tree-shaped table with change tracking, undo, and saving | Available |
-| `ui` | Interfaces: layout, elements, themes, effects, and displays | Planned |
+| `ui` | Interfaces: layout, elements, themes, effects, and displays | Available |
 | `script` | The easyforge scripting language, embeddable in any program | Planned |
 | `sound` | Mixing, streaming, effects, and positional sound | Planned |
 | `physics` | Bodies, collisions, and joints in 2D, later 3D | Planned |
@@ -55,8 +55,8 @@ int main()
 }
 ```
 
-That is an empty window that closes with Escape. When `ui` is ready, a window
-with an interface will look like this:
+That is an empty window that closes with Escape. A window with an interface
+looks like this:
 
 ```cpp
 #include <easyforge/window.h>

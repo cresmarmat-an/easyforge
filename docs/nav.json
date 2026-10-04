@@ -118,9 +118,30 @@
       ]
     },
     {
+      "folder": "ui",
+      "title": "ui",
+      "pages": [
+        {
+          "page": "overview",
+          "title": "Overview"
+        },
+        "layout",
+        "elements",
+        "menus-and-dialogs",
+        "lists-and-trees",
+        "title-bars",
+        "displays",
+        "effects-and-shaders",
+        "themes",
+        "properties-and-animation",
+        "events-and-focus",
+        "live-data",
+        "without-a-window"
+      ]
+    },
+    {
       "title": "Planned libraries",
       "pages": [
-        "ui/overview",
         "script/overview",
         "sound/overview",
         "physics/overview",

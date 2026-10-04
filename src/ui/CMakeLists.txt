@@ -1,0 +1,25 @@
+easyforge_add_library(ui
+    SOURCES
+        Areas.cpp
+        Button.cpp
+        Checks.cpp
+        Displays.cpp
+        Draw.cpp
+        Editing.cpp
+        Element.cpp
+        ElementState.cpp
+        Image.cpp
+        Label.cpp
+        Layout.cpp
+        Lists.cpp
+        Popups.cpp
+        Range.cpp
+        Root.cpp
+        Rows.cpp
+        Scroll.cpp
+        Tabs.cpp
+        Text.cpp
+        TextArea.cpp
+        TextField.cpp
+        Theme.cpp
+        TitleBar.cpp)
