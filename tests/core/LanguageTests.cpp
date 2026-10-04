@@ -108,6 +108,11 @@ EASYFORGE_TEST(CommentsAreLeftOut)
     }
     EASYFORGE_EXPECT(spellings == std::vector<std::string>({ "constant", "speed", "=", "4", "" }));
     EASYFORGE_EXPECT(tokens[2].Where == Location(3, 15));
+
+    // A byte order mark at the start of a file is left out too.
+    std::vector<Token> marked = Read("\xEF\xBB\xBFprint");
+    EASYFORGE_EXPECT_EQUAL(marked[0].Spelling, std::string("print"));
+    EASYFORGE_EXPECT(marked[0].Where == Location(1, 1));
 }
 
 EASYFORGE_TEST(TokenProblemsSayWhere)

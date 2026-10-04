@@ -312,6 +312,11 @@ namespace easyforge::language
 
     std::vector<Token> Tokenize(std::string_view source, std::vector<Problem>& problems)
     {
+        // Many Windows editors start UTF-8 files with a byte order mark.
+        if (source.starts_with("\xEF\xBB\xBF"))
+        {
+            source.remove_prefix(3);
+        }
         return Reader(source, problems).Read();
     }
 }

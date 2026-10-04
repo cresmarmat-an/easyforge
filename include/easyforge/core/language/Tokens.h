@@ -63,8 +63,9 @@ namespace easyforge::language
     // True for the words the easyforge languages reserve.
     bool IsKeyword(std::string_view word);
 
-    // Splits source text into tokens, leaving out comments: `--` to the end of
-    // the line, and `--[[` to the next `]]`. The last token is always EndOfFile.
+    // Splits source text into tokens, leaving out comments (`--` to the end of
+    // the line, and `--[[` to the next `]]`) and a UTF-8 byte order mark at the
+    // start. The last token is always EndOfFile.
     // Anything that cannot be read is added to `problems`.
     std::vector<Token> Tokenize(std::string_view source, std::vector<Problem>& problems);
 }
