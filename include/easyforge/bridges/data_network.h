@@ -845,6 +845,24 @@ namespace easyforge
             }
         }
 
+        // Sends the changes made so far at once, instead of during the next
+        // update, so that a message or request sent next arrives after them.
+        void SendChanges() const
+        {
+            if (!State || State->Stopped)
+            {
+                return;
+            }
+            if (State->IsServer)
+            {
+                State->ServerAfterUpdate();
+            }
+            else
+            {
+                State->ClientAfterUpdate();
+            }
+        }
+
         // On a client, true once the server's table has arrived. On a server, true.
         bool IsReady() const { return State && !State->Stopped && (State->IsServer || State->Ready); }
 

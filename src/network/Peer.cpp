@@ -114,7 +114,9 @@ namespace easyforge::internal::networking
         }
 
         bool ackDue = (ReceivedSinceSent > 0 && now - LastSent >= AckDelaySeconds) || AckOverdue();
-        bool keepAliveDue = LastSent < 0.0 || now - LastSent >= KeepAliveSeconds;
+        // Counted from the last packet that asked for an answer, so even an end
+        // that only acknowledges keeps measuring the round trip.
+        bool keepAliveDue = LastAsked < 0.0 || now - LastAsked >= KeepAliveSeconds;
         std::size_t nextUnreliable = 0;
         std::size_t nextDue = 0;
         while (true)
@@ -133,6 +135,7 @@ namespace easyforge::internal::networking
             record.Sequence = sequence;
             record.Used = true;
             record.Acknowledged = false;
+            record.AskedForAnswer = false;
             record.SentAt = now;
             record.Pieces.clear();
 
@@ -174,6 +177,22 @@ namespace easyforge::internal::networking
                     record.Pieces.emplace_back(static_cast<std::uint8_t>(channel), piece->Identifier);
                     ++nextDue;
                 }
+            }
+
+            // Empty packets only acknowledge, and are not acknowledged in turn,
+            // unless the connection was quiet long enough to need a keep-alive.
+            if (packet.size() > DataHeaderSize)
+            {
+                record.AskedForAnswer = true;
+            }
+            else if (keepAliveDue)
+            {
+                packet[sizeof Magic] = static_cast<std::uint8_t>(PacketKind::KeepAlive);
+                record.AskedForAnswer = true;
+            }
+            if (record.AskedForAnswer)
+            {
+                LastAsked = now;
             }
 
             Budget -= static_cast<double>(packet.size());
@@ -231,7 +250,7 @@ namespace easyforge::internal::networking
             return;
         }
         record.Acknowledged = true;
-        if (newest)
+        if (newest && record.AskedForAnswer)
         {
             double sample = now - record.SentAt;
             if (!MeasuredRoundTrip)
@@ -259,7 +278,7 @@ namespace easyforge::internal::networking
         }
     }
 
-    bool Peer::Receive(double now, ByteReader& reader, std::vector<DeliveredMessage>& delivered)
+    bool Peer::Receive(double now, ByteReader& reader, bool keepAlive, std::vector<DeliveredMessage>& delivered)
     {
         std::uint16_t sequence = reader.Read16();
         std::uint16_t newest = reader.Read16();
@@ -271,7 +290,10 @@ namespace easyforge::internal::networking
 
         LastHeard = now;
         NoteReceived(sequence);
-        ++ReceivedSinceSent;
+        if (keepAlive || !reader.IsAtEnd())
+        {
+            ++ReceivedSinceSent;
+        }
 
         Acknowledge(now, newest, true);
         for (int bit = 0; bit < 32; ++bit)

@@ -33,6 +33,11 @@ namespace easyforge::internal::networking
         Disconnect,
         Discover,
         DiscoverReply,
+
+        // A data packet sent only because the connection was quiet. Like a
+        // packet with messages, and unlike an empty one, it asks for an
+        // acknowledgement, which keeps the round trip measured.
+        KeepAlive,
     };
 
     enum class Channel : std::uint8_t

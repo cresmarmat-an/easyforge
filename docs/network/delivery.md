@@ -41,9 +41,10 @@ be. Packets are kept small enough that networks rarely have to split them.
 Every packet carries a number and says which of the other end's last 33
 packets arrived. A reliable message is sent again when the packet carrying it
 is not acknowledged in about one and a half round trips. The receiver drops
-repeats and holds early arrivals until the gaps fill. A packet goes out at
-least four times a second even with nothing to say, so silence means the other
-end is gone.
+repeats and holds early arrivals until the gaps fill. A packet that carries
+nothing but acknowledgements is not acknowledged in turn, and a quiet connection
+sends a keep-alive four times a second, which the other end does answer, so
+silence means the other end is gone and the round trip stays measured.
 
 ## Testing on a poor network
 
@@ -59,6 +60,14 @@ of packets, `Latency` holds each one back for that many seconds, and `Jitter`
 adds or takes up to that many more at random, which also puts packets out of
 order. Give both ends the same conditions to test a poor network in both
 directions. The last word on a closing connection is sent without them.
+
+`Conditions` is also a property of servers and clients, so a program can switch
+the trouble on and off while it runs:
+
+```cpp
+server.Conditions = poor;
+client.Conditions = NetworkConditions {};   // a good network again
+```
 
 Held-back packets leave during `Update`, so latency shorter than the time
 between updates is rounded up to it.

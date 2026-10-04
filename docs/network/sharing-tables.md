@@ -61,6 +61,18 @@ server.OnDisconnected = [&](Connection client, std::string) {
 };
 ```
 
+## Changes and other messages
+
+Changes go out during `Update`, after the messages sent since the last update.
+When a message or request has to arrive after a change, `SendChanges()` sends
+the changes made so far at once:
+
+```cpp
+me["Position"] = target;
+shared.SendChanges();
+client.Request("PickUp", { { "Coin", name } }, onAnswer);   // the server sees the new position
+```
+
 ## Stopping
 
 Sharing goes on for as long as the server or client runs, whether or not the

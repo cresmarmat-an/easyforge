@@ -97,6 +97,10 @@ namespace easyforge
         std::size_t AfterUpdate(std::function<void()> handler) const;
         void RemoveAfterUpdate(std::size_t handler) const;
 
+        // The trouble put into what the server sends, which can be changed
+        // while it runs.
+        Property<NetworkConditions> Conditions;
+
         Property<std::function<void(Connection)>> OnConnected;
 
         // With why: "disconnected", "timed out", or "the server stopped".

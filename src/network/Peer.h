@@ -41,9 +41,10 @@ namespace easyforge::internal::networking
         // acknowledgement, or a keep-alive.
         void Flush(double now, std::uint64_t token, std::vector<std::vector<std::uint8_t>>& packets);
 
-        // Reads a data packet whose header up to the token has been read, and
-        // adds the messages it completes. False when the packet was damaged.
-        bool Receive(double now, ByteReader& reader, std::vector<DeliveredMessage>& delivered);
+        // Reads a data or keep-alive packet whose header up to the token has
+        // been read, and adds the messages it completes. False when the packet
+        // was damaged.
+        bool Receive(double now, ByteReader& reader, bool keepAlive, std::vector<DeliveredMessage>& delivered);
 
         // True when enough packets arrived since the last one sent that the
         // other end should hear about them now.
@@ -90,6 +91,11 @@ namespace easyforge::internal::networking
             std::uint16_t Sequence = 0;
             bool Used = false;
             bool Acknowledged = false;
+
+            // Carried messages or was a keep-alive, so the other end answered
+            // it at once and its acknowledgement measures the round trip.
+            bool AskedForAnswer = false;
+
             double SentAt = 0.0;
             std::vector<std::pair<std::uint8_t, std::uint16_t>> Pieces;
         };
@@ -119,6 +125,7 @@ namespace easyforge::internal::networking
         double Budget = SendBurst;
         double BudgetTime = 0.0;
         double LastSent = -1.0;
+        double LastAsked = -1.0;
         int ReceivedSinceSent = 0;
 
         // Receiving.

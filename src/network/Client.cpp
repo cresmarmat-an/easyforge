@@ -11,7 +11,17 @@ namespace easyforge
     }
 
     Client::Client(std::shared_ptr<Endpoint> state)
-        : OnConnected(state.get(),
+        : Conditions(state.get(),
+              [](const void* owner) {
+                  return owner ? static_cast<const Endpoint*>(owner)->Read(&Endpoint::Conditions) : NetworkConditions {};
+              },
+              [](void* owner, const NetworkConditions& value) {
+                  if (owner)
+                  {
+                      static_cast<Endpoint*>(owner)->Write(&Endpoint::Conditions, value);
+                  }
+              }),
+          OnConnected(state.get(),
               [](const void* owner) {
                   return owner ? static_cast<const Endpoint*>(owner)->Read(&Endpoint::ClientConnected) : std::function<void()>();
               },
@@ -59,6 +69,7 @@ namespace easyforge
 
     void Client::RebindProperties()
     {
+        Conditions.Rebind(State.get());
         OnConnected.Rebind(State.get());
         OnDisconnected.Rebind(State.get());
     }

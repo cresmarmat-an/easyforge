@@ -223,3 +223,36 @@ EASYFORGE_TEST(StoppedSharesHearNothingMore)
     EASYFORGE_EXPECT(!none.IsReady());
     none.Stop();
 }
+
+EASYFORGE_TEST(SentChangesArriveBeforeLaterMessages)
+{
+    Table game = MakeGame();
+    Server server = LocalServer();
+    TableShare shared = Share(game, server, Sharing::TwoWay);
+    Table copy = Table::New();
+    Client client = LocalClient(server);
+    TableShare received = Share(copy, client);
+    auto update = [&] {
+        server.Update();
+        client.Update();
+    };
+    EASYFORGE_REQUIRE(UpdateUntil(update, [&] { return received.IsReady(); }));
+    Node marker = copy.Find("Players").Add("Ari", { { "Position", Vector2 { 0.0f, 0.0f } } });
+    EASYFORGE_REQUIRE(UpdateUntil(update, [&] { return static_cast<bool>(game.Find("Players/Ari")); }));
+
+    // The server reads the position when the request comes, which is after
+    // the change only because the change was sent first.
+    server.OnRequest("Where", [&](Connection, const Message&) {
+        return Message { { "Position", game.Find("Players/Ari")["Position"].As<Vector2>() } };
+    });
+    marker["Position"] = Vector2 { 5.0f, 6.0f };
+    received.SendChanges();
+    Vector2 seen { -1.0f, -1.0f };
+    bool answered = false;
+    client.Request("Where", {}, [&](const Reply& reply) {
+        seen = reply.Message["Position"];
+        answered = true;
+    });
+    EASYFORGE_REQUIRE(UpdateUntil(update, [&] { return answered; }));
+    EASYFORGE_EXPECT(seen == (Vector2 { 5.0f, 6.0f }));
+}

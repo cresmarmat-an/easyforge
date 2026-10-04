@@ -36,7 +36,7 @@ are written:
 | `Name` | "easyforge" | Shown to programs [finding servers](finding-servers.md) |
 | `ThisComputerOnly` | false | Accepts only programs on this computer |
 | `Threaded` | false | See [Threads](#threads) |
-| `Conditions` | none | Packet loss and delay on purpose, see [Delivery](delivery.md#testing-on-a-poor-network) |
+| `Conditions` | none | Packet loss and delay on purpose, see [Delivery](delivery.md#testing-on-a-poor-network); also a property that can change while the server runs |
 | `Timeout` | 5 | Seconds of silence before a client is dropped |
 
 When the port cannot be used, for example because another program has it, the

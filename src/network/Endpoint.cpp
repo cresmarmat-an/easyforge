@@ -433,6 +433,7 @@ namespace easyforge::internal::networking
             return;
         }
         case PacketKind::Data:
+        case PacketKind::KeepAlive:
         {
             std::uint64_t token = reader.Read64();
             int index = SlotFor(from);
@@ -447,7 +448,7 @@ namespace easyforge::internal::networking
             }
             // A damaged packet still delivers what came before the damage.
             std::vector<DeliveredMessage> delivered;
-            slot.Link->Receive(now, reader, delivered);
+            slot.Link->Receive(now, reader, kind == PacketKind::KeepAlive, delivered);
             for (DeliveredMessage& message : delivered)
             {
                 HandleDelivered(index, std::move(message));

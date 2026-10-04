@@ -185,3 +185,26 @@ EASYFORGE_TEST(MessagesWithoutHandlersAreDropped)
     UpdateFor([&] { pair.Update(); }, 0.2);
     EASYFORGE_EXPECT_EQUAL(arrived, 1);
 }
+
+EASYFORGE_TEST(ConditionsChangeWhileRunning)
+{
+    ConnectedPair pair = Connect();
+    EASYFORGE_REQUIRE(pair.Guest.IsConnected());
+    int arrived = 0;
+    pair.Host.OnMessage("Note", [&](Connection, const Message&) { ++arrived; });
+
+    // Everything the client sends is lost, until the trouble is taken away.
+    pair.Guest.Conditions = NetworkConditions { .Loss = 1.0f };
+    NetworkConditions now = pair.Guest.Conditions;
+    EASYFORGE_EXPECT_EQUAL(now.Loss, 1.0f);
+    pair.Guest.Send("Note");
+    UpdateFor([&] { pair.Update(); }, 0.3);
+    EASYFORGE_EXPECT_EQUAL(arrived, 0);
+
+    pair.Guest.Conditions = NetworkConditions {};
+    EASYFORGE_EXPECT(UpdateUntil([&] { pair.Update(); }, [&] { return arrived == 1; }));
+    EASYFORGE_EXPECT(pair.Guest.IsConnected());
+
+    NetworkConditions unset = Server().Conditions;
+    EASYFORGE_EXPECT_EQUAL(unset.Loss, 0.0f);
+}

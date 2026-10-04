@@ -111,8 +111,9 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   handshake, keep-alives, and timeouts; messages of named values sent reliably
   in order, reliably in any order, or unreliably with the newest winning;
   messages of up to 4 MB in pieces; requests answered with a reply or a reason;
-  a send rate limit; packet loss and delay on purpose for testing; an optional
-  thread of its own; and finding servers on the local network.
+  a send rate limit; packet loss and delay on purpose for testing, which can be
+  switched while running; an optional thread of its own; and finding servers on
+  the local network.
 - The `data_network` bridge, which keeps a `data` table the same on a server
   and its clients, one way or with each client changing the nodes it added.
 
