@@ -28,6 +28,7 @@ rectangles at whole-point positions come out crisp.
 |---|---|---|
 | `Position` | 0, 0 | The top left corner |
 | `Size` | 0, 0 | Width and height; nothing is drawn if either is zero |
+| `Rotation` | 0 | Turns the rectangle about its center, in radians, clockwise on screen; corners, borders, and gradients turn with it |
 | `Color` | white | The fill |
 | `CornerRadius` | 0 | Rounds all four corners; it is limited to half the shorter side, so a large radius makes a pill |
 | `BorderWidth` | 0 | A border inside the edge |
@@ -38,6 +39,9 @@ rectangles at whole-point positions come out crisp.
 ```cpp
 canvas.Rectangle({ .Position = { 240, 20 }, .Size = { 200, 80 }, .Color = Color::White, .CornerRadius = 40,
     .BorderWidth = 4, .BorderColor = Color::Hex("#E8553B") });
+
+// A crate tipped over by an eighth of a turn.
+canvas.Rectangle({ .Position = { 480, 20 }, .Size = { 80, 80 }, .Rotation = 0.785f, .Color = Color::Hex("#C68A4E") });
 ```
 
 ### Gradients
@@ -103,6 +107,7 @@ canvas.Image(sheet, { .Position = { 20, 200 }, .Source = { 32, 0, 32, 32 } }); /
 |---|---|---|
 | `Position` | 0, 0 | The top left corner |
 | `Size` | 0, 0 | The size to draw at; zero draws one point for each pixel of the part shown |
+| `Rotation` | 0 | Turns the image about its center, in radians, clockwise on screen; not used with `Slice` |
 | `Source` | empty | The part of the texture to draw, in its pixels; empty is all of it |
 | `Tint` | white | Multiplies every pixel; lower its alpha to fade the image |
 | `CornerRadius` | 0 | Rounds the image's corners |
@@ -247,5 +252,6 @@ anti-aliased formula.
   a [shader](shaders.md).
 - Images and text cannot be blurred on their own; draw them in a layer and blur
   behind a later area, or use a shader.
-- Transforms move and scale; they do not rotate.
+- Transforms move and scale; they do not rotate. Rectangles and images turn on
+  their own with `Rotation`; text does not turn.
 - A clip area is a rectangle, not a rounded shape.

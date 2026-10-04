@@ -135,6 +135,27 @@ namespace easyforge
                 return instance;
             }
 
+            // Turns a shape about its center by `angle` radians, clockwise on screen.
+            // Everything the shader draws, corners and borders included, turns with it.
+            void TurnAboutCenter(ShapeInstance& instance, float angle)
+            {
+                if (angle == 0.0f)
+                {
+                    return;
+                }
+                Vector2 half { instance.Size[0] * 0.5f, instance.Size[1] * 0.5f };
+                Vector2 center { instance.Origin[0] + half.X, instance.Origin[1] + half.Y };
+                Vector2 axisX { std::cos(angle), std::sin(angle) };
+                Vector2 axisY { -axisX.Y, axisX.X };
+                Vector2 origin = center - axisX * half.X - axisY * half.Y;
+                instance.Origin[0] = origin.X;
+                instance.Origin[1] = origin.Y;
+                instance.AxisX[0] = axisX.X;
+                instance.AxisX[1] = axisX.Y;
+                instance.AxisY[0] = axisY.X;
+                instance.AxisY[1] = axisY.Y;
+            }
+
             // Gives a shape of `size` pixels a gradient along `angle` degrees, with
             // the first and last colors on the farthest corners.
             void ApplyGradient(ShapeInstance& instance, const LinearGradient& gradient, Vector2 size)
@@ -183,6 +204,7 @@ namespace easyforge
             instance.Gradient[0] = Max(style.HoleCornerRadius, 0.0f) * scale;
         }
         instance.Shape[3] = Max(style.Blur, 0.0f) * scale;
+        internal::TurnAboutCenter(instance, style.Rotation);
         Recorder->Add(instance, nullptr, internal::gpu::Sampling::LinearClamp);
     }
 
@@ -304,6 +326,7 @@ namespace easyforge
         instance.Coordinates[1] = source.Top() / height;
         instance.Coordinates[2] = source.Right() / width;
         instance.Coordinates[3] = source.Bottom() / height;
+        internal::TurnAboutCenter(instance, style.Rotation);
         Recorder->Add(instance, uploaded, state->Sampling());
     }
 

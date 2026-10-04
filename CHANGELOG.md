@@ -100,7 +100,8 @@ first. Version numbers follow [Semantic Versioning](https://semver.org); before
   device; and offline mixing into memory.
 - `OnPress`, `OnMove`, and `OnRelease` on `ui::DrawingArea`, in the points
   `OnDraw` uses.
-
+- `Rotation` on `RectangleStyle` and `ImageStyle`, which turns a rectangle or an
+  image about its center.
 ### Fixed
 
 - A window asked its title bar view about points below the title bar, so a

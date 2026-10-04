@@ -38,6 +38,10 @@ namespace easyforge
         Vector2 Position;
         Vector2 Size;
 
+        // Turns the rectangle about its center, in radians. On screen, where Y
+        // grows downward, positive angles turn it clockwise.
+        float Rotation = 0.0f;
+
         easyforge::Color Color = easyforge::Color::White;
 
         // Rounds every corner by this many points.
@@ -86,6 +90,10 @@ namespace easyforge
         // The size to draw at, in points. Zero draws one point for each pixel of
         // the part of the texture shown.
         Vector2 Size;
+
+        // Turns the image about its center, in radians, clockwise on screen. Not
+        // used with a slice.
+        float Rotation = 0.0f;
 
         // The part of the texture to draw, in its pixels. Empty draws all of it.
         easyforge::Rectangle Source;

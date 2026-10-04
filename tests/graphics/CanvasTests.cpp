@@ -77,6 +77,28 @@ EASYFORGE_TEST(RectanglesCoverWholePixels)
     EASYFORGE_EXPECT_EQUAL(Pixel(image, 11, 15), std::string("#FFFFFF"));
 }
 
+EASYFORGE_TEST(RectanglesTurnAboutTheirCenter)
+{
+    Renderer renderer = Offscreen(40, 40);
+    // A bar 24 wide and 6 tall around (20, 20), turned a quarter: 6 wide and 24 tall.
+    ImageData image = Picture(renderer, [](Canvas& canvas) {
+        canvas.Rectangle({ .Position = { 8, 17 }, .Size = { 24, 6 }, .Rotation = 1.5707964f, .Color = Color::White });
+    });
+    EASYFORGE_EXPECT_EQUAL(Pixel(image, 20, 10), std::string("#FFFFFF"));
+    EASYFORGE_EXPECT_EQUAL(Pixel(image, 20, 29), std::string("#FFFFFF"));
+    EASYFORGE_EXPECT_EQUAL(Pixel(image, 10, 20), std::string("#000000"));
+    EASYFORGE_EXPECT_EQUAL(Pixel(image, 29, 20), std::string("#000000"));
+
+    // An eighth of a turn, with a border: the border follows the turned edges.
+    image = Picture(renderer, [](Canvas& canvas) {
+        canvas.Rectangle({ .Position = { 10, 10 }, .Size = { 20, 20 }, .Rotation = 0.7853982f, .Color = Color::White,
+            .BorderWidth = 2, .BorderColor = Color::Hex("#FF0000") });
+    });
+    EASYFORGE_EXPECT_EQUAL(Pixel(image, 20, 20), std::string("#FFFFFF"));
+    EASYFORGE_EXPECT_EQUAL(Pixel(image, 11, 11), std::string("#000000"));   // the unturned corner is empty now
+    EASYFORGE_EXPECT_EQUAL(Pixel(image, 20, 7), std::string("#FF0000"));    // just under the turned top corner, in the border
+}
+
 EASYFORGE_TEST(RoundedCornersAndBorders)
 {
     Renderer renderer = Offscreen(40, 40);
