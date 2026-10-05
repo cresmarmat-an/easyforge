@@ -157,6 +157,10 @@ namespace easyforge
               [](void* owner, const float& value) { WriteField<float, &BodyData::Friction>(owner, std::max(value, 0.0f)); }),
           Restitution(reference.get(), ReadField<float, &BodyData::Restitution>,
               [](void* owner, const float& value) { WriteField<float, &BodyData::Restitution>(owner, std::max(value, 0.0f)); }),
+          RollingResistance(reference.get(), ReadField<float, &BodyData::RollingResistance>,
+              [](void* owner, const float& value) {
+                  WriteField<float, &BodyData::RollingResistance>(owner, std::max(value, 0.0f));
+              }),
           LinearDamping(reference.get(), ReadField<float, &BodyData::LinearDamping>,
               [](void* owner, const float& value) { WriteField<float, &BodyData::LinearDamping>(owner, std::max(value, 0.0f)); }),
           AngularDamping(reference.get(), ReadField<float, &BodyData::AngularDamping>,
@@ -243,6 +247,7 @@ namespace easyforge
         Type.Rebind(owner);
         Friction.Rebind(owner);
         Restitution.Rebind(owner);
+        RollingResistance.Rebind(owner);
         LinearDamping.Rebind(owner);
         AngularDamping.Rebind(owner);
         GravityScale.Rebind(owner);
@@ -612,6 +617,7 @@ namespace easyforge
             definition.Density = settings.Density;
             definition.Friction = settings.Friction;
             definition.Restitution = settings.Restitution;
+            definition.RollingResistance = settings.RollingResistance;
             definition.LinearDamping = settings.LinearDamping;
             definition.AngularDamping = settings.AngularDamping;
             definition.GravityScale = settings.GravityScale;

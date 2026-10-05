@@ -64,6 +64,13 @@ namespace easyforge
         // How much a collision bounces: 0 stops dead, 1 bounces back as fast.
         float Restitution = 0.0f;
 
+        // How much the body resists rolling where it is round: a circle, a
+        // capsule's ends, rounded corners. Its turning is held back by up to
+        // this share of the weight it rests with, at its radius. 0.01 is about
+        // a hard ball on a hard floor; 0 rolls forever on a flat floor. What it
+        // rolls on does not matter.
+        float RollingResistance = 0.01f;
+
         // Slows the body down over time, as air would.
         float LinearDamping = 0.0f;
         float AngularDamping = 0.0f;
@@ -104,6 +111,7 @@ namespace easyforge
         float Density = 1.0f;
         float Friction = 0.6f;
         float Restitution = 0.0f;
+        float RollingResistance = 0.01f;
         float LinearDamping = 0.0f;
         float AngularDamping = 0.0f;
         float GravityScale = 1.0f;
@@ -130,6 +138,7 @@ namespace easyforge
         float Density = 1.0f;
         float Friction = 0.6f;
         float Restitution = 0.0f;
+        float RollingResistance = 0.01f;
         float LinearDamping = 0.0f;
         float AngularDamping = 0.0f;
         float GravityScale = 1.0f;
@@ -156,6 +165,7 @@ namespace easyforge
         float Density = 1.0f;
         float Friction = 0.6f;
         float Restitution = 0.0f;
+        float RollingResistance = 0.01f;
         float LinearDamping = 0.0f;
         float AngularDamping = 0.0f;
         float GravityScale = 1.0f;
@@ -263,6 +273,7 @@ namespace easyforge
         Property<BodyType> Type;
         Property<float> Friction;
         Property<float> Restitution;
+        Property<float> RollingResistance;
         Property<float> LinearDamping;
         Property<float> AngularDamping;
         Property<float> GravityScale;

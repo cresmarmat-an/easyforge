@@ -161,6 +161,80 @@ EASYFORGE_TEST(SleepCanBeTurnedOff)
     EASYFORGE_EXPECT(top.IsAwake());
 }
 
+EASYFORGE_TEST(APileOfRoundBodiesFallsAsleep)
+{
+    // Circles packed together tremble a little where friction joins them, like
+    // gears; trembling in place still counts as resting.
+    Physics2D physics = Physics2D::New();
+    Ground(physics, 12.0f);
+    physics.AddBox({ .Position = { -5.5f, 15.0f }, .Size = { 1.0f, 30.0f }, .Type = BodyType::Static });
+    physics.AddBox({ .Position = { 5.5f, 15.0f }, .Size = { 1.0f, 30.0f }, .Type = BodyType::Static });
+    for (int index = 0; index < 150; ++index)
+    {
+        float x = -4.5f + static_cast<float>(index % 10) * 1.0f;
+        float y = 0.5f + static_cast<float>(index / 10) * 1.0f;
+        if (index % 3 == 0)
+        {
+            physics.AddBox({ .Position = { x, y }, .Size = { 0.8f, 0.8f } });
+        }
+        else
+        {
+            physics.AddCircle({ .Position = { x, y }, .Radius = 0.4f });
+        }
+    }
+    Run(physics, 20.0f);
+    EASYFORGE_EXPECT(AllAsleep(physics));
+}
+
+EASYFORGE_TEST(BallsRollToAStopUnlessNothingResists)
+{
+    Physics2D physics = Physics2D::New();
+    Ground(physics, 200.0f);
+    auto ball = [&](float x, float resistance) {
+        return physics.AddCircle({ .Position = { x, 0.5f }, .Radius = 0.5f, .Velocity = { 3.0f, 0.0f },
+            .AngularVelocity = -6.0f, .RollingResistance = resistance });
+    };
+    Body2D strong = ball(-80.0f, 0.1f);
+    Body2D usual = ball(-40.0f, 0.01f);
+    Body2D free = ball(0.0f, 0.0f);
+    Run(physics, 6.0f);
+
+    // A strong resistance stops a ball within a few metres.
+    EASYFORGE_EXPECT(Speed(strong) < 0.01f);
+    EASYFORGE_EXPECT(strong.Position.Get().X > -76.0f);
+    // The usual one, about a hard ball on a hard floor, slows it gently.
+    EASYFORGE_EXPECT(Speed(usual) < 2.8f);
+    EASYFORGE_EXPECT(Speed(usual) > 2.3f);
+    // Without any, nothing slows a ball rolling on a flat floor.
+    EASYFORGE_EXPECT_NEAR(Speed(free), 3.0f, 0.05f);
+}
+
+EASYFORGE_TEST(ABodyCloseByWakesASleeperOnlyByComingAtIt)
+{
+    Physics2D physics = Physics2D::New();
+    Ground(physics);
+    Body2D sleeper = physics.AddBox({ .Position = { 0.0f, 0.5f } });
+    Run(physics, 2.0f);
+    EASYFORGE_REQUIRE(!sleeper.IsAwake());
+
+    // A centimetre from its side, moving along it: near enough to be checked
+    // for contact, but neither touching nor coming closer.
+    Body2D passing = physics.AddBox({ .Position = { 1.01f, 0.5f }, .Size = { 1.0f, 1.0f }, .Type = BodyType::Kinematic,
+        .Velocity = { 0.0f, 0.02f } });
+    Run(physics, 2.0f);
+    EASYFORGE_EXPECT(!sleeper.IsAwake());
+
+    // Coming at it wakes it.
+    passing.Velocity = { -0.5f, 0.0f };
+    bool woke = false;
+    for (int step = 0; step < 30 && !woke; ++step)
+    {
+        physics.Step(StepSeconds);
+        woke = sleeper.IsAwake();
+    }
+    EASYFORGE_EXPECT(woke);
+}
+
 EASYFORGE_TEST(StacksApartSleepAndWakeApart)
 {
     Physics2D physics = Physics2D::New();

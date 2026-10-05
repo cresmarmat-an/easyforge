@@ -132,6 +132,7 @@ namespace easyforge::internal
         body.Density = std::max(definition.Density, 0.0f);
         body.Friction = std::max(definition.Friction, 0.0f);
         body.Restitution = std::max(definition.Restitution, 0.0f);
+        body.RollingResistance = std::max(definition.RollingResistance, 0.0f);
         body.LinearDamping = std::max(definition.LinearDamping, 0.0f);
         body.AngularDamping = std::max(definition.AngularDamping, 0.0f);
         body.GravityScale = definition.GravityScale;
@@ -521,16 +522,29 @@ namespace easyforge::internal
             contact.Points = manifold;
             contact.Touching = touching;
 
-            // Something moving that reaches a sleeping body wakes it.
-            if (manifold.Count > 0 && !contact.Sensor)
+            // Something that touches a sleeping body, or comes at it faster than
+            // a resting body moves, wakes it. A body that only trembles close by
+            // without touching does not, or a pile next to it could never rest.
+            bool firstAsleep = first.Type == BodyType::Dynamic && !first.Awake;
+            bool secondAsleep = second.Type == BodyType::Dynamic && !second.Awake;
+            if (manifold.Count > 0 && !contact.Sensor && (firstAsleep || secondAsleep))
             {
-                if (first.Type == BodyType::Dynamic && !first.Awake)
+                float closing = 0.0f;
+                for (int point = 0; point < manifold.Count; ++point)
                 {
-                    Wake(contact.First);
+                    Vector2 at = manifold.Points[point].Point;
+                    closing = std::max(closing, -Dot(ApproachVelocity(first, second, at), manifold.Normal));
                 }
-                if (second.Type == BodyType::Dynamic && !second.Awake)
+                if (touching || closing > WakeSpeed)
                 {
-                    Wake(contact.Second);
+                    if (firstAsleep)
+                    {
+                        Wake(contact.First);
+                    }
+                    if (secondAsleep)
+                    {
+                        Wake(contact.Second);
+                    }
                 }
             }
             ++index;
@@ -662,9 +676,34 @@ namespace easyforge::internal
             {
                 continue;
             }
-            float fastestPoint = Length(body.Velocity) + std::abs(body.AngularVelocity) * body.Extents.Most;
-            bool still = AllowSleep && body.AllowSleep && fastestPoint <= SleepSpeed;
-            body.StillTime = still ? body.StillTime + seconds : 0.0f;
+            if (!AllowSleep || !body.AllowSleep)
+            {
+                body.StillTime = 0.0f;
+                continue;
+            }
+            float reach = body.Extents.Most;
+            std::array<Vector2, 3> points = {
+                body.Center,
+                body.Center + Rotate(body.Origin.Turn, Vector2 { reach, 0.0f }),
+                body.Center + Rotate(body.Origin.Turn, Vector2 { 0.0f, reach }),
+            };
+            constexpr float Allowed = SleepSpeed * SleepAfter;
+            bool near = body.StillTime > 0.0f;
+            for (std::size_t point = 0; point < points.size() && near; ++point)
+            {
+                near = LengthSquared(points[point] - body.RestPoints[point]) <= Allowed * Allowed;
+            }
+            if (near)
+            {
+                body.StillTime += seconds;
+            }
+            else
+            {
+                // Starts keeping still from here. The smallest time above zero
+                // marks the points as taken.
+                body.RestPoints = points;
+                body.StillTime = std::numeric_limits<float>::min();
+            }
         }
 
         // Bodies touching or joined sleep together. Resting on something that

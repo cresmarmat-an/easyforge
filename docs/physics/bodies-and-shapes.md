@@ -46,6 +46,7 @@ After the shape's own settings, every Add takes the same ones:
 | `Density` | 1 | kilograms a square metre, which sets the mass |
 | `Friction` | 0.6 | 0 slides like ice, 1 grips like rubber; two bodies use the root of both |
 | `Restitution` | 0 | 0 stops dead, 1 bounces back as fast; two bodies use the larger |
+| `RollingResistance` | 0.01 | how much a round body, or a round part of one, resists rolling; see [rolling](#rolling) |
 | `LinearDamping`, `AngularDamping` | 0 | slow the body over time, as air does |
 | `GravityScale` | 1 | how much gravity the body feels; 0 floats |
 | `FixedRotation` | false | the body never turns |
@@ -81,17 +82,40 @@ inertia about its center of mass, `Center()` the center of mass in the world,
 `Bounds()` the smallest box around it, and `WorldPoint` and `LocalPoint` turn
 points between the world and the body's own coordinates.
 
+## Rolling
+
+A ball on a flat floor would roll forever if nothing held it back, and a ball
+caught in a dip on a pile would rock back and forth forever, keeping the pile
+awake. Real balls slow down as they roll, and so do easyforge's: wherever a body
+is round (a circle, a capsule's ends, rounded corners), its turning is held
+back by up to `RollingResistance` times the weight it rests with, at its
+radius.
+
+The default, 0.01, is about a hard ball on a hard floor: a ball rolling at 3
+metres a second slows by a few centimetres a second each second. A higher
+value, such as 0.1 for a ball on grass or carpet, stops it within metres; 0
+lets it roll on forever. The rolling body's own value counts, whatever it
+rolls on; between two round bodies, the larger.
+
+```cpp
+Body2D marble = physics.AddCircle({ .Radius = 0.1f, .RollingResistance = 0.002f });
+marble.RollingResistance = 0.1f;   // onto the carpet
+```
+
 ## Sleeping
 
 A dynamic body that has been still for half a second, along with everything it
 touches or is joined to, falls asleep: it is not moved or solved until something
 wakes it, so a pile of resting bodies costs almost nothing and stays perfectly
-still. "Still" means no point of the body moves faster than 5 centimetres a
-second, counting its turning as well as its movement.
+still. "Still" means the body's center and the points at its edge have each
+stayed within 2.5 centimetres of where they were for the whole half second, so
+bodies that tremble in place deep in a pile rest too, while one drifting
+slowly does not.
 
 A sleeping body wakes, with everything that fell asleep with it, when:
 
-- something moving reaches it, or a body is added next to it;
+- something touches it, or comes at it faster than 10 centimetres a second,
+  or a body is added next to it;
 - a force, torque, or impulse is applied to it, or its velocity, position,
   rotation, type, gravity scale, or collision layers are set;
 - a joint is added to it, removed from it, or changed;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -51,6 +52,7 @@ namespace easyforge::internal::physics2d
         float Density = 1.0f;
         float Friction = 0.6f;
         float Restitution = 0.0f;
+        float RollingResistance = 0.01f;
         float LinearDamping = 0.0f;
         float AngularDamping = 0.0f;
         float GravityScale = 1.0f;
@@ -93,6 +95,7 @@ namespace easyforge::internal::physics2d
         float Density = 1.0f;
         float Friction = 0.6f;
         float Restitution = 0.0f;
+        float RollingResistance = 0.01f;
         float LinearDamping = 0.0f;
         float AngularDamping = 0.0f;
         float GravityScale = 1.0f;
@@ -112,6 +115,12 @@ namespace easyforge::internal::physics2d
         bool Awake = true;
         float StillTime = 0.0f;
         int SleepGroup = -1;
+
+        // Where three points of the body were when it began to keep still: its
+        // center, and two points at its reach. It stays still while each stays
+        // near where it was, so a body trembling in place still rests. A still
+        // time of zero means they are taken again.
+        std::array<Vector2, 3> RestPoints {};
 
         // How far the shape reaches from the center of mass.
         Reach Extents;
@@ -213,6 +222,14 @@ namespace easyforge::internal::physics2d
         Vector2 Normal;
         float Friction = 0.0f;
         float Restitution = 0.0f;
+
+        // Rolling resistance: the most torque per unit of normal impulse, the
+        // mass for turning the two bodies against each other, and the
+        // impulse so far this step.
+        float RollingResistance = 0.0f;
+        float RollingMass = 0.0f;
+        float RollingImpulse = 0.0f;
+
         PointConstraint Points[2];
         int Count = 0;
     };

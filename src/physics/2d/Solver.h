@@ -32,12 +32,17 @@ namespace easyforge::internal::physics2d
     // this, which keeps the solver and the sweeps of fast bodies dependable.
     inline constexpr float MaximumSubstepTurn = 0.25f * 3.14159265f;
 
-    // A body none of whose points moves faster than this, in metres a second,
-    // for this long along with everything it touches, falls asleep. A point's
-    // speed is at most the body's speed plus its turning times its reach, so a
-    // small body may turn a little faster than a large one and still rest.
+    // A body falls asleep, along with everything it touches, once its center
+    // and two points at its reach have each stayed within SleepSpeed *
+    // SleepAfter (2.5 centimetres) of where they were for SleepAfter seconds.
+    // Testing where points went, as Jolt does, rather than how fast they move
+    // at one moment, lets bodies that tremble in place in a pile rest.
     inline constexpr float SleepSpeed = 0.05f;
     inline constexpr float SleepAfter = 0.5f;
+
+    // A body coming at a sleeping one faster than this, in metres a second,
+    // wakes it before they touch.
+    inline constexpr float WakeSpeed = 2.0f * SleepSpeed;
 
     // A body that moves more than this share of its least reach in a step is
     // swept, so it cannot pass through anything in between.

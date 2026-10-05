@@ -98,6 +98,24 @@ namespace easyforge::internal::physics2d
                 point.TangentImpulse = total;
                 Apply(first, second, point.ArmFirst, point.ArmSecond, tangent * impulse);
             }
+
+            // Rolling resistance: the bodies turning against each other are
+            // slowed, by at most a share of how hard they press together.
+            if (constraint.RollingResistance > 0.0f)
+            {
+                float pressing = 0.0f;
+                for (int index = 0; index < constraint.Count; ++index)
+                {
+                    pressing += constraint.Points[index].NormalImpulse;
+                }
+                float limit = constraint.RollingResistance * pressing;
+                float impulse = -constraint.RollingMass * (second.AngularVelocity - first.AngularVelocity);
+                float total = std::clamp(constraint.RollingImpulse + impulse, -limit, limit);
+                impulse = total - constraint.RollingImpulse;
+                constraint.RollingImpulse = total;
+                first.AngularVelocity -= first.InverseInertia * impulse;
+                second.AngularVelocity += second.InverseInertia * impulse;
+            }
         }
     }
 }
@@ -148,6 +166,19 @@ namespace easyforge::internal
             // Mixed from the bodies every step, so changing either takes effect.
             constraint.Friction = std::sqrt(first.Friction * second.Friction);
             constraint.Restitution = std::max(first.Restitution, second.Restitution);
+            // Rolling is resisted as the round shape that rolls says, on its
+            // radius; between two round shapes, the more resisting one.
+            float roundFirst = first.Outline.Radius;
+            float roundSecond = second.Outline.Radius;
+            float turnable = first.InverseInertia + second.InverseInertia;
+            if ((roundFirst > 0.0f || roundSecond > 0.0f) && turnable > 0.0f)
+            {
+                float coefficient = roundFirst > 0.0f && roundSecond > 0.0f
+                                        ? std::max(first.RollingResistance, second.RollingResistance)
+                                        : (roundFirst > 0.0f ? first.RollingResistance : second.RollingResistance);
+                constraint.RollingResistance = coefficient * std::max(roundFirst, roundSecond);
+                constraint.RollingMass = 1.0f / turnable;
+            }
             constraint.Count = contact.Points.Count;
             Vector2 tangent = RightPerpendicular(constraint.Normal);
             for (int point = 0; point < constraint.Count; ++point)
@@ -223,6 +254,8 @@ namespace easyforge::internal
                     Vector2 impulse = constraint.Normal * point.NormalImpulse + tangent * point.TangentImpulse;
                     Apply(first, second, point.ArmFirst, point.ArmSecond, impulse);
                 }
+                first.AngularVelocity -= first.InverseInertia * constraint.RollingImpulse;
+                second.AngularVelocity += second.InverseInertia * constraint.RollingImpulse;
             }
 
             for (JointData* joint : joints)

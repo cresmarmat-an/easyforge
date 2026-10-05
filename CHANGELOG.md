@@ -28,6 +28,9 @@
 - A `Font` or `Shader` can be named by the path of its file wherever one is
   expected, such as `.Font = "fonts/Inter.ttf"` or `.Shader = "ripple.shader"`
   in settings; everything that names the same file shares one.
+- `RollingResistance` on physics bodies and in every shape's settings, 0.01 by
+  default, so round bodies slow down as they roll and piles of them come to
+  rest.
 - `Window::RequestFrame`, `Host::RequestFrame`, and `SecondsUntilNextFrame` on
   views and listeners, so a window can wait while nothing changes.
 
@@ -50,9 +53,13 @@
   another image, before reading input, and at most one finished frame waits to
   be shown, so what is shown answers input sooner.
 - A physics body turns at most an eighth of a turn per substep.
-- A physics body counts as still for sleeping when no point of it moves faster
-  than 5 centimetres a second, as in Box2D, rather than when it moves and turns
-  slower than fixed amounts, so piles of small round bodies fall asleep.
+- A sleeping physics body wakes when something touches it or comes at it,
+  not whenever something moves close by, which kept a pile next to a
+  trembling body from ever sleeping.
+- A physics body counts as still for sleeping when its center and two points at
+  its edge stay within 2.5 centimetres of where they were for half a second,
+  as in Jolt, rather than by its speed at each moment, so bodies that tremble
+  in place in a pile fall asleep.
 - Input recordings and bindings, `.tree` files, and scripts open files named in
   any language on Windows; before, names outside the system's code page failed.
 - A color in a script that the compiler could not read no longer ends the
