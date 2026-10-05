@@ -297,3 +297,14 @@ EASYFORGE_TEST(EffectsStayOutsideAndAboveTheirBox)
     ImageData tallImage = tallScreen.Picture();
     EASYFORGE_EXPECT(!NearColor(tallImage.ColorAt(100, 100), Color::Transparent, 0.01f));
 }
+
+EASYFORGE_TEST(SettingsNameFontsByTheirFiles)
+{
+    ui::Theme theme = TestTheme();
+    theme.Font = EASYFORGE_TEST_FONT;
+    EASYFORGE_EXPECT(static_cast<bool>(theme.Font));
+    ui::Label label("Hello", { .Font = EASYFORGE_TEST_FONT });
+    Screen screen(300, 100, Holder({ label }));
+    screen.Frame();
+    EASYFORGE_EXPECT(label.Frame().Width > 0.0f);
+}

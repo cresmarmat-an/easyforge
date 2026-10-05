@@ -72,13 +72,14 @@ points.
 
 ```cpp
 ui::Panel({
-    .Shader = Shader::Load("ripple.shader"),
+    .Shader = "ripple.shader",
     .ShaderValues = { { "Speed", 2.0f }, { "Tint", Color::Hex("#66CCFF") } },
     .Children = { /* ... */ },
 })
 ```
 
-With a `Shader`, the element and everything in it are drawn into a picture
+`.Shader` takes a `Shader` or the path of a `.shader` file. With a shader, the
+element and everything in it are drawn into a picture
 first, and the shader decides each pixel, reading that picture as
 `input.Content`. `ShaderValues` sets the shader's values each frame. The
 picture covers the element's box and a margin around it for its effects, and

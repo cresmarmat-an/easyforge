@@ -133,6 +133,38 @@ namespace easyforge
     {
     }
 
+    namespace
+    {
+        internal::SharedByPath<internal::ShaderState>& ShadersByPath()
+        {
+            static internal::SharedByPath<internal::ShaderState> shaders;
+            return shaders;
+        }
+    }
+
+    Shader::Shader(const char* path) : Shader(std::string_view(path ? path : ""))
+    {
+    }
+
+    Shader::Shader(const std::string& path) : Shader(std::string_view(path))
+    {
+    }
+
+    Shader::Shader(std::string_view path)
+        : Shared(ShadersByPath().Find(
+              std::string(path),
+              [path] {
+                  Shader shader = Load(path);
+                  if (!shader)
+                  {
+                      Log(LogLevel::Warning, "The shader {} was not loaded: {}", path, shader.Error());
+                  }
+                  return shader.Shared;
+              },
+              [](const internal::ShaderState& state) { return state.Made; }))
+    {
+    }
+
     Shader::operator bool() const
     {
         return Shared->Made;

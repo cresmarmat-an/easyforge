@@ -30,6 +30,15 @@ namespace easyforge
         // No font. Tests as false.
         Font();
 
+        // The font in a file, so settings can name it: `.Font = "fonts/Inter.ttf"`.
+        // Everything that names the same file shares one font while any of them
+        // is in use, so naming it in many places loads it once. A file that
+        // cannot be read logs a warning and gives a font that tests as false.
+        // Load always reads the file again.
+        Font(const char* path);
+        Font(const std::string& path);
+        Font(std::string_view path);
+
         explicit operator bool() const;
         const std::string& Error() const;
 

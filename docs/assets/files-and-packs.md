@@ -27,6 +27,36 @@ was started. An absolute path is read exactly as it is.
 
 When a file is not found, the error says every place that was searched.
 
+## Arranging your files
+
+Files can sit wherever suits the project. Everything in easyforge that uses a
+file takes its path, and finds it the same way:
+
+| Written | Reads |
+|---|---|
+| `Window::New({ .Icon = "art/icon.png" })` | The window's icon |
+| `ui::Image("art/logo.png")`, `ui::Background::Image(path)` | Pictures in an interface |
+| `.Font = "fonts/Inter.ttf"`, `theme.Font = path` | A font, shared by everything that names it |
+| `.Shader = "effects/ripple.shader"` | A shader, shared the same way |
+| `ui::Theme::Load(path)` | A theme |
+| `Texture::Load`, `Font::Load`, `Model::Load`, `Shader::Load` | Graphics |
+| `Sound::Load`, `SoundData::Open` | Sounds and music |
+| `Table::Load`, `scripts.RunFile`, `controls.LoadBindings` | Data, scripts, and key bindings |
+
+To keep everything under one folder, mount it once at the start, and name
+files from there:
+
+```cpp
+Files::Mount("assets");   // in the working directory, or else next to the program
+
+Window window = Window::New({ .Title = "Notes", .Icon = "icons/notes.png" });   // assets/icons/notes.png
+```
+
+Mounting several folders, such as one for the game and one for a mod that
+replaces some of its files, searches the one mounted last first. Shipped
+programs can put the same folder into a pack with `Files::CreatePack` and
+mount that instead, without changing a single path.
+
 ## Reading
 
 | Written | Result |

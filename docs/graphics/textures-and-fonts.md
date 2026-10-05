@@ -47,6 +47,20 @@ canvas.Text(font, "Hello", { .Position = { 20, 20 }, .Size = 24 });
 `Font::Load` reads TrueType fonts and collections through
 [FontData](../assets/fonts.md); `Font::FromData` uses one already loaded.
 
+Wherever a `Font` is expected, the path of its file works too, which is the
+easy way to name one in settings:
+
+```cpp
+ui::Label("Scores", { .FontSize = 32, .Font = "fonts/Title.ttf" });
+theme.Font = "fonts/Inter.ttf";
+```
+
+Everything that names the same file this way shares one font while any of them
+is in use, so a font named on a hundred labels is read once. A file that cannot
+be read logs a warning and gives a font that tests as false, so the interface
+falls back to the theme's font. `Font::Load` always reads the file again, for
+when it has changed.
+
 ### Measuring text
 
 ```cpp

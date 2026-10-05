@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -20,6 +21,40 @@
 
 namespace easyforge::internal
 {
+    // Objects made from files, shared by everything that names the same file
+    // while any of them is in use. Safe to use from several threads.
+    template <typename State>
+    class SharedByPath
+    {
+    public:
+        // The object for `path`: the one in use, or a new one from `make`, kept
+        // for others when `keep` says it was made well.
+        template <typename Make, typename Keep>
+        std::shared_ptr<State> Find(const std::string& path, Make make, Keep keep)
+        {
+            std::scoped_lock lock(Mutex);
+            auto found = Objects.find(path);
+            if (found != Objects.end())
+            {
+                if (std::shared_ptr<State> state = found->second.lock())
+                {
+                    return state;
+                }
+            }
+            std::shared_ptr<State> state = make();
+            std::erase_if(Objects, [](const auto& entry) { return entry.second.expired(); });
+            if (keep(*state))
+            {
+                Objects[path] = state;
+            }
+            return state;
+        }
+
+    private:
+        std::mutex Mutex;
+        std::map<std::string, std::weak_ptr<State>> Objects;
+    };
+
     // A GPU copy of something, made for one device. The device is kept alive by
     // its copies, and destroyed after them.
     template <typename Copy>

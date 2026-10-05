@@ -196,3 +196,28 @@ EASYFORGE_TEST(ModelsWithMaterialsAndTextures)
     EASYFORGE_EXPECT(!empty);
     EASYFORGE_EXPECT(!empty.Add(model));
 }
+
+EASYFORGE_TEST(FontsAndShadersCanBeNamedByTheirFiles)
+{
+    // Settings can name the file, and everything that names it shares one.
+    Font first = EASYFORGE_TEST_FONT;
+    Font second = std::string(EASYFORGE_TEST_FONT);
+    EASYFORGE_REQUIRE(first);
+    EASYFORGE_EXPECT(first.State() == second.State());
+    EASYFORGE_EXPECT(first.State() != Font::Load(EASYFORGE_TEST_FONT).State());
+    EASYFORGE_EXPECT(first.Measure("Hi", 20.0f).X > 0.0f);
+
+    std::string ripple = std::string(EASYFORGE_TEST_SHADERS) + "ripple.shader";
+    Shader shader = ripple;
+    EASYFORGE_REQUIRE(shader);
+    EASYFORGE_EXPECT(shader.State() == Shader(std::string_view(ripple)).State());
+
+    // A file that cannot be read gives one that tests as false, and is tried
+    // again the next time it is named.
+    Font missing = "no such font.ttf";
+    EASYFORGE_EXPECT(!missing);
+    EASYFORGE_EXPECT(!missing.Error().empty());
+    Shader broken = std::string(EASYFORGE_TEST_SHADERS) + "broken.shader";
+    EASYFORGE_EXPECT(!broken);
+    EASYFORGE_EXPECT(broken.State() != Shader(std::string(EASYFORGE_TEST_SHADERS) + "broken.shader").State());
+}

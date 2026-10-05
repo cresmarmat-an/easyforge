@@ -58,6 +58,15 @@ namespace easyforge
         // No shader. Tests as false.
         Shader();
 
+        // The shader in a file, so settings can name it:
+        // `.Shader = "effects/wave.shader"`. Everything that names the same file
+        // shares one shader while any of them is in use. A file that cannot be
+        // read or checked logs a warning and gives a shader that tests as false.
+        // Load always reads the file again.
+        Shader(const char* path);
+        Shader(const std::string& path);
+        Shader(std::string_view path);
+
         explicit operator bool() const;
 
         // Every problem found, one a line, such as

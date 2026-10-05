@@ -40,6 +40,11 @@ ripple.shader:6:22: 'wave' is not declared
 ripple.shader:7:12: this function returns a color, but this is a vector2
 ```
 
+Wherever a `Shader` is expected, the path of its file works too:
+`.Shader = "effects/ripple.shader"`. Everything that names the same file shares
+one shader while any of them is in use, and a shader with problems logs them as
+a warning. `Shader::Load` always reads the file again.
+
 The shader is turned into the GPU's own language the first time it is drawn.
 [easyforge_add_shaders](../installation/shaders.md) checks shaders when the
 program is built, so problems show up before the program runs.

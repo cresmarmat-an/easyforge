@@ -25,6 +25,9 @@
 - `PathFromText` and `TextFromPath` in `core`, for UTF-8 file paths.
 - The `EASYFORGE_SANITIZE` build option, and tests that feed damaged input to
   every reader and run jobs, sounds, and network ends from many threads at once.
+- A `Font` or `Shader` can be named by the path of its file wherever one is
+  expected, such as `.Font = "fonts/Inter.ttf"` or `.Shader = "ripple.shader"`
+  in settings; everything that names the same file shares one.
 - `Window::RequestFrame`, `Host::RequestFrame`, and `SecondsUntilNextFrame` on
   views and listeners, so a window can wait while nothing changes.
 

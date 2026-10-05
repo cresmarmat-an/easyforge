@@ -1,5 +1,9 @@
 #include <easyforge/graphics/Font.h>
 
+#include <atomic>
+
+#include <easyforge/core/Log.h>
+
 #include "Resources.h"
 #include "Text.h"
 
@@ -42,8 +46,14 @@ namespace easyforge
         {
             std::uint64_t NextFontNumber()
             {
-                static std::uint64_t next = 1;
+                static std::atomic<std::uint64_t> next = 1;
                 return next++;
+            }
+
+            SharedByPath<FontState>& FontsByPath()
+            {
+                static SharedByPath<FontState> fonts;
+                return fonts;
             }
         }
     }
@@ -67,6 +77,29 @@ namespace easyforge
     }
 
     Font::Font(std::shared_ptr<internal::FontState> state) : Shared(std::move(state))
+    {
+    }
+
+    Font::Font(const char* path) : Font(std::string_view(path ? path : ""))
+    {
+    }
+
+    Font::Font(const std::string& path) : Font(std::string_view(path))
+    {
+    }
+
+    Font::Font(std::string_view path)
+        : Shared(internal::FontsByPath().Find(
+              std::string(path),
+              [path] {
+                  Font font = Load(path);
+                  if (!font)
+                  {
+                      Log(LogLevel::Warning, "The font {} was not loaded: {}", path, font.Error());
+                  }
+                  return font.Shared;
+              },
+              [](const internal::FontState& state) { return static_cast<bool>(state.Data); }))
     {
     }
 
