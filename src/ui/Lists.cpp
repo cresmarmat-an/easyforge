@@ -241,9 +241,19 @@ namespace easyforge::ui::internal
                 return Lines.size();
             }
 
+            bool FollowedChanged(ElementState& element) override
+            {
+                Table table = element.Object<Table>("Source");
+                return !(table == Watched) || (table && table.Version() != SeenVersion);
+            }
+
             void Update(ElementState& element, Context& context) override
             {
                 Refresh(element);
+                if (Watched)
+                {
+                    context.Root->Follow(element);
+                }
                 RowsBehavior::Update(element, context);
             }
 

@@ -9,6 +9,7 @@
 
 #include <easyforge/core/Clock.h>
 #include <easyforge/core/Host.h>
+#include <easyforge/core/Scalar.h>
 #include <easyforge/graphics/Renderer.h>
 #include <easyforge/ui/Theme.h>
 
@@ -121,6 +122,15 @@ namespace easyforge::ui::internal
         void HandleEvent(const Event&) override {}
         void FrameStarted(float) override {}
         void FrameEnded() override;
+        float SecondsUntilNextFrame() const override;
+
+        // While updating and drawing: something shown changes on its own within
+        // `seconds`, so the window must not wait longer for the next frame.
+        void WantFrameIn(float seconds) { WaitSeconds = Min(WaitSeconds, seconds); }
+
+        // While updating: the element shows data from outside the interface,
+        // which is checked for changes while the window waits.
+        void Follow(ElementState& element) { Following.push_back(element.weak_from_this()); }
 
         std::shared_ptr<ElementTree> Interface;
         std::vector<Slot> Slots;
@@ -148,6 +158,21 @@ namespace easyforge::ui::internal
         Clock SinceStart;
         float PendingDelta = 0.0f;
         float Scale = 1.0f;
+
+        // When the next frame is needed, gathered while updating and drawing,
+        // counted from UpdatedAt.
+        float WaitSeconds = 0.0f;
+        double UpdatedAt = 0.0;
+
+        // The last event or change. Frames keep coming for a moment after it,
+        // so whatever it set going can finish.
+        double ActiveAt = 0.0;
+
+        // Something changed outside the table, so the next frame has to draw.
+        bool DrawWanted = true;
+
+        std::vector<std::weak_ptr<ElementState>> Following;
+        mutable double FollowCheckedAt = 0.0;
 
         std::uint64_t SeenVersion = 0;
         bool LayoutDirty = true;
@@ -212,6 +237,7 @@ namespace easyforge::ui::internal
         void Frame(float deltaSeconds) override;
         Vector2 PreferredSize(Vector2 available) const override;
         HitArea HitTest(Vector2 point) const override;
+        float SecondsUntilNextFrame() const override;
 
         std::shared_ptr<ElementState> Element;
         std::shared_ptr<RootState> Root;

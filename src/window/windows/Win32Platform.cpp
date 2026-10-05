@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <atomic>
 #include <map>
 
 #include "../Platform.h"
@@ -13,6 +14,10 @@ namespace easyforge::internal
 {
     namespace
     {
+        // The thread that handles the windows' messages, which a wake-up is
+        // posted to.
+        std::atomic<DWORD> WindowThread { 0 };
+
         // The names screens report, by the GDI device name Windows uses for each
         // desktop area, such as \\.\DISPLAY1.
         std::map<std::wstring, std::string> ScreenNames()
@@ -181,6 +186,7 @@ namespace easyforge::internal
 
     void HandlePlatformMessages()
     {
+        WindowThread.store(GetCurrentThreadId());
         MSG message;
         while (PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE))
         {
@@ -209,6 +215,12 @@ namespace easyforge::internal
 
     void WaitForMessages(float seconds)
     {
+        WindowThread.store(GetCurrentThreadId());
+        if (!(seconds < 86'400.0f))
+        {
+            MsgWaitForMultipleObjectsEx(0, nullptr, INFINITE, QS_ALLINPUT, MWMO_INPUTAVAILABLE);
+            return;
+        }
         // A plain timeout rounds up to the system's timer tick, which is often
         // 15.6 milliseconds, so ask for a timer that keeps finer time.
         static HANDLE timer = CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
@@ -221,6 +233,16 @@ namespace easyforge::internal
         }
         DWORD milliseconds = static_cast<DWORD>(Max(seconds, 0.0f) * 1000.0f);
         MsgWaitForMultipleObjectsEx(0, nullptr, milliseconds, QS_ALLINPUT, MWMO_INPUTAVAILABLE);
+    }
+
+    // A thread message: it reaches the thread even while every window is busy,
+    // and nothing handles it, so it only ends the wait.
+    void WakeWindowThread()
+    {
+        if (DWORD thread = WindowThread.load())
+        {
+            PostThreadMessageW(thread, WM_NULL, 0, 0);
+        }
     }
 
     ColorScheme PlatformColorScheme()

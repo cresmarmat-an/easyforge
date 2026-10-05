@@ -87,8 +87,9 @@ namespace easyforge
         // says why.
         static Window New(const WindowSettings& settings = {});
 
-        // Handles what the system sent and runs one frame of every open window.
-        // For programs that run their own loop instead of calling Run.
+        // Handles what the system sent and runs one frame of every open window,
+        // whether or not anything changed. For programs that run their own loop
+        // instead of calling Run.
         static void RunOneFrame();
 
         // Not a window. Tests as false.
@@ -105,8 +106,14 @@ namespace easyforge
         const std::string& Error() const;
 
         // Runs frames until this window closes. Every other open window keeps
-        // running too.
+        // running too. A window without OnFrame runs frames only while something
+        // changes, and otherwise waits without using the processor.
         void Run() const;
+
+        // Asks for a frame soon, for a window that waits while nothing changes,
+        // such as after data arrived on another thread. Safe to call from any
+        // thread.
+        void RequestFrame() const;
 
         bool IsOpen() const;
 

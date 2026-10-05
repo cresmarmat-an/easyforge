@@ -197,6 +197,12 @@ namespace easyforge::ui::internal
     void EditingBehavior::Update(ElementState& element, Context& context)
     {
         LastTime = context.Time;
+        // The caret blinks: shown for half a second, then hidden for half.
+        if (element.Focused && element.IsEnabled())
+        {
+            float phase = std::fmod(Max(context.Time - BlinkStart, 0.0f), 1.0f);
+            context.Root->WantFrameIn((phase < 0.5f ? 0.5f : 1.0f) - phase);
+        }
         std::string text = Text(element);
         if (!Writing && text != Known)
         {

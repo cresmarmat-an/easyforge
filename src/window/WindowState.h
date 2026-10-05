@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <functional>
 #include <map>
 #include <memory>
@@ -49,6 +50,7 @@ namespace easyforge::internal
         std::shared_ptr<void>& Shared(std::string_view name) override;
         void RequestPlacement() override { PlacementWanted = true; }
         void SetFramePacer(FramePacer* pacer) override { Pacer = pacer; }
+        void RequestFrame() override;
 
         // Called by the platform window.
         void Report(Event& event);
@@ -58,6 +60,17 @@ namespace easyforge::internal
 
         // Runs one frame, unless one is already running.
         void RunFrame();
+
+        // How long, from now, the window can do without a frame: 0 while it has
+        // OnFrame, something happened, or a view or listener wants one now.
+        float SecondsUntilFrame() const;
+
+        // The window is skipped while nothing needs a frame. Its next frame then
+        // does not count the time spent waiting for input.
+        bool Waiting = false;
+
+        // Whether the window shows: visible and not minimized.
+        bool Shows() const;
 
         void SetContent(std::shared_ptr<View> view);
         void SetTitleBar(std::shared_ptr<View> view);
@@ -108,6 +121,10 @@ namespace easyforge::internal
         Clock FrameClock;
         // Evens out frame times while frames are shown in step with the screen.
         FrameTimer Timing;
+        // Something happened that the next frame has to show. Set from any
+        // thread by RequestFrame.
+        std::atomic<bool> FrameWanted { true };
+        bool ShownInLastFrame = false;
         int FramesUntilRefreshCheck = 0;
         bool TimedWithScreen = false;
         bool InFrame = false;

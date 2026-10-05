@@ -96,9 +96,11 @@ namespace easyforge
             }
         }
 
+        // Waits once for each frame shown: the screen's wait object counts the
+        // frames it can take, so waiting twice before showing one would block.
         void RendererState::WaitForNextFrame(float seconds)
         {
-            if (Surface)
+            if (Surface && !WaitedForFrame)
             {
                 Surface->WaitUntilReady(seconds);
                 WaitedForFrame = true;

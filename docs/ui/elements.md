@@ -214,7 +214,9 @@ ui::DrawingArea({
 })
 ```
 
-`OnDraw` is called every frame the area is on screen, with the same
+`OnDraw` is called every frame the area is on screen, and a drawing area keeps
+frames coming even in a window that otherwise waits while nothing changes,
+since what it draws can change on its own. It gets the same
 [Canvas](../graphics/canvas.md) a renderer gives. Points start at the area's top
 left inside its padding, and drawing is cut to that box. `OnDraw` can take just
 the canvas, or the canvas and the area's size in points.

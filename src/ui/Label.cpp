@@ -94,7 +94,18 @@ namespace easyforge::ui::internal
                     FromData<TextAlignment>(element.Get("TextAlignment")), true);
             }
 
-            void Update(ElementState& element, Context&) override
+            bool FollowedChanged(ElementState& element) override
+            {
+                auto found = element.Objects.find("Binding");
+                if (found == element.Objects.end())
+                {
+                    return false;
+                }
+                const ui::Binding* binding = std::any_cast<ui::Binding>(&found->second);
+                return binding && *binding && binding->Text() != element.Get("Text").AsText();
+            }
+
+            void Update(ElementState& element, Context& context) override
             {
                 auto found = element.Objects.find("Binding");
                 if (found == element.Objects.end())
@@ -105,6 +116,10 @@ namespace easyforge::ui::internal
                 if (!binding || !*binding)
                 {
                     return;
+                }
+                if (context.Root)
+                {
+                    context.Root->Follow(element);
                 }
                 std::string text = binding->Text();
                 if (text != element.Get("Text").AsText())

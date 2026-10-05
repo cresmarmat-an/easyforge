@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <filesystem>
+#include <limits>
 
 #include <easyforge/core/Log.h>
 #include <easyforge/core/Paths.h>
@@ -19,6 +20,13 @@ namespace easyforge::ui::internal
 
         // Seconds the pointer rests before a tooltip shows.
         constexpr float TooltipDelay = 0.6f;
+
+        // How long frames keep coming after an event or a change, so a transition
+        // it set going finishes even if nothing reports it.
+        constexpr double SettleSeconds = 0.25;
+
+        // How often data that elements follow is checked while a window waits.
+        constexpr double FollowSeconds = 0.25;
 
         float Approach(float value, float target, float step)
         {
@@ -470,6 +478,38 @@ namespace easyforge::ui::internal
         {
             LayoutDirty = true;
         }
+        DrawWanted = true;
+    }
+
+    float RootState::SecondsUntilNextFrame() const
+    {
+        if (DrawWanted || LayoutDirty || Interface->Elements.Version() != SeenVersion)
+        {
+            return 0.0f;
+        }
+        double now = SinceStart.Seconds();
+        if (now - ActiveAt < SettleSeconds)
+        {
+            return 0.0f;
+        }
+        double wait = static_cast<double>(WaitSeconds) - (now - UpdatedAt);
+        if (!Following.empty())
+        {
+            if (now - FollowCheckedAt >= FollowSeconds)
+            {
+                FollowCheckedAt = now;
+                for (const std::weak_ptr<ElementState>& followed : Following)
+                {
+                    std::shared_ptr<ElementState> element = followed.lock();
+                    if (element && element->Root() == this && element->Kind->FollowedChanged(*element))
+                    {
+                        return 0.0f;
+                    }
+                }
+            }
+            wait = std::min(wait, FollowSeconds - (now - FollowCheckedAt));
+        }
+        return static_cast<float>(std::max(wait, 0.0));
     }
 
     Context RootState::MakeContext(float deltaSeconds) const
@@ -622,6 +662,7 @@ namespace easyforge::ui::internal
         {
             return;
         }
+        ActiveAt = SinceStart.Seconds();
         if (SeenVersion + 1 < table.OldestVersion())
         {
             for (Slot& slot : Slots)
@@ -692,6 +733,10 @@ namespace easyforge::ui::internal
             }
             ++index;
         }
+        if (!element.Animations.empty())
+        {
+            WantFrameIn(0.0f);
+        }
         for (const std::function<void()>& callback : finished)
         {
             callback();
@@ -729,6 +774,10 @@ namespace easyforge::ui::internal
             }
             ++index;
         }
+        if (!ThemeAnimations.empty())
+        {
+            WantFrameIn(0.0f);
+        }
         for (const std::function<void()>& callback : finished)
         {
             callback();
@@ -739,8 +788,14 @@ namespace easyforge::ui::internal
     {
         StepAnimations(element, context.DeltaSeconds);
         float step = context.DeltaSeconds / Max(context.Theme->Transition, 0.001f);
-        element.HoverAmount = Approach(element.HoverAmount, element.Hovered ? 1.0f : 0.0f, step);
-        element.PressAmount = Approach(element.PressAmount, element.Pressed ? 1.0f : 0.0f, step * 2.0f);
+        float hover = element.Hovered ? 1.0f : 0.0f;
+        float press = element.Pressed ? 1.0f : 0.0f;
+        element.HoverAmount = Approach(element.HoverAmount, hover, step);
+        element.PressAmount = Approach(element.PressAmount, press, step * 2.0f);
+        if (element.HoverAmount != hover || element.PressAmount != press)
+        {
+            WantFrameIn(0.0f);
+        }
         element.Kind->Update(element, context);
         std::vector<std::shared_ptr<ElementState>> children = element.Children;
         for (const std::shared_ptr<ElementState>& child : children)
@@ -840,6 +895,9 @@ namespace easyforge::ui::internal
         // Callbacks run while drawing may drop the last handle to the root.
         std::shared_ptr<RootState> self = shared_from_this();
         DropTypedText = false;
+        DrawWanted = false;
+        WaitSeconds = std::numeric_limits<float>::infinity();
+        Following.clear();
         Context context = MakeContext(deltaSeconds);
         StepTheme(deltaSeconds);
         context.Font = CurrentTheme.Font ? CurrentTheme.Font : SystemFont();
@@ -879,6 +937,10 @@ namespace easyforge::ui::internal
             RestSeconds += deltaSeconds;
             TooltipElement = withTip->weak_from_this();
             TooltipShown = RestSeconds >= TooltipDelay;
+            if (!TooltipShown)
+            {
+                WantFrameIn(TooltipDelay - RestSeconds);
+            }
         }
         else
         {
@@ -916,6 +978,7 @@ namespace easyforge::ui::internal
         }
         DrawDrag(drawing);
         DrawTooltip(drawing);
+        UpdatedAt = SinceStart.Seconds();
     }
 
     void RootState::DrawDrag(DrawContext& context)
@@ -1155,6 +1218,8 @@ namespace easyforge::ui::internal
     {
         // A callback may close the window or drop the last handle to the root.
         std::shared_ptr<RootState> self = shared_from_this();
+        ActiveAt = SinceStart.Seconds();
+        DrawWanted = true;
         Context context = MakeContext();
         bool used = false;
         auto pointerFrom = [&](const ElementState& element, bool touch) {
@@ -1586,6 +1651,11 @@ namespace easyforge::ui::internal
         {
             Root->PendingDelta = deltaSeconds;
         }
+    }
+
+    float SlotView::SecondsUntilNextFrame() const
+    {
+        return Root ? Root->SecondsUntilNextFrame() : std::numeric_limits<float>::infinity();
     }
 
     Vector2 SlotView::PreferredSize(Vector2 available) const

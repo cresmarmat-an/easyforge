@@ -83,6 +83,10 @@ namespace easyforge::ui::internal
         float farthest = Max(RowsHeight(element, context) - RowArea(element).Height, 0.0f);
         Scrolled = Clamp(Scrolled, 0.0f, farthest);
         ScrollShown = Max(ScrollShown - context.DeltaSeconds * 1.5f, 0.0f);
+        if (ScrollShown > 0.0f)
+        {
+            context.Root->WantFrameIn(0.0f);
+        }
         if (!element.Hovered)
         {
             HoveredRow.reset();

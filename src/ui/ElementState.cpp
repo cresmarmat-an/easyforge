@@ -97,7 +97,7 @@ namespace easyforge::ui::internal
         {
             found->second = std::move(value);
         }
-        StyleStale = true;
+        Changed(false);
     }
 
     void ElementState::ClearObject(std::string_view name)
@@ -107,7 +107,7 @@ namespace easyforge::ui::internal
         {
             Objects.erase(found);
         }
-        StyleStale = true;
+        Changed(false);
     }
 
     void ElementState::Changed(bool affectsLayout)

@@ -1,6 +1,7 @@
 add_executable(easyforge-window-tests
     Main.cpp
     EventTests.cpp
+    IdleTests.cpp
     SystemTests.cpp
     ViewTests.cpp
     WindowTests.cpp)

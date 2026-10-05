@@ -141,6 +141,10 @@ namespace easyforge::ui::internal
                     Shown = 1.0f;
                 }
                 Shown = Max(Shown - seconds * 1.5f, 0.0f);
+                if (Velocity != 0.0f || Shown > 0.0f || element.Get("Position").As<float>() != goal)
+                {
+                    context.Root->WantFrameIn(0.0f);
+                }
             }
 
             // The bar's thumb: where it starts along the view, and how long it is.

@@ -1,6 +1,7 @@
 #include "WindowState.h"
 
 #include <algorithm>
+#include <limits>
 
 #include <easyforge/assets/ImageData.h>
 #include <easyforge/core/Log.h>
@@ -26,6 +27,46 @@ namespace easyforge::internal
     Color DefaultBackground(ColorScheme scheme)
     {
         return scheme == ColorScheme::Dark ? Color::Hex("#202024") : Color::Hex("#F3F3F3");
+    }
+
+    void WindowState::RequestFrame()
+    {
+        FrameWanted.store(true);
+        WakeWindowThread();
+    }
+
+    bool WindowState::Shows() const
+    {
+        return Platform && Platform->IsVisible() && !Platform->IsMinimized();
+    }
+
+    float WindowState::SecondsUntilFrame() const
+    {
+        if (!Platform)
+        {
+            return std::numeric_limits<float>::infinity();
+        }
+        if (FrameCallback || PlacementWanted || FrameWanted.load() || Shows() != ShownInLastFrame)
+        {
+            return 0.0f;
+        }
+        float seconds = std::numeric_limits<float>::infinity();
+        if (TitleBarShown())
+        {
+            seconds = Min(seconds, TitleBarView->SecondsUntilNextFrame());
+        }
+        if (ContentView)
+        {
+            seconds = Min(seconds, ContentView->SecondsUntilNextFrame());
+        }
+        for (HostListener* listener : Listeners)
+        {
+            if (listener)
+            {
+                seconds = Min(seconds, listener->SecondsUntilNextFrame());
+            }
+        }
+        return Max(seconds, 0.0f);
     }
 
     Result<> WindowState::Open(const WindowSettings& settings)
@@ -131,6 +172,7 @@ namespace easyforge::internal
             return false;
         }
         SurfaceClaimed = true;
+        FrameWanted.store(true);
         Platform->SurfaceClaimed(true);
         return true;
     }
@@ -186,6 +228,7 @@ namespace easyforge::internal
         if (std::find(Listeners.begin(), Listeners.end(), &listener) == Listeners.end())
         {
             Listeners.push_back(&listener);
+            FrameWanted.store(true);
         }
     }
 
@@ -255,6 +298,7 @@ namespace easyforge::internal
     void WindowState::Report(Event& event)
     {
         std::shared_ptr<WindowState> keepAlive = shared_from_this();
+        FrameWanted.store(true);
 
         if (event.Type == EventType::Resized || event.Type == EventType::ScaleChanged)
         {
@@ -348,6 +392,10 @@ namespace easyforge::internal
         }
         std::shared_ptr<WindowState> keepAlive = shared_from_this();
         InFrame = true;
+        // Whether something from outside asked for this frame, rather than a
+        // view's or listener's own time running out.
+        bool woken = FrameWanted.exchange(false) || PlacementWanted || FrameCallback || Shows() != ShownInLastFrame;
+        ShownInLastFrame = Shows();
         if (PlacementWanted)
         {
             PlacementWanted = false;
@@ -357,14 +405,27 @@ namespace easyforge::internal
         // Frames shown in step with the screen get steady times. The screen is
         // looked up about once a second, which also catches a window moved to
         // a screen with another rate.
-        bool withScreen = VerticalSyncEnabled && Platform->IsVisible() && !Platform->IsMinimized();
+        bool withScreen = VerticalSyncEnabled && ShownInLastFrame;
         if (withScreen != TimedWithScreen || --FramesUntilRefreshCheck <= 0)
         {
             TimedWithScreen = withScreen;
             FramesUntilRefreshCheck = 60;
             Timing.SetRefreshRate(withScreen ? Platform->RefreshRate() : 0.0f);
         }
-        float delta = static_cast<float>(Timing.Next(measured));
+        float delta = 0.0f;
+        if (Waiting)
+        {
+            // Time spent waiting for input is not motion, so the first frame
+            // after it is one refresh long. Time a view asked to wait for is
+            // counted, so its timers stay true.
+            Waiting = false;
+            double refresh = Timing.RefreshInterval() > 0.0 ? Timing.RefreshInterval() : 1.0 / 60.0;
+            delta = static_cast<float>(woken ? std::min(measured, refresh) : measured);
+        }
+        else
+        {
+            delta = static_cast<float>(Timing.Next(measured));
+        }
 
         ++Dispatching;
         std::size_t count = Listeners.size();
@@ -424,6 +485,7 @@ namespace easyforge::internal
             return;
         }
         ContentView = std::move(view);
+        FrameWanted.store(true);
         if (ContentView)
         {
             ContentView->Attach(*this);
@@ -447,6 +509,7 @@ namespace easyforge::internal
             return;
         }
         TitleBarView = std::move(view);
+        FrameWanted.store(true);
         Platform->SetCustomTitleBar(TitleBarView != nullptr);
         if (TitleBarView)
         {

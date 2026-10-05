@@ -25,9 +25,14 @@
 - `PathFromText` and `TextFromPath` in `core`, for UTF-8 file paths.
 - The `EASYFORGE_SANITIZE` build option, and tests that feed damaged input to
   every reader and run jobs, sounds, and network ends from many threads at once.
+- `Window::RequestFrame`, `Host::RequestFrame`, and `SecondsUntilNextFrame` on
+  views and listeners, so a window can wait while nothing changes.
 
 ### Changed
 
+- `Window::Run` runs frames of a window without `OnFrame` only while something
+  changes, and waits without using the processor in between. An interface that
+  is still uses no processor time; `Window::RunOneFrame` still runs every frame.
 - Windows give `OnFrame` steady frame times while frames are shown in step with
   the screen.
 - A window with a renderer now starts each frame when the screen can take

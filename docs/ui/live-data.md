@@ -19,7 +19,9 @@ player["Health"] = 90;   // the label shows "Health: 90" in the next frame
 [data table](../data/overview.md). A label made with a binding follows the
 value by itself: whenever it changes, wherever the change comes from (your code,
 an undo, a script, or later the network), the label shows the new value in the
-next frame. Nothing needs to tell the label to update.
+next frame. Nothing needs to tell the label to update. A window waiting while
+nothing changes checks bound values a few times a second, so a change made
+outside any frame or event still shows within a quarter of a second.
 
 `format` is a `std::format` string with one `{}` for the value; without one the
 value is shown as it is. Text is shown without quotes, and numbers, vectors, and

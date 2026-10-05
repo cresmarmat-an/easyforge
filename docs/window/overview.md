@@ -122,6 +122,7 @@ Other things a window can tell you or do:
 |---|---|
 | `window.IsOpen()` | False once the window has closed |
 | `window.Close()` | Closes it at once, without calling `OnCloseRequested` |
+| `window.RequestFrame()` | Asks for a frame of a window that [waits while nothing changes](#waiting-while-nothing-changes). Safe from any thread |
 | `window.Focus()` | Brings it to the front and gives it the keyboard |
 | `window.IsFocused()` | Whether it has the keyboard |
 | `window.Scale()` | Pixels per point on the window's screen |
@@ -154,8 +155,30 @@ While the person drags an edge or moves the window, Windows holds the program
 in a loop of its own. `window` keeps running frames during that time, so the
 content keeps drawing at the new size instead of freezing.
 
-A minimized or hidden window still runs frames, about 60 a second, so timers
-and network code keep going.
+A minimized or hidden window with `OnFrame` still runs frames, about 60 a
+second, so timers and network code keep going.
+
+### Waiting while nothing changes
+
+A window with `OnFrame` runs a frame every refresh of the screen. A window
+without it runs frames only while something changes, and in between waits
+without using the processor or the graphics card. It waits while its views and
+[listeners](../core/events-and-views.md#frames-on-demand) all say they can, and
+wakes for input, a change of size, or the time a view asked for.
+
+An interface from `ui` asks for frames while something in it moves, while a
+caret blinks, and for a moment after each event, and checks data it shows from
+[tables](../ui/live-data.md) a few times a second. A `DrawingArea`, a
+`SceneView`, or an element with a shader keeps frames coming, since what they
+show can change on its own.
+
+When something outside the window changes what it should show, such as data
+that arrived on another thread, `window.RequestFrame()` asks for a frame. It is
+safe to call from any thread.
+
+The first frame after a wait for input is one refresh long, since nothing moved
+while the window waited. After a wait that a view asked for, the frame gets the
+time that passed, so the view's timers stay true.
 
 ### Frame times
 
@@ -176,7 +199,8 @@ does the evening out, for programs that run frames themselves.
 
 Programs that already have a loop of their own call
 `Window::RunOneFrame()` instead of `Run`. It does one round of the steps above
-for every open window and returns.
+for every open window and returns. Every window runs a frame each time, whether
+or not anything changed.
 
 ## Closing
 

@@ -97,8 +97,12 @@ namespace easyforge::internal
     // Waits for the screen's next refresh.
     void WaitForVerticalBlank();
 
-    // Waits until the system sends something or `seconds` pass.
+    // Waits until the system sends something or `seconds` pass. Infinity waits
+    // for the system alone.
     void WaitForMessages(float seconds);
+
+    // Ends a wait for messages on the windows' thread. Safe from any thread.
+    void WakeWindowThread();
 
     ColorScheme PlatformColorScheme();
 

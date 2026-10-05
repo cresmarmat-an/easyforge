@@ -122,6 +122,14 @@ namespace easyforge
         // Once a frame: update and draw.
         virtual void Frame(float deltaSeconds) = 0;
 
+        // How long, from now, the view can do without a frame: 0 when it wants
+        // every frame, the seconds until something it shows changes on its own,
+        // such as a blinking caret, or infinity while nothing changes until an
+        // event arrives. A host may skip frames while every view and listener can
+        // wait, and asks again when the time is up, so a view can check something
+        // then and ask for more time. The default wants every frame.
+        virtual float SecondsUntilNextFrame() const { return 0.0f; }
+
         // How big the view would like to be when given `available` points. A
         // window uses the height of its title bar view and places the content
         // below it.
@@ -150,6 +158,10 @@ namespace easyforge
         // Called before the window's OnFrame, and after the views have drawn.
         virtual void FrameStarted(float deltaSeconds) = 0;
         virtual void FrameEnded() = 0;
+
+        // As for a view: how long the listener can do without a frame. The
+        // default wants every frame.
+        virtual float SecondsUntilNextFrame() const { return 0.0f; }
     };
 
     // Decides when a host's next frame may start, such as a renderer waiting
@@ -224,6 +236,10 @@ namespace easyforge
         // A view's preferred size changed, such as a title bar made taller. The
         // host asks its views again and places them before the next frame.
         virtual void RequestPlacement() {}
+
+        // Asks for a frame soon, for a host that skips frames while nothing
+        // changes. Safe to call from any thread.
+        virtual void RequestFrame() {}
 
         // A renderer that claimed the surface can pace the host's frames: the
         // host then waits on the pacer at the start of each frame, before it

@@ -1,5 +1,7 @@
 #include <easyforge/window/Window.h>
 
+#include <limits>
+
 #include <easyforge/assets/ImageData.h>
 #include <easyforge/core/Log.h>
 
@@ -96,47 +98,98 @@ namespace easyforge
         return Window(state);
     }
 
+    namespace
+    {
+        // One round of the loop. With `skipIdle`, a window runs a frame only when
+        // it needs one, and while none does the round first waits until one
+        // does: for input, a request, or the time a view asked for.
+        void RunRound(bool skipIdle)
+        {
+            std::vector<std::shared_ptr<WindowState>>& open = internal::OpenWindows();
+            auto due = [skipIdle](const WindowState& window) { return !skipIdle || window.SecondsUntilFrame() <= 0.0f; };
+            if (skipIdle)
+            {
+                internal::HandlePlatformMessages();
+                while (!open.empty())
+                {
+                    float wait = std::numeric_limits<float>::infinity();
+                    for (const std::shared_ptr<WindowState>& window : open)
+                    {
+                        wait = Min(wait, window->SecondsUntilFrame());
+                    }
+                    if (wait <= 0.0f)
+                    {
+                        break;
+                    }
+                    for (const std::shared_ptr<WindowState>& window : open)
+                    {
+                        window->Waiting = true;
+                    }
+                    internal::WaitForMessages(wait);
+                    internal::HandlePlatformMessages();
+                }
+            }
+
+            // A renderer that paces frames is waited on first, so the frame starts
+            // as soon as the screen can take it and input is read as late as it can be.
+            for (const std::shared_ptr<WindowState>& window : open)
+            {
+                if (window->Pacer && window->Shows() && due(*window))
+                {
+                    window->Pacer->WaitForNextFrame(0.1f);
+                }
+            }
+
+            internal::HandlePlatformMessages();
+            // Frames can open and close windows, so work on a copy.
+            std::vector<std::shared_ptr<WindowState>> windows = open;
+            for (const std::shared_ptr<WindowState>& window : windows)
+            {
+                if (due(*window))
+                {
+                    window->RunFrame();
+                }
+            }
+
+            // Pace the loop: a renderer waiting for the screen does it on its own;
+            // otherwise wait for the screen here, or for messages when nothing
+            // shows. Windows that will wait for something to happen do not count.
+            bool anyRunning = false;
+            bool anyShown = false;
+            bool rendererPaces = false;
+            bool waitForScreen = false;
+            for (const std::shared_ptr<WindowState>& window : open)
+            {
+                if (!due(*window))
+                {
+                    continue;
+                }
+                anyRunning = true;
+                if (window->Shows())
+                {
+                    anyShown = true;
+                    rendererPaces = rendererPaces || window->SurfaceClaimed;
+                    waitForScreen = waitForScreen || window->VerticalSyncEnabled;
+                }
+            }
+            if (!anyRunning)
+            {
+                return;
+            }
+            if (!anyShown)
+            {
+                internal::WaitForMessages(1.0f / 60.0f);
+            }
+            else if (waitForScreen && !rendererPaces)
+            {
+                internal::WaitForVerticalBlank();
+            }
+        }
+    }
+
     void Window::RunOneFrame()
     {
-        // A renderer that paces frames is waited on first, so the frame starts
-        // as soon as the screen can take it and input is read as late as it can be.
-        for (const std::shared_ptr<WindowState>& window : internal::OpenWindows())
-        {
-            if (window->Pacer && window->Platform && window->Platform->IsVisible() && !window->Platform->IsMinimized())
-            {
-                window->Pacer->WaitForNextFrame(0.1f);
-            }
-        }
-
-        internal::HandlePlatformMessages();
-        internal::RunFramesOfOpenWindows();
-
-        // Pace the loop: a renderer waiting for the screen does it on its own;
-        // otherwise wait for the screen here, or for messages when nothing shows.
-        bool anyShown = false;
-        bool rendererPaces = false;
-        bool waitForScreen = false;
-        for (const std::shared_ptr<WindowState>& window : internal::OpenWindows())
-        {
-            if (window->Platform->IsVisible() && !window->Platform->IsMinimized())
-            {
-                anyShown = true;
-                rendererPaces = rendererPaces || window->SurfaceClaimed;
-                waitForScreen = waitForScreen || window->VerticalSyncEnabled;
-            }
-        }
-        if (internal::OpenWindows().empty())
-        {
-            return;
-        }
-        if (!anyShown)
-        {
-            internal::WaitForMessages(1.0f / 60.0f);
-        }
-        else if (waitForScreen && !rendererPaces)
-        {
-            internal::WaitForVerticalBlank();
-        }
+        RunRound(false);
     }
 
     Window::Window() : Window(EmptyState())
@@ -361,8 +414,13 @@ namespace easyforge
         std::shared_ptr<WindowState> state = State;
         while (state->IsOpen())
         {
-            RunOneFrame();
+            RunRound(true);
         }
+    }
+
+    void Window::RequestFrame() const
+    {
+        State->RequestFrame();
     }
 
     bool Window::IsOpen() const

@@ -54,6 +54,10 @@ namespace easyforge::ui::internal
                     Amount = target;
                     Started = true;
                 }
+                if (Amount != target)
+                {
+                    context.Root->WantFrameIn(0.0f);
+                }
             }
 
             void Draw(ElementState& element, DrawContext& context) override

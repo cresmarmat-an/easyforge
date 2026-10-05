@@ -123,6 +123,11 @@ namespace easyforge::ui::internal
         // Once a frame, before layout, for kinds that change by themselves.
         virtual void Update(ElementState&, Context&) {}
 
+        // For an element that shows data from outside the interface, such as a
+        // table: whether the data changed since the element last showed it. The
+        // root checks now and then while a window waits, to know when to draw.
+        virtual bool FollowedChanged(ElementState&) { return false; }
+
         // ---- Events ------------------------------------------------------------
 
         // Pointer presses stop at this element instead of passing through.

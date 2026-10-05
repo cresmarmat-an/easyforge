@@ -69,6 +69,7 @@ window.Content = std::make_shared<Stopwatch>();
 | `Frame(deltaSeconds)` | Once a frame, after the window's `OnFrame`. Update and draw here |
 | `PreferredSize(available)` | Optional. A title bar view returns its height here |
 | `HitTest(point)` | Optional. A title bar view says which parts drag the window and which are buttons ([custom title bars](../window/title-bars.md)) |
+| `SecondsUntilNextFrame()` | Optional. How long the view can do without a frame ([frames on demand](#frames-on-demand)) |
 
 A view is in one slot of one window at a time. The window holds it with a
 `std::shared_ptr`, so it lives at least as long as it is in the slot.
@@ -97,6 +98,7 @@ another library can implement `Host` to show easyforge views.
 | `Shared(name)` | One object per host that libraries share, found by name |
 | `RequestPlacement()` | A view wants another size: the host asks its views again and places them before the next frame |
 | `SetFramePacer(pacer)` | A renderer that claimed the surface gives the host a `FramePacer`; the host calls `pacer->WaitForNextFrame(seconds)` at the start of each frame, before reading input. `nullptr` removes it |
+| `RequestFrame()` | Asks for a frame soon, for a host that skips frames while nothing changes ([frames on demand](#frames-on-demand)). Safe to call from any thread |
 
 `Shared` is how two parts of a program find the same object for one window
 without a global. `graphics` keeps a window's renderer there, so the `ui` in the
@@ -146,7 +148,35 @@ host->RemoveListener(counter);
 Listeners get each event after the views, so `event.Handled` tells them whether
 a view already used it. `FrameStarted` comes before the window's `OnFrame`,
 and `FrameEnded` after the views have drawn. A listener must stay alive until
-it is removed. Removing one while events are being delivered is safe.
+it is removed. Removing one while events are being delivered is safe. Like a
+view, a listener can say how long it can do without a frame with
+`SecondsUntilNextFrame()`.
+
+## Frames on demand
+
+A window without `OnFrame` runs a frame only when something needs one, and
+otherwise waits without using the processor. To know when, it asks each view
+and listener `SecondsUntilNextFrame()`:
+
+| Returned | Meaning |
+|---|---|
+| `0` | It wants every frame. This is the default, so a view that does not say otherwise keeps frames coming |
+| Some seconds | Something it shows changes on its own after that long, such as a caret that blinks |
+| `std::numeric_limits<float>::infinity()` | Nothing changes until an event arrives |
+
+The seconds count from the moment of asking. The window asks again when they
+are up, so a view can check something then, such as data it shows, and answer
+with more time if nothing changed. An event, a new view or listener, a change
+of size, and `RequestFrame()` always bring a frame, whatever the views said.
+
+The stopwatch above wants frames only while it runs:
+
+```cpp
+float SecondsUntilNextFrame() const override
+{
+    return Running ? 0.0f : std::numeric_limits<float>::infinity();
+}
+```
 
 ## The order of everything
 

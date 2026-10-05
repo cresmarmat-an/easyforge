@@ -1,5 +1,10 @@
 #include "Helpers.h"
 
+#include <chrono>
+#include <cmath>
+#include <thread>
+
+#include <easyforge/data.h>
 #include <easyforge/window.h>
 
 using namespace easyforge;
@@ -115,4 +120,62 @@ EASYFORGE_TEST(TitleBarsThatChangeSizeMoveTheContent)
     };
     window.Run();
     EASYFORGE_EXPECT_EQUAL(frames, 8);
+}
+
+EASYFORGE_TEST(InterfacesAskForFramesOnlyWhileSomethingChanges)
+{
+    Window window = Window::New({ .Title = "ui test", .Width = 320, .Height = 240, .Visible = false });
+    EASYFORGE_REQUIRE(window);
+    ui::Root::Of(window).Theme = TestTheme();
+
+    Table game = Table::New();
+    Node player = game.Add("Player");
+    player["Health"] = 100;
+    ui::Label title("A");
+    ui::Label health(ui::Bind(player["Health"], "{}"));
+    ui::TextField field({ .Width = 120 });
+    window.Content = ui::Column({ .Padding = 20, .Gap = 10, .Children = { title, health, field } });
+    std::shared_ptr<View> view = window.Content.Get();
+
+    auto settle = [] {
+        // Frames keep coming for a moment after anything changes.
+        Window::RunOneFrame();
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    };
+    settle();
+    EASYFORGE_EXPECT_EQUAL(health.Text.Get(), std::string("100"));
+
+    // Still, and showing data: the data is checked a few times a second.
+    float wait = view->SecondsUntilNextFrame();
+    EASYFORGE_EXPECT(wait > 0.0f && wait <= 0.25f);
+
+    // A change to the data is found without a frame, and asks for one.
+    player["Health"] = 90;
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    EASYFORGE_EXPECT_EQUAL(view->SecondsUntilNextFrame(), 0.0f);
+    settle();
+    EASYFORGE_EXPECT_EQUAL(health.Text.Get(), std::string("90"));
+
+    // Without data to follow, a still interface needs no frames at all.
+    health.Text = "Gone";
+    EASYFORGE_EXPECT_EQUAL(view->SecondsUntilNextFrame(), 0.0f);
+    settle();
+    EASYFORGE_EXPECT(std::isinf(view->SecondsUntilNextFrame()));
+
+    // A change to an element asks for a frame at once.
+    title.Text = "B";
+    EASYFORGE_EXPECT_EQUAL(view->SecondsUntilNextFrame(), 0.0f);
+    settle();
+
+    // A text field with the keyboard blinks its caret, twice a second.
+    field.Focus();
+    settle();
+    wait = view->SecondsUntilNextFrame();
+    EASYFORGE_EXPECT(wait <= 0.5f);
+
+    // An animation keeps frames coming until it ends.
+    title.Opacity.AnimateTo(0.5f, { .Duration = 0.5f });
+    Window::RunOneFrame();
+    EASYFORGE_EXPECT_EQUAL(view->SecondsUntilNextFrame(), 0.0f);
+    window.Close();
 }

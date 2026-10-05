@@ -44,6 +44,8 @@ namespace easyforge::ui::internal
                 {
                     return;
                 }
+                // What it draws can change on its own, so it draws every frame.
+                context.Root->WantFrameIn(0.0f);
                 const Style& style = element.CurrentStyle();
                 Rectangle content { element.Frame.X + style.Padding.Left, element.Frame.Y + style.Padding.Top,
                     Max(element.Frame.Width - style.Padding.Horizontal(), 0.0f),
@@ -92,6 +94,7 @@ namespace easyforge::ui::internal
                 if (scene && !element.Frame.IsEmpty())
                 {
                     context.Canvas.Draw(scene, element.Frame);
+                    context.Root->WantFrameIn(0.0f);
                 }
             }
         };

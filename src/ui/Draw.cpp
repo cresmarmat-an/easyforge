@@ -344,6 +344,11 @@ end
         // its input.Position is measured from.
         bool fade = style.Opacity < 0.999f;
         bool shaded = static_cast<bool>(style.Shader);
+        if (shaded && context.Root)
+        {
+            // A shader can change with time on its own.
+            context.Root->WantFrameIn(0.0f);
+        }
         Rectangle shown = (fade || adjust) ? Intersection(Extent(element), canvas.ClipArea()) : Rectangle {};
         Rectangle shaderBounds = Grown(area, Reach(style));
         if (fade)

@@ -170,7 +170,9 @@ namespace easyforge::ui::internal
                     std::shared_ptr<ElementState> leaving = Leaving.lock();
                     Leaving.reset();
                     Call(leaving.get(), "OnHidden");
+                    return;
                 }
+                context.Root->WantFrameIn(0.0f);
             }
 
             bool DrawChildren(ElementState& element, DrawContext& context) override
