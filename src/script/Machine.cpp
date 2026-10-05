@@ -229,6 +229,51 @@ namespace easyforge::internal::scripting
         return true;
     }
 
+    GlobalSlot& Machine::SlotFor(const Prototype& code, std::size_t instruction)
+    {
+        if (code.GlobalSlots.size() != code.Code.size())
+        {
+            code.GlobalSlots.resize(code.Code.size());
+        }
+        return code.GlobalSlots[instruction];
+    }
+
+    Value* Machine::Remembered(const GlobalSlot& slot, TableObject* module, TextObject* name)
+    {
+        TableObject* table = slot.Table;
+        if (!table || slot.Position >= table->Fields.size() || table->Fields[slot.Position].first != name)
+        {
+            return nullptr;
+        }
+        if (table == module)
+        {
+            return &table->Fields[slot.Position].second;
+        }
+        // An engine global holds while the module has not defined the name.
+        bool shadowed = module && module->Generation != slot.ModuleGeneration;
+        return table == Engine.Globals && !shadowed ? &table->Fields[slot.Position].second : nullptr;
+    }
+
+    Value* Machine::FindGlobal(GlobalSlot& slot, TableObject* module, TextObject* name)
+    {
+        for (TableObject* table : { module, Engine.Globals })
+        {
+            if (!table)
+            {
+                continue;
+            }
+            auto found = table->Positions.find(name);
+            if (found != table->Positions.end())
+            {
+                slot.Table = table;
+                slot.Position = static_cast<std::uint32_t>(found->second);
+                slot.ModuleGeneration = module ? module->Generation : 0;
+                return &table->Fields[found->second].second;
+            }
+        }
+        return nullptr;
+    }
+
     Outcome Machine::Run(Task& task)
     {
         Engine.Running.push_back(&task);
@@ -252,14 +297,17 @@ namespace easyforge::internal::scripting
 
         while (true)
         {
-            std::string limit;
-            if (!Engine.BetweenInstructions(limit) || !Engine.CountInstruction())
+            if (Engine.NeedsChecks())
             {
-                Fatal = true;
-                Problem = limit.empty() ? std::format("the script ran more than {} instructions", Engine.Settings.InstructionLimit)
-                                        : limit;
-                Problem = std::format("{}: {}", Where(task), Problem);
-                return Outcome::Failed;
+                std::string limit;
+                if (!Engine.BetweenInstructions(limit) || !Engine.CountInstruction())
+                {
+                    Fatal = true;
+                    Problem = limit.empty() ? std::format("the script ran more than {} instructions", Engine.Settings.InstructionLimit)
+                                            : limit;
+                    Problem = std::format("{}: {}", Where(task), Problem);
+                    return Outcome::Failed;
+                }
             }
 
             Frame& frame = task.Frames.back();
@@ -280,10 +328,12 @@ namespace easyforge::internal::scripting
             case Operation::GetGlobal:
             {
                 TextObject* name = text(instruction.B);
-                const Value* found = function->Module ? function->Module->Globals->Find(name) : nullptr;
+                TableObject* module = function->Module ? function->Module->Globals : nullptr;
+                GlobalSlot& slot = SlotFor(code, frame.Next - 1);
+                Value* found = Remembered(slot, module, name);
                 if (!found)
                 {
-                    found = Engine.Globals->Find(name);
+                    found = FindGlobal(slot, module, name);
                 }
                 EASYFORGE_FAIL_IF(!found && !Fail(std::format("there is no {}", name->Text)));
                 registers[instruction.A] = *found;
@@ -292,12 +342,22 @@ namespace easyforge::internal::scripting
             case Operation::SetGlobal:
             {
                 TextObject* name = text(instruction.B);
-                TableObject* module = function->Module ? function->Module->Globals : Engine.Globals;
-                if (!module->Find(name) && Engine.Globals->Find(name))
+                TableObject* module = function->Module ? function->Module->Globals : nullptr;
+                GlobalSlot& slot = SlotFor(code, frame.Next - 1);
+                Value* found = Remembered(slot, module, name);
+                if (!found)
                 {
-                    module = Engine.Globals;
+                    found = FindGlobal(slot, module, name);
                 }
-                module->Set(name, registers[instruction.A]);
+                if (found)
+                {
+                    *found = registers[instruction.A];
+                }
+                else
+                {
+                    // A name not defined yet becomes the module's.
+                    (module ? module : Engine.Globals)->Set(name, registers[instruction.A]);
+                }
                 break;
             }
             case Operation::DefineGlobal:

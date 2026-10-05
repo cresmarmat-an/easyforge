@@ -70,6 +70,9 @@
   any language on Windows; before, names outside the system's code page failed.
 - A color in a script that the compiler could not read no longer ends the
   program.
+- Scripts run about a third faster: each instruction that reads or writes a
+  global remembers where it found it, and the checks between instructions are
+  skipped when a script has no limits.
 - A file path that is not valid UTF-8, given to any easyforge function, no
   longer throws from inside the standard library; and making a pack from a
   folder with a subfolder that cannot be read fails with an error instead of

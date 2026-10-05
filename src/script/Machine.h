@@ -86,6 +86,12 @@ namespace easyforge::internal::scripting
         // function gets a new frame; anything else runs now and leaves its
         // result in the slot.
         bool CallAt(Task& task, std::size_t slot, std::size_t count);
+
+        // Globals through each instruction's slot: the remembered field when it
+        // still holds, or the module's then the engine's, remembered.
+        static GlobalSlot& SlotFor(const Prototype& code, std::size_t instruction);
+        Value* Remembered(const GlobalSlot& slot, TableObject* module, TextObject* name);
+        Value* FindGlobal(GlobalSlot& slot, TableObject* module, TextObject* name);
         bool Invoke(Task& task, std::size_t slot, std::size_t count, TextObject* name);
 
         // Moves to the innermost try that can catch the failure. False when none can.

@@ -510,3 +510,39 @@ EASYFORGE_TEST(ScriptsImportOthers)
     EASYFORGE_EXPECT(!refused);
     EASYFORGE_EXPECT(refused.Error().find("does not let scripts import") != std::string::npos);
 }
+EASYFORGE_TEST(GlobalsStayRightWhereverTheyAreRead)
+{
+    // Instructions remember where they found a global; whatever changes, the
+    // value read is the current one.
+    Printing scripts;
+    scripts.Engine.Define("Answer", 1);
+    EASYFORGE_EXPECT_EQUAL(scripts.Printed(R"(
+function Read() returns number then
+    return Answer
+end
+variable total = 0
+for index in 1 to 3 then
+    total = total + Read()
+end
+print(total)
+Answer = 5
+print(Read())
+)"),
+        Expected({ "3", "5" }));
+
+    // The program changes it between runs.
+    scripts.Engine.Define("Answer", 7);
+    EASYFORGE_EXPECT_EQUAL(scripts.Printed("print(Read())\n"), Expected({ "7" }));
+
+    // A name the module defines later is found before the engine's.
+    Result<ScriptValue> shadowed = scripts.Engine.Run(R"(
+function Ask() returns number then
+    return Answer
+end
+constant before = Ask()
+variable Answer = 9
+return before * 10 + Ask()
+)", "shadow.script");
+    EASYFORGE_REQUIRE(shadowed);
+    EASYFORGE_EXPECT_EQUAL(shadowed->AsNumber(), 79.0);
+}

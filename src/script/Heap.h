@@ -131,6 +131,10 @@ namespace easyforge::internal::scripting
         std::vector<std::pair<TextObject*, Value>> Fields;
         std::unordered_map<TextObject*, std::size_t> Positions;
 
+        // Counts names added and removed, so a remembered absence of a name
+        // can be checked without looking for it.
+        std::uint32_t Generation = 0;
+
         // The record type that made it, for tables made by a type's constructor.
         RecordObject* Record = nullptr;
     };
@@ -211,12 +215,27 @@ namespace easyforge::internal::scripting
 
     // A function as compiled: its instructions, constants, and the functions
     // written inside it.
+    // Where an instruction that reads or writes a global found it last: the
+    // table and the field's position in it, and for a global of the whole
+    // engine, the module's generation, which says the module has not defined
+    // the name since. Checked before each use, so a stale one only costs the
+    // full lookup again.
+    struct GlobalSlot
+    {
+        TableObject* Table = nullptr;
+        std::uint32_t Position = 0;
+        std::uint32_t ModuleGeneration = 0;
+    };
+
     struct Prototype
     {
         std::string Name;
         int ParameterCount = 0;
         int RegisterCount = 0;
         std::vector<Instruction> Code;
+
+        // One for each instruction, made the first time a global is used.
+        mutable std::vector<GlobalSlot> GlobalSlots;
         std::vector<language::Location> Places;
         std::vector<Value> Constants;
         std::vector<std::unique_ptr<Prototype>> Children;

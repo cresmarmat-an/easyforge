@@ -53,6 +53,13 @@ namespace easyforge::internal::scripting
 
         // Counts an instruction toward the limit; false once it is used up.
         bool CountInstruction();
+
+        // Whether anything needs checking between instructions: a collection
+        // due, or a limit to keep. Kept inline, since it runs before every one.
+        bool NeedsChecks() const
+        {
+            return TheHeap.WantsCollection() || Settings.MemoryLimit != 0 || Settings.InstructionLimit != 0;
+        }
         void StartEntry();
         void FinishEntry();
 

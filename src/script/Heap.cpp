@@ -26,6 +26,7 @@ namespace easyforge::internal::scripting
         }
         Positions.emplace(name, Fields.size());
         Fields.emplace_back(name, value);
+        ++Generation;
     }
 
     bool TableObject::Remove(TextObject* name)
@@ -38,6 +39,7 @@ namespace easyforge::internal::scripting
         std::size_t position = found->second;
         Positions.erase(found);
         Fields.erase(Fields.begin() + static_cast<std::ptrdiff_t>(position));
+        ++Generation;
         for (auto& [key, index] : Positions)
         {
             if (index > position)
