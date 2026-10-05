@@ -6,7 +6,9 @@
 #include "../Gamepads.h"
 
 #ifndef NOMINMAX
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #endif
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -38,8 +40,13 @@ namespace easyforge::internal
                 }
                 if (module)
                 {
-                    GetState = reinterpret_cast<GetStateFunction>(GetProcAddress(module, "XInputGetState"));
-                    SetState = reinterpret_cast<SetStateFunction>(GetProcAddress(module, "XInputSetState"));
+                    // Through a function type that takes nothing, which any
+                    // function pointer may be cast to and back from.
+                    using AnyFunction = void (*)();
+                    GetState = reinterpret_cast<GetStateFunction>(
+                        reinterpret_cast<AnyFunction>(GetProcAddress(module, "XInputGetState")));
+                    SetState = reinterpret_cast<SetStateFunction>(
+                        reinterpret_cast<AnyFunction>(GetProcAddress(module, "XInputSetState")));
                 }
             }
         };

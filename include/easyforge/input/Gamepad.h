@@ -65,8 +65,8 @@ namespace easyforge
         std::array<bool, static_cast<std::size_t>(GamepadButton::Count)> Buttons {};
 
         // From -1 to 1 on each side, with Y positive for up, after the dead zone.
-        Vector2 LeftStick;
-        Vector2 RightStick;
+        Vector2 LeftStick {};
+        Vector2 RightStick {};
 
         // From 0 to 1.
         float LeftTrigger = 0.0f;

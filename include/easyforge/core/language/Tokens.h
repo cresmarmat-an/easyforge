@@ -18,8 +18,8 @@ namespace easyforge::language
     // Something wrong with a source file, and where.
     struct Problem
     {
-        Location Where;
-        std::string Message;
+        Location Where {};
+        std::string Message {};
     };
 
     enum class TokenKind
@@ -49,8 +49,8 @@ namespace easyforge::language
     struct Token
     {
         TokenKind Kind = TokenKind::EndOfFile;
-        std::string Spelling;
-        Location Where;
+        std::string Spelling {};
+        Location Where {};
 
         // True when the token is the first on its line.
         bool StartsLine = false;

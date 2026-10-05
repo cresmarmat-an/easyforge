@@ -66,10 +66,10 @@ namespace easyforge
         {
             using Stored = std::conditional_t<std::is_void_v<Type>, std::monostate, Type>;
 
-            std::mutex Mutex;
-            std::condition_variable Finished;
+            std::mutex Mutex {};
+            std::condition_variable Finished {};
             std::atomic<bool> Done = false;
-            std::optional<Stored> Value;
+            std::optional<Stored> Value {};
         };
     }
 
@@ -119,6 +119,13 @@ namespace easyforge
         std::shared_ptr<internal::JobState<Type>> State;
     };
 
+    struct JobsSettings
+    {
+        // How many threads to start. 0 means one fewer than the processor's
+        // hardware threads, and at least one.
+        int ThreadCount = 0;
+    };
+
     // A group of threads that run functions in the background.
     //
     //     Jobs jobs = Jobs::Shared();
@@ -131,14 +138,9 @@ namespace easyforge
     class Jobs
     {
     public:
-        struct Settings
-        {
-            // How many threads to start. 0 means one fewer than the processor's
-            // hardware threads, and at least one.
-            int ThreadCount = 0;
-        };
+        using Settings = JobsSettings;
 
-        static Jobs New(const Settings& settings = {});
+        static Jobs New(const JobsSettings& settings = {});
 
         // Threads shared by the whole program, started the first time this is called.
         static Jobs Shared();

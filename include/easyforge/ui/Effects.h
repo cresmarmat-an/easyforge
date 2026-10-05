@@ -96,7 +96,7 @@ namespace easyforge::ui
     {
         float Blur = 16.0f;
         float Spread = 0.0f;
-        std::optional<easyforge::Color> Color;
+        std::optional<easyforge::Color> Color {};
     };
 
     // A line around the element, outside its box. Without a color, the theme's
@@ -108,7 +108,7 @@ namespace easyforge::ui
         // Space between the box and the line.
         float Gap = 0.0f;
 
-        std::optional<easyforge::Color> Color;
+        std::optional<easyforge::Color> Color {};
     };
 
     // Blurs whatever is behind the element, like frosted glass. Give the element

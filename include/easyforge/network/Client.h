@@ -24,7 +24,7 @@ namespace easyforge
         // handlers then run on that thread.
         bool Threaded = false;
 
-        NetworkConditions Conditions;
+        NetworkConditions Conditions {};
 
         // Seconds without hearing from the server before the connection closes,
         // and to wait for the server to accept.

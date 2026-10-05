@@ -13,17 +13,17 @@ namespace easyforge::ui
     // you need, in this order.
     struct ContainerSettings
     {
-        std::string Name;
+        std::string Name {};
 
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
-        Insets Padding;
+        Insets Margin {};
+        Insets Padding {};
 
         // Space between children, in points.
         float Gap = 0.0f;
@@ -34,24 +34,24 @@ namespace easyforge::ui
         // How a row or column spreads its children along itself.
         ui::Distribution Distribution = ui::Distribution::Start;
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<Color> BorderColor;
+        std::optional<Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
 
-        std::vector<Element> Children;
+        std::vector<Element> Children {};
     };
 
     // The properties every container has, on top of an Element's.
@@ -134,17 +134,17 @@ namespace easyforge::ui
 
     struct GridSettings
     {
-        std::string Name;
+        std::string Name {};
 
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
-        Insets Padding;
+        Insets Margin {};
+        Insets Padding {};
 
         // How many children go in each row. The columns share the width equally.
         int Columns = 2;
@@ -156,24 +156,24 @@ namespace easyforge::ui
         // Where each child sits in its cell.
         ui::Alignment Alignment = ui::Alignment::Stretch;
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<Color> BorderColor;
+        std::optional<Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
 
-        std::vector<Element> Children;
+        std::vector<Element> Children {};
     };
 
     // Children in rows of equal columns, filled from left to right.
@@ -205,40 +205,40 @@ namespace easyforge::ui
 
     struct ScrollSettings
     {
-        std::string Name;
+        std::string Name {};
 
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
-        Insets Padding;
+        Insets Margin {};
+        Insets Padding {};
         float Gap = 0.0f;
         ui::Alignment Alignment = ui::Alignment::Stretch;
 
         ScrollDirection Direction = ScrollDirection::Vertical;
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<Color> BorderColor;
+        std::optional<Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
 
-        std::vector<Element> Children;
+        std::vector<Element> Children {};
     };
 
     // Children in a column (or a row) that can be longer than the scroll's own

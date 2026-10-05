@@ -36,7 +36,7 @@ namespace easyforge::ui::internal
         struct Slot
         {
             std::shared_ptr<ElementState> Element;
-            Rectangle Area;
+            Rectangle Area {};
             SlotView* View = nullptr;
 
             // The window has asked for its title bar's size or hit test.
@@ -54,18 +54,18 @@ namespace easyforge::ui::internal
 
             // A popup sits below its anchor, or above it when there is no room.
             // Without one, the overlay is centered.
-            std::weak_ptr<ElementState> Anchor;
+            std::weak_ptr<ElementState> Anchor {};
 
             // Dims everything below and keeps the keyboard and pointer inside.
             bool Modal = false;
 
             bool ClosesOnOutsideClick = true;
-            std::function<void()> OnClosed;
+            std::function<void()> OnClosed {};
 
             // Where the keyboard was when it opened, to give it back.
-            std::weak_ptr<ElementState> FocusBefore;
+            std::weak_ptr<ElementState> FocusBefore {};
 
-            Rectangle Area;
+            Rectangle Area {};
         };
 
         void OpenOverlay(Overlay overlay);

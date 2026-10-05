@@ -15,50 +15,50 @@ namespace easyforge::ui
 
     struct DropdownSettings
     {
-        std::string Name;
+        std::string Name {};
 
         // Without a width, 200 points.
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
-        std::optional<Insets> Padding;
+        Insets Margin {};
+        std::optional<Insets> Padding {};
 
-        std::vector<std::string> Options;
+        std::vector<std::string> Options {};
 
         // The option chosen, counting from 0, or -1 for none.
         int Selected = -1;
 
         // Shown while nothing is chosen.
-        std::string Placeholder;
+        std::string Placeholder {};
 
         float FontSize = 0.0f;
-        std::optional<easyforge::Color> Color;
+        std::optional<easyforge::Color> Color {};
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
 
         // Called with the option chosen, when a person chooses one or the program
         // assigns Selected.
-        std::function<void(int)> OnChange;
+        std::function<void(int)> OnChange {};
     };
 
     // A button that shows the option chosen, and opens a list of the others
@@ -98,12 +98,12 @@ namespace easyforge::ui
     // One entry of a menu.
     struct MenuItem
     {
-        std::string Text;
-        std::function<void()> OnClick;
+        std::string Text {};
+        std::function<void()> OnClick {};
 
         // Text shown at the right, such as "Ctrl+S". The menu does not act on it;
         // the program handles its own shortcuts.
-        std::string Shortcut;
+        std::string Shortcut {};
 
         bool Enabled = true;
 
@@ -113,42 +113,42 @@ namespace easyforge::ui
 
     struct MenuSettings
     {
-        std::string Name;
+        std::string Name {};
 
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
-        std::optional<Insets> Padding;
+        Insets Margin {};
+        std::optional<Insets> Padding {};
 
-        std::vector<MenuItem> Items;
+        std::vector<MenuItem> Items {};
 
         // The button's look. Menus in title bars and toolbars suit Subtle, the default.
         ButtonStyle Style = ButtonStyle::Subtle;
 
         float FontSize = 0.0f;
-        std::optional<easyforge::Color> Color;
+        std::optional<easyforge::Color> Color {};
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
     };
 
     // A button that opens a list of actions below it, for menu bars such as
@@ -188,38 +188,38 @@ namespace easyforge::ui
 
     struct DialogSettings
     {
-        std::string Name;
+        std::string Name {};
 
         // Without a width, 440 points.
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
+        Insets Margin {};
 
         // Without padding, 24 points.
-        std::optional<Insets> Padding;
+        std::optional<Insets> Padding {};
 
         // Space between the title, the children, and the buttons. Without one, 16.
-        std::optional<float> Gap;
+        std::optional<float> Gap {};
 
         // Shown at the top in a larger size.
-        std::string Title;
+        std::string Title {};
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
@@ -228,12 +228,12 @@ namespace easyforge::ui
         bool ClosesOnOutsideClick = false;
 
         // Called when the dialog has closed, however it was closed.
-        std::function<void()> OnClosed;
+        std::function<void()> OnClosed {};
 
-        std::vector<Element> Children;
+        std::vector<Element> Children {};
 
         // Laid out in a row at the bottom right, such as Cancel and OK.
-        std::vector<Element> Buttons;
+        std::vector<Element> Buttons {};
     };
 
     // A box over everything else, which takes the keyboard and the pointer until

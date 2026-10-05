@@ -20,54 +20,54 @@ namespace easyforge::ui
     struct Theme
     {
         // Behind everything: the window's own color.
-        Color Background;
+        Color Background {};
 
         // Panels, cards, menus, and dialogs.
-        Color Surface;
+        Color Surface {};
 
         // Buttons, fields, and other controls.
-        Color Control;
-        Color ControlHovered;
-        Color ControlPressed;
+        Color Control {};
+        Color ControlHovered {};
+        Color ControlPressed {};
 
-        Color Text;
+        Color Text {};
 
         // Text that matters less: hints, placeholders, captions.
-        Color MutedText;
+        Color MutedText {};
 
         // Highlighted buttons, checked boxes, sliders, and selections.
-        Color Accent;
-        Color AccentHovered;
-        Color AccentPressed;
+        Color Accent {};
+        Color AccentHovered {};
+        Color AccentPressed {};
 
         // Text on the accent color.
-        Color AccentText;
+        Color AccentText {};
 
         // Lines around fields and panels, and between sections.
-        Color Border;
+        Color Border {};
 
         // The ring around whatever has the keyboard.
-        Color Focus;
+        Color Focus {};
 
         // Behind selected text.
-        Color Selection;
+        Color Selection {};
 
         // Title bars and their buttons.
-        Color TitleBar;
-        Color TitleBarText;
-        Color TitleButtonHovered;
-        Color CloseButtonHovered;
+        Color TitleBar {};
+        Color TitleBarText {};
+        Color TitleButtonHovered {};
+        Color CloseButtonHovered {};
 
         // Text in controls that cannot be used right now.
-        Color DisabledText;
+        Color DisabledText {};
 
         // Tooltips.
-        Color Tooltip;
-        Color TooltipText;
+        Color Tooltip {};
+        Color TooltipText {};
 
         // Without a font, the system's interface font is used: Segoe UI on
         // Windows.
-        easyforge::Font Font;
+        easyforge::Font Font {};
 
         // In points.
         float FontSize = 15.0f;

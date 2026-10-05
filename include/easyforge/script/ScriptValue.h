@@ -237,7 +237,8 @@ namespace easyforge
                     }
                     std::string problem;
                     auto check = [&]<std::size_t... Index>(std::index_sequence<Index...>) {
-                        auto one = [&]<std::size_t At>() {
+                        // Unused for a function that takes nothing.
+                        [[maybe_unused]] auto one = [&]<std::size_t At>() {
                             using Argument = std::tuple_element_t<At, ArgumentTypes>;
                             if (problem.empty() && !Accepts<Argument>(arguments[At]))
                             {

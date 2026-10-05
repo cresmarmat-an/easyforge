@@ -27,7 +27,7 @@ namespace easyforge
         ShaderValue(std::string name, Vector4 value);
         ShaderValue(std::string name, Color value);
 
-        std::string Name;
+        std::string Name {};
 
         // The numbers, in order; a number uses the first, a color all four.
         float Numbers[4] {};

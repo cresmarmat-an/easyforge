@@ -14,22 +14,22 @@ namespace easyforge
 {
     struct MeshVertex
     {
-        Vector3 Position;
-        Vector3 Normal;
+        Vector3 Position {};
+        Vector3 Normal {};
 
         // Texture coordinates with (0, 0) at the top left of the image, matching
         // ImageData's rows. OBJ files store V from the bottom; it is flipped on loading.
-        Vector2 TextureCoordinate;
+        Vector2 TextureCoordinate {};
     };
 
     // Triangles that share one material.
     struct MeshData
     {
-        std::string Name;
-        std::vector<MeshVertex> Vertices;
+        std::string Name {};
+        std::vector<MeshVertex> Vertices {};
 
         // Three indices into Vertices per triangle, counterclockwise when seen from the front.
-        std::vector<std::uint32_t> Indices;
+        std::vector<std::uint32_t> Indices {};
 
         // Index into ModelData::Materials, or -1 for none.
         int MaterialIndex = -1;
@@ -39,13 +39,13 @@ namespace easyforge
     // Texture::Load: they are relative to the same place the model was loaded from.
     struct MaterialData
     {
-        std::string Name;
+        std::string Name {};
         Color BaseColor = Color::White;
-        std::string BaseColorTexture;
+        std::string BaseColorTexture {};
         float Metallic = 0.0f;
         float Roughness = 0.5f;
         Color Emissive = Color::Black;
-        std::string NormalTexture;
+        std::string NormalTexture {};
     };
 
     // A 3D model in memory: meshes and the materials they use.

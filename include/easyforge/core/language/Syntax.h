@@ -15,9 +15,9 @@ namespace easyforge::language
     // `list of number`, where Element is the type after `of`.
     struct TypeName
     {
-        std::string Name;
-        std::unique_ptr<TypeName> Element;
-        Location Where;
+        std::string Name {};
+        std::unique_ptr<TypeName> Element {};
+        Location Where {};
 
         // The type as written, such as "list of number".
         std::string Spelling() const;
@@ -65,20 +65,20 @@ namespace easyforge::language
         ~Expression();
 
         ExpressionKind Kind = ExpressionKind::Nothing;
-        Location Where;
+        Location Where {};
         double Number = 0.0;
         bool Boolean = false;
-        std::string Name;
-        std::vector<std::string> Pieces;
-        std::vector<std::unique_ptr<Expression>> Parts;
-        std::unique_ptr<Statement> Function;
+        std::string Name {};
+        std::vector<std::string> Pieces {};
+        std::vector<std::unique_ptr<Expression>> Parts {};
+        std::unique_ptr<Statement> Function {};
     };
 
     struct Parameter
     {
-        std::string Name;
-        std::unique_ptr<TypeName> Type;
-        Location Where;
+        std::string Name {};
+        std::unique_ptr<TypeName> Type {};
+        Location Where {};
     };
 
     using Block = std::vector<std::unique_ptr<Statement>>;
@@ -135,21 +135,21 @@ namespace easyforge::language
         ~Statement();
 
         StatementKind Kind = StatementKind::Expression;
-        Location Where;
-        std::string Name;
-        std::unique_ptr<TypeName> Type;
-        std::vector<Parameter> Parameters;
-        std::vector<std::unique_ptr<Expression>> Expressions;
-        std::vector<Block> Blocks;
+        Location Where {};
+        std::string Name {};
+        std::unique_ptr<TypeName> Type {};
+        std::vector<Parameter> Parameters {};
+        std::vector<std::unique_ptr<Expression>> Expressions {};
+        std::vector<Block> Blocks {};
     };
 
     // A whole source file, read into statements.
     struct SyntaxTree
     {
-        Block Statements;
+        Block Statements {};
 
         // Everything that could not be read. The statements hold whatever could.
-        std::vector<Problem> Problems;
+        std::vector<Problem> Problems {};
 
         explicit operator bool() const { return Problems.empty(); }
     };

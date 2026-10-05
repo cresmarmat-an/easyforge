@@ -23,11 +23,11 @@ namespace easyforge::ui
     struct RootSettings
     {
         // What the root shows, filling its canvas.
-        Element Content;
+        Element Content {};
 
         // Without one, the system's light or dark theme when the root belongs to a
         // window, and the light theme otherwise.
-        std::optional<ui::Theme> Theme;
+        std::optional<ui::Theme> Theme {};
     };
 
     // One interface: its theme, the element that has the keyboard, and what it

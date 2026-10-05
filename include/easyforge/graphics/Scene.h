@@ -22,7 +22,7 @@ namespace easyforge
     struct Camera
     {
         Vector3 Position { 0.0f, 2.0f, 6.0f };
-        Vector3 Target;
+        Vector3 Target {};
         Vector3 Up { 0.0f, 1.0f, 0.0f };
 
         // How much the camera sees from the bottom of the picture to the top, in degrees.
@@ -48,8 +48,8 @@ namespace easyforge
 
     struct SceneObjectSettings
     {
-        Vector3 Position;
-        Quaternion Rotation;
+        Vector3 Position {};
+        Quaternion Rotation {};
         Vector3 Scale { 1.0f, 1.0f, 1.0f };
         bool Visible = true;
     };

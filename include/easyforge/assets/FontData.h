@@ -46,8 +46,8 @@ namespace easyforge
         float LeftBearing = 0.0f;
 
         // The corners of the box around the outline. Both are zero for an empty glyph, such as a space.
-        Vector2 Minimum;
-        Vector2 Maximum;
+        Vector2 Minimum {};
+        Vector2 Maximum {};
     };
 
     // One point of a glyph's outline. An on-curve point lies on the outline; an
@@ -55,7 +55,7 @@ namespace easyforge
     // on-curve points on either side.
     struct OutlinePoint
     {
-        Vector2 Position;
+        Vector2 Position {};
         bool OnCurve = true;
     };
 
@@ -76,7 +76,7 @@ namespace easyforge
         int Top = 0;
 
         // Width * Height values, rows from top to bottom.
-        std::vector<std::uint8_t> Coverage;
+        std::vector<std::uint8_t> Coverage {};
     };
 
     // A TrueType font. Reads .ttf files, and .ttc collections, from which

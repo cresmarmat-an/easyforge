@@ -3,7 +3,9 @@
 // Direct3D 12 headers for easyforge's own code, without the min and max macros.
 
 #ifndef NOMINMAX
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #endif
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN

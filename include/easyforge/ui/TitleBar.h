@@ -12,7 +12,7 @@ namespace easyforge::ui
 {
     struct TitleBarSettings
     {
-        std::string Name;
+        std::string Name {};
 
         // As wide as the window and 36 points tall, unless given others.
         Size Width = ui::Fill;
@@ -22,7 +22,7 @@ namespace easyforge::ui
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
+        Insets Margin {};
 
         // 12 points before the first child.
         Insets Padding { 12.0f, 0.0f, 0.0f, 0.0f };
@@ -32,24 +32,24 @@ namespace easyforge::ui
         ui::Distribution Distribution = ui::Distribution::Start;
 
         // Without a background, the theme's TitleBar color.
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<Color> BorderColor;
+        std::optional<Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
 
-        std::vector<Element> Children;
+        std::vector<Element> Children {};
     };
 
     // A title bar to draw in place of the system's:
@@ -84,7 +84,7 @@ namespace easyforge::ui
 
     struct WindowButtonsSettings
     {
-        std::string Name;
+        std::string Name {};
 
         // Each button's width. Their height is the title bar's.
         float ButtonWidth = 46.0f;

@@ -88,7 +88,7 @@ namespace easyforge::ui
 
     struct DisplaysSettings
     {
-        std::string Name;
+        std::string Name {};
 
         // Without a size, it fills.
         Size Width = ui::Fill;
@@ -98,36 +98,36 @@ namespace easyforge::ui
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
-        Insets Padding;
+        Insets Margin {};
+        Insets Padding {};
 
         // The display shown first. Without one, the first child.
-        std::string Start;
+        std::string Start {};
 
         // Used by Show and Back when they are not given one.
         ui::Transition Transition = ui::Transition::Cut();
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<Color> BorderColor;
+        std::optional<Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::optional<easyforge::Cursor> Cursor;
+        std::optional<easyforge::Cursor> Cursor {};
 
         // Called with the name of the display being shown.
-        std::function<void(const std::string&)> OnChange;
+        std::function<void(const std::string&)> OnChange {};
 
         // Its displays.
-        std::vector<Element> Children;
+        std::vector<Element> Children {};
     };
 
     // Several displays in one place, one shown at a time: the menu, the settings,
@@ -181,7 +181,7 @@ namespace easyforge::ui
 
     struct TabsSettings
     {
-        std::string Name;
+        std::string Name {};
 
         // Without a size, it fills.
         Size Width = ui::Fill;
@@ -191,37 +191,37 @@ namespace easyforge::ui
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
+        Insets Margin {};
 
         // Around the page, below the tabs.
-        Insets Padding;
+        Insets Padding {};
 
         // The tab shown first. Without one, the first child.
-        std::string Start;
+        std::string Start {};
 
         float FontSize = 0.0f;
-        std::optional<easyforge::Color> Color;
+        std::optional<easyforge::Color> Color {};
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
 
         // Called with the name of the tab chosen.
-        std::function<void(const std::string&)> OnChange;
+        std::function<void(const std::string&)> OnChange {};
 
         // Its pages, usually Display elements. Each page's name is its tab's text.
-        std::vector<Element> Children;
+        std::vector<Element> Children {};
     };
 
     // A row of tabs over pages, one page shown at a time.

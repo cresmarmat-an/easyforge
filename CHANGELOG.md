@@ -79,6 +79,12 @@
   longer throws from inside the standard library; and making a pack from a
   folder with a subfolder that cannot be read fails with an error instead of
   throwing.
+- easyforge builds with GCC as well as Visual Studio, with every warning on
+  and treated as an error. Every member of the public settings structs has a
+  default, so filling them by name gives no missing-initializer warnings with
+  GCC or Clang, and a script function that takes no arguments no longer gives
+  an unused-variable warning. `Jobs::Settings` is now `JobsSettings`, which
+  `Jobs::Settings` still names.
 - `RunTests` turns off the error dialogs of Windows and of the C++ library's
   debug build, so a crashing test fails at once instead of waiting.
 - With `EASYFORGE_SANITIZE`, the sanitizer's runtime is copied next to every

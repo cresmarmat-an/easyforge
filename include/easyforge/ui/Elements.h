@@ -19,23 +19,23 @@ namespace easyforge::ui
 {
     struct LabelSettings
     {
-        std::string Name;
+        std::string Name {};
 
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
-        Insets Padding;
+        Insets Margin {};
+        Insets Padding {};
 
         // In points. Zero is the theme's size.
         float FontSize = 0.0f;
 
         // Without a color, the theme's text color.
-        std::optional<easyforge::Color> Color;
+        std::optional<easyforge::Color> Color {};
 
         ui::TextAlignment TextAlignment = ui::TextAlignment::Start;
 
@@ -43,24 +43,24 @@ namespace easyforge::ui
         bool Wrap = false;
 
         // Without a font, the theme's.
-        easyforge::Font Font;
+        easyforge::Font Font {};
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
     };
 
     // Text. A new line starts at each "\n".
@@ -98,18 +98,18 @@ namespace easyforge::ui
 
     struct ImageSettings
     {
-        std::string Name;
+        std::string Name {};
 
         // Without a size, the image's own: one point for each pixel.
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
-        Insets Padding;
+        Insets Margin {};
+        Insets Padding {};
 
         ui::ImageFit Fit = ui::ImageFit::Contain;
         easyforge::Color Tint = easyforge::Color::White;
@@ -117,22 +117,22 @@ namespace easyforge::ui
         // Keeps this many pixels at each edge from stretching. Only with Stretch.
         float Slice = 0.0f;
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
     };
 
     // A picture from a file or a texture.
@@ -179,19 +179,19 @@ namespace easyforge::ui
 
     struct ButtonSettings
     {
-        std::string Name;
+        std::string Name {};
 
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
+        Insets Margin {};
 
         // Without padding, 14 points at the sides and 6 above and below.
-        std::optional<Insets> Padding;
+        std::optional<Insets> Padding {};
 
         ButtonStyle Style = ButtonStyle::Normal;
 
@@ -199,36 +199,36 @@ namespace easyforge::ui
         float FontSize = 0.0f;
 
         // The text's color. Without one, the theme's, for the style.
-        std::optional<easyforge::Color> Color;
+        std::optional<easyforge::Color> Color {};
 
         // Where the text sits: in the middle, or at the start for buttons in a
         // list.
         ui::TextAlignment TextAlignment = ui::TextAlignment::Center;
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
 
         // Called when the button is clicked, or pressed with Enter or Space while
         // it has the keyboard.
-        std::function<void()> OnClick;
+        std::function<void()> OnClick {};
 
         // Elements to show in place of the text, side by side, such as an icon
         // and a label.
-        std::vector<Element> Children;
+        std::vector<Element> Children {};
     };
 
     // A button with text, or with children of its own.
@@ -263,43 +263,43 @@ namespace easyforge::ui
     // Settings for Checkbox and Toggle.
     struct CheckSettings
     {
-        std::string Name;
+        std::string Name {};
 
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
-        Insets Padding;
+        Insets Margin {};
+        Insets Padding {};
 
         bool Checked = false;
 
         float FontSize = 0.0f;
-        std::optional<easyforge::Color> Color;
+        std::optional<easyforge::Color> Color {};
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
 
         // Called with the new state whenever it changes, by a click or by the
         // program.
-        std::function<void(bool)> OnChange;
+        std::function<void(bool)> OnChange {};
     };
 
     // A box that is checked or not, with text beside it. Clicking the box or the
@@ -353,18 +353,18 @@ namespace easyforge::ui
     // Settings for Slider and ProgressBar.
     struct RangeSettings
     {
-        std::string Name;
+        std::string Name {};
 
         // Without a width, 200 points.
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
-        Insets Padding;
+        Insets Margin {};
+        Insets Padding {};
 
         float Value = 0.0f;
         float Minimum = 0.0f;
@@ -375,27 +375,27 @@ namespace easyforge::ui
         float Step = 0.0f;
 
         // Without a color, the theme's accent.
-        std::optional<easyforge::Color> Color;
+        std::optional<easyforge::Color> Color {};
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
 
         // Called with the new value whenever it changes.
-        std::function<void(float)> OnChange;
+        std::function<void(float)> OnChange {};
     };
 
     // A value picked by dragging a handle along a track, or with the arrow keys.
@@ -446,28 +446,28 @@ namespace easyforge::ui
 
     struct TextFieldSettings
     {
-        std::string Name;
+        std::string Name {};
 
         // Without a width, 200 points.
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
+        Insets Margin {};
 
         // Without padding, 8 points at the sides and 6 above and below.
-        std::optional<Insets> Padding;
+        std::optional<Insets> Padding {};
 
-        std::string Text;
+        std::string Text {};
 
         // Shown in the theme's muted color while the field is empty.
-        std::string Placeholder;
+        std::string Placeholder {};
 
         float FontSize = 0.0f;
-        std::optional<easyforge::Color> Color;
+        std::optional<easyforge::Color> Color {};
 
         // Shows a dot for each character, and does not copy.
         bool Password = false;
@@ -475,28 +475,28 @@ namespace easyforge::ui
         // The most characters the field takes. Zero is no limit.
         int MaximumLength = 0;
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
-        std::optional<float> BorderWidth;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
+        std::optional<float> BorderWidth {};
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
 
         // Called after every change to the text.
-        std::function<void(const std::string&)> OnChange;
+        std::function<void(const std::string&)> OnChange {};
 
         // Called when Enter is pressed in the field.
-        std::function<void(const std::string&)> OnSubmit;
+        std::function<void(const std::string&)> OnSubmit {};
     };
 
     // One line of text to type into, with a caret, selection by mouse and
@@ -531,29 +531,29 @@ namespace easyforge::ui
 
     struct TextAreaSettings
     {
-        std::string Name;
+        std::string Name {};
 
         // Without a size, 300 by 120 points. With a height that fits, it grows
         // with its text.
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
+        Insets Margin {};
 
         // Without padding, 8 points at the sides and 6 above and below.
-        std::optional<Insets> Padding;
+        std::optional<Insets> Padding {};
 
-        std::string Text;
+        std::string Text {};
 
         // Shown in the theme's muted color while the area is empty.
-        std::string Placeholder;
+        std::string Placeholder {};
 
         float FontSize = 0.0f;
-        std::optional<easyforge::Color> Color;
+        std::optional<easyforge::Color> Color {};
 
         // Breaks lines between words to fit the width. Without it, long lines
         // scroll sideways.
@@ -562,25 +562,25 @@ namespace easyforge::ui
         // The most characters the area takes. Zero is no limit.
         int MaximumLength = 0;
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
-        std::optional<float> BorderWidth;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
+        std::optional<float> BorderWidth {};
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
 
         // Called after every change to the text.
-        std::function<void(const std::string&)> OnChange;
+        std::function<void(const std::string&)> OnChange {};
     };
 
     // Several lines of text to type into. Enter starts a new line, Up and Down
@@ -636,51 +636,51 @@ namespace easyforge::ui
         void operator()(Canvas& canvas, Vector2 size) const { Call(canvas, size); }
 
     private:
-        std::function<void(Canvas&, Vector2)> Call;
+        std::function<void(Canvas&, Vector2)> Call {};
     };
 
     struct DrawingAreaSettings
     {
-        std::string Name;
+        std::string Name {};
 
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
-        Insets Padding;
+        Insets Margin {};
+        Insets Padding {};
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
         float BorderWidth = 0.0f;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
 
         // Called every frame the area is on screen. Points start at the area's
         // top left inside its padding, and drawing is cut to that box.
-        DrawFunction OnDraw;
+        DrawFunction OnDraw {};
 
         // Called when the area is pressed with the left button or a finger,
         // when the pointer moves over it or while it is held, and when it is
         // let go, with the point in the same coordinates as OnDraw. Setting any
         // of them makes the area take the presses on it.
-        std::function<void(Vector2)> OnPress;
-        std::function<void(Vector2)> OnMove;
-        std::function<void(Vector2)> OnRelease;
+        std::function<void(Vector2)> OnPress {};
+        std::function<void(Vector2)> OnMove {};
+        std::function<void(Vector2)> OnRelease {};
     };
 
     // An area to draw into with a Canvas, as with a renderer of your own.
@@ -716,7 +716,7 @@ namespace easyforge::ui
 
     struct SceneViewSettings
     {
-        std::string Name;
+        std::string Name {};
 
         // Without a size, it fills.
         Size Width = ui::Fill;
@@ -726,21 +726,21 @@ namespace easyforge::ui
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
+        Insets Margin {};
 
-        std::optional<float> CornerRadius;
+        std::optional<float> CornerRadius {};
         float BorderWidth = 0.0f;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
-        std::optional<easyforge::Cursor> Cursor;
+        std::optional<easyforge::Cursor> Cursor {};
     };
 
     // A 3D scene drawn through its camera. It does not use pointer events, so

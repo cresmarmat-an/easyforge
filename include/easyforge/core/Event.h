@@ -80,23 +80,23 @@ namespace easyforge
 
         easyforge::Key Key = Key::Unknown;
         bool Repeat = false;
-        KeyModifiers Modifiers;
+        KeyModifiers Modifiers {};
 
-        std::string Text;
+        std::string Text {};
 
-        Vector2 Position;
-        Vector2 Movement;
+        Vector2 Position {};
+        Vector2 Movement {};
         easyforge::MouseButton Button = MouseButton::Left;
 
         // 1 for a single click, 2 for a double click, 3 for a triple click.
         int ClickCount = 1;
 
-        Vector2 Wheel;
+        Vector2 Wheel {};
         int Touch = 0;
 
-        Vector2 Size;
+        Vector2 Size {};
         float Scale = 1.0f;
-        std::vector<std::string> Files;
+        std::vector<std::string> Files {};
 
         // Set by whatever used the event, such as an interface element that was
         // clicked. Everything later in line still sees the event, and can skip it.

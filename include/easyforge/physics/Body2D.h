@@ -44,7 +44,7 @@ namespace easyforge
     // up. The settings after the shape's own are the same for every shape.
     struct BoxSettings
     {
-        Vector2 Position;
+        Vector2 Position {};
         float Rotation = 0.0f;
         Vector2 Size { 1.0f, 1.0f };
 
@@ -52,7 +52,7 @@ namespace easyforge
         float Rounding = 0.0f;
 
         BodyType Type = BodyType::Dynamic;
-        Vector2 Velocity;
+        Vector2 Velocity {};
         float AngularVelocity = 0.0f;
 
         // Kilograms per square metre.
@@ -101,12 +101,12 @@ namespace easyforge
 
     struct CircleSettings
     {
-        Vector2 Position;
+        Vector2 Position {};
         float Rotation = 0.0f;
         float Radius = 0.5f;
 
         BodyType Type = BodyType::Dynamic;
-        Vector2 Velocity;
+        Vector2 Velocity {};
         float AngularVelocity = 0.0f;
         float Density = 1.0f;
         float Friction = 0.6f;
@@ -127,13 +127,13 @@ namespace easyforge
     // distance between the centers of the ends.
     struct CapsuleSettings
     {
-        Vector2 Position;
+        Vector2 Position {};
         float Rotation = 0.0f;
         float Length = 1.0f;
         float Radius = 0.25f;
 
         BodyType Type = BodyType::Dynamic;
-        Vector2 Velocity;
+        Vector2 Velocity {};
         float AngularVelocity = 0.0f;
         float Density = 1.0f;
         float Friction = 0.6f;
@@ -154,13 +154,13 @@ namespace easyforge
     // Points inside the outline are left out, and at most eight corners are kept.
     struct PolygonSettings
     {
-        Vector2 Position;
+        Vector2 Position {};
         float Rotation = 0.0f;
-        std::vector<Vector2> Points;
+        std::vector<Vector2> Points {};
         float Rounding = 0.0f;
 
         BodyType Type = BodyType::Dynamic;
-        Vector2 Velocity;
+        Vector2 Velocity {};
         float AngularVelocity = 0.0f;
         float Density = 1.0f;
         float Friction = 0.6f;
@@ -301,11 +301,11 @@ namespace easyforge
     // Two bodies starting or stopping to touch, as the body told sees it.
     struct Contact2D
     {
-        Body2D Other;
+        Body2D Other {};
 
         // Where they touch, and the direction from this body toward the other.
-        Vector2 Point;
-        Vector2 Normal;
+        Vector2 Point {};
+        Vector2 Normal {};
 
         // How fast they were moving toward each other, in metres a second.
         float Speed = 0.0f;
@@ -317,9 +317,9 @@ namespace easyforge
     // What a ray or a cast circle hit first. Tests as false when it hit nothing.
     struct RayHit2D
     {
-        Body2D Body;
-        Vector2 Point;
-        Vector2 Normal;
+        Body2D Body {};
+        Vector2 Point {};
+        Vector2 Normal {};
         float Distance = 0.0f;
 
         explicit operator bool() const { return static_cast<bool>(Body); }

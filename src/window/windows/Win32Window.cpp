@@ -251,7 +251,7 @@ namespace easyforge::internal
         bool Transparent = false;
         bool CustomTitleBar = false;
         bool Fullscreen = false;
-        WINDOWPLACEMENT PlacementBeforeFullscreen { sizeof(WINDOWPLACEMENT) };
+        WINDOWPLACEMENT PlacementBeforeFullscreen = SizedStruct<WINDOWPLACEMENT>();
         bool MaximizeWhenShown = false;
         Vector2 MinimumSize;
         bool InModalLoop = false;
@@ -373,7 +373,7 @@ namespace easyforge::internal
 
             // A window larger than the screen would reach under the taskbar or off
             // the edge; start it at the most that fits.
-            MONITORINFO information { sizeof(MONITORINFO) };
+            MONITORINFO information = SizedStruct<MONITORINFO>();
             GetMonitorInfoW(monitor, &information);
             const RECT& work = information.rcWork;
             width = Min(width, static_cast<int>(work.right - work.left));
@@ -519,7 +519,7 @@ namespace easyforge::internal
         }
         if (IsZoomed(Handle) || IsIconic(Handle))
         {
-            WINDOWPLACEMENT placement { sizeof(WINDOWPLACEMENT) };
+            WINDOWPLACEMENT placement = SizedStruct<WINDOWPLACEMENT>();
             GetWindowPlacement(Handle, &placement);
             placement.rcNormalPosition.right = placement.rcNormalPosition.left + width;
             placement.rcNormalPosition.bottom = placement.rcNormalPosition.top + height;
@@ -589,7 +589,7 @@ namespace easyforge::internal
         if (fullscreen)
         {
             GetWindowPlacement(Handle, &PlacementBeforeFullscreen);
-            MONITORINFO information { sizeof(MONITORINFO) };
+            MONITORINFO information = SizedStruct<MONITORINFO>();
             GetMonitorInfoW(MonitorFromWindow(Handle, MONITOR_DEFAULTTONEAREST), &information);
             Fullscreen = true;
             LONG_PTR kept = GetWindowLongPtrW(Handle, GWL_STYLE) & WS_VISIBLE;
@@ -1113,7 +1113,7 @@ namespace easyforge::internal
             POINT cursor {};
             GetCursorPos(&cursor);
             LRESULT hit = SendMessageW(Handle, WM_NCHITTEST, 0, MAKELPARAM(cursor.x, cursor.y));
-            TRACKMOUSEEVENT track { sizeof(TRACKMOUSEEVENT) };
+            TRACKMOUSEEVENT track = SizedStruct<TRACKMOUSEEVENT>();
             track.dwFlags = TME_LEAVE | (hit == HTCLIENT ? 0 : TME_NONCLIENT);
             track.hwndTrack = Handle;
             TrackMouseEvent(&track);
@@ -1309,7 +1309,7 @@ namespace easyforge::internal
                 POINT point = ScreenToContent(lParam);
                 if (!TrackingFrame)
                 {
-                    TRACKMOUSEEVENT track { sizeof(TRACKMOUSEEVENT) };
+                    TRACKMOUSEEVENT track = SizedStruct<TRACKMOUSEEVENT>();
                     track.dwFlags = TME_LEAVE | TME_NONCLIENT;
                     track.hwndTrack = Handle;
                     TrackMouseEvent(&track);
@@ -1379,7 +1379,7 @@ namespace easyforge::internal
         {
             if (!TrackingContent)
             {
-                TRACKMOUSEEVENT track { sizeof(TRACKMOUSEEVENT) };
+                TRACKMOUSEEVENT track = SizedStruct<TRACKMOUSEEVENT>();
                 track.dwFlags = TME_LEAVE;
                 track.hwndTrack = Handle;
                 TrackMouseEvent(&track);

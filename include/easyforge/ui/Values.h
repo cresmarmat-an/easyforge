@@ -160,7 +160,7 @@ namespace easyforge::ui
         float Delay = 0.0f;
 
         // Called when the animation reaches its end, not when something stops it.
-        std::function<void()> OnFinished;
+        std::function<void()> OnFinished {};
     };
 
     namespace internal

@@ -17,7 +17,7 @@ namespace easyforge
     struct RecordedFrame
     {
         float DeltaSeconds = 0.0f;
-        std::vector<Event> Events;
+        std::vector<Event> Events {};
         std::array<GamepadState, MaximumGamepads> Gamepads {};
     };
 

@@ -33,13 +33,13 @@ namespace easyforge
 
         // Where `import "name"` looks for name.script after the folder of the
         // file that imports it.
-        std::vector<std::string> SearchFolders;
+        std::vector<std::string> SearchFolders {};
 
         // Whether scripts may import files at all.
         bool AllowImports = true;
 
         // Where print writes. Without one, to the standard output.
-        std::function<void(std::string_view line)> Print;
+        std::function<void(std::string_view line)> Print {};
     };
 
     // Runs scripts in the easyforge language. Each engine has its own values

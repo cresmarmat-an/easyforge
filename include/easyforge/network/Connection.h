@@ -47,8 +47,8 @@ namespace easyforge
     // other end refused it, it timed out, or the connection closed.
     struct Reply
     {
-        easyforge::Message Message;
-        std::string Error;
+        easyforge::Message Message {};
+        std::string Error {};
 
         explicit operator bool() const { return Error.empty(); }
     };

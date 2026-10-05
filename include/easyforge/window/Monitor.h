@@ -15,13 +15,13 @@ namespace easyforge
     {
         // The name the screen reports, such as "DELL U2720Q", or a generic name
         // when it reports none.
-        std::string Name;
+        std::string Name {};
 
         // All of the screen, placed on the desktop.
-        Rectangle Area;
+        Rectangle Area {};
 
         // The part not covered by the taskbar, dock, or menu bar.
-        Rectangle WorkArea;
+        Rectangle WorkArea {};
 
         // Pixels per point, from the system's display scaling.
         float Scale = 1.0f;

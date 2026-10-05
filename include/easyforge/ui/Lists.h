@@ -13,50 +13,50 @@ namespace easyforge::ui
 {
     struct ListSettings
     {
-        std::string Name;
+        std::string Name {};
 
         // Without a size, 240 by 200 points.
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
-        std::optional<Insets> Padding;
+        Insets Margin {};
+        std::optional<Insets> Padding {};
 
-        std::vector<std::string> Items;
+        std::vector<std::string> Items {};
 
         // The item chosen, counting from 0, or -1 for none.
         int Selected = -1;
 
         float FontSize = 0.0f;
-        std::optional<easyforge::Color> Color;
+        std::optional<easyforge::Color> Color {};
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
-        std::optional<float> BorderWidth;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
+        std::optional<float> BorderWidth {};
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
 
         // Called with the item chosen, when a person chooses one or the program
         // assigns Selected.
-        std::function<void(int)> OnSelect;
+        std::function<void(int)> OnSelect {};
 
         // Called when an item is double-clicked, or Enter is pressed on it.
-        std::function<void(int)> OnActivate;
+        std::function<void(int)> OnActivate {};
     };
 
     // Rows of text, one of which can be chosen, in a box that scrolls when there
@@ -90,50 +90,50 @@ namespace easyforge::ui
 
     struct TreeSettings
     {
-        std::string Name;
+        std::string Name {};
 
         // Without a size, 240 by 300 points.
-        Size Width;
-        Size Height;
+        Size Width {};
+        Size Height {};
         float MinimumWidth = 0.0f;
         float MinimumHeight = 0.0f;
         float MaximumWidth = Unlimited;
         float MaximumHeight = Unlimited;
 
-        Insets Margin;
-        std::optional<Insets> Padding;
+        Insets Margin {};
+        std::optional<Insets> Padding {};
 
         // The table whose nodes the tree shows.
-        Table Source;
+        Table Source {};
 
         // Show the nodes at the top of the table open.
         bool OpenAtStart = true;
 
         float FontSize = 0.0f;
-        std::optional<easyforge::Color> Color;
+        std::optional<easyforge::Color> Color {};
 
-        std::optional<float> CornerRadius;
-        std::optional<ui::Background> Background;
-        std::optional<float> BorderWidth;
-        std::optional<easyforge::Color> BorderColor;
+        std::optional<float> CornerRadius {};
+        std::optional<ui::Background> Background {};
+        std::optional<float> BorderWidth {};
+        std::optional<easyforge::Color> BorderColor {};
 
         float Opacity = 1.0f;
-        Vector2 Offset;
+        Vector2 Offset {};
         float Scale = 1.0f;
-        std::vector<Effect> Effects;
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> ShaderValues;
+        std::vector<Effect> Effects {};
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> ShaderValues {};
 
         bool Visible = true;
         bool Enabled = true;
-        std::string Tooltip;
-        std::optional<easyforge::Cursor> Cursor;
+        std::string Tooltip {};
+        std::optional<easyforge::Cursor> Cursor {};
 
         // Called with the node chosen.
-        std::function<void(Node)> OnSelect;
+        std::function<void(Node)> OnSelect {};
 
         // Called when a node is double-clicked, or Enter is pressed on it.
-        std::function<void(Node)> OnActivate;
+        std::function<void(Node)> OnActivate {};
     };
 
     // The nodes of a data table as rows that open and close, following the table

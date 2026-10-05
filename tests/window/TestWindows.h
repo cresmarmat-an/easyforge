@@ -5,7 +5,9 @@
 // directly, which makes each test independent of what the person at the
 // computer does.
 
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #define WIN32_LEAN_AND_MEAN
 #define UNICODE
 #include <windows.h>

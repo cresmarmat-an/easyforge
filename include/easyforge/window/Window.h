@@ -34,7 +34,7 @@ namespace easyforge
         // The window's icon, shown in its title bar and the taskbar: the path of
         // an image file, or an image loaded already. Empty uses the icon built
         // into the program, if it has one.
-        ImageData Icon;
+        ImageData Icon {};
 
         // The size of the content, not counting the system's frame.
         float Width = 1280.0f;
@@ -45,7 +45,7 @@ namespace easyforge
 
         // Where the top left of the content goes, in desktop pixels. Empty centers
         // the window on the primary screen. Write it as `Vector2 { 100, 100 }`.
-        std::optional<Vector2> Position;
+        std::optional<Vector2> Position {};
 
         bool Resizable = true;
         bool Maximized = false;
@@ -65,7 +65,7 @@ namespace easyforge
 
         // The color the window shows where nothing is drawn. Empty follows the
         // system's light or dark setting.
-        std::optional<Color> Background;
+        std::optional<Color> Background {};
     };
 
     // A window on the desktop, or the whole screen on phones and the web.

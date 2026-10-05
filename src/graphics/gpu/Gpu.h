@@ -102,12 +102,12 @@ namespace easyforge::internal::gpu
     struct PipelineSettings
     {
         // Source code in the backend's own shading language: HLSL for Direct3D 12.
-        std::string_view VertexShader;
-        std::string_view PixelShader;
+        std::string_view VertexShader {};
+        std::string_view PixelShader {};
         std::string_view VertexEntry = "VertexMain";
         std::string_view PixelEntry = "PixelMain";
 
-        std::span<const VertexAttribute> Attributes;
+        std::span<const VertexAttribute> Attributes {};
         std::uint32_t VertexStride = 0;
 
         // Attributes advance once per instance instead of once per vertex.
@@ -121,7 +121,7 @@ namespace easyforge::internal::gpu
         bool DepthTest = false;
         bool CullBackFaces = false;
         int SampleCount = 1;
-        std::string_view Name;
+        std::string_view Name {};
     };
 
     class Pipeline

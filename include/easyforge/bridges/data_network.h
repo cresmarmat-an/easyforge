@@ -174,7 +174,7 @@ namespace easyforge
         public:
             struct Entry
             {
-                Node Local;
+                Node Local {};
                 std::uint64_t Identifier = 0;
                 std::int64_t Parent = 0;
             };
@@ -182,15 +182,15 @@ namespace easyforge
             // Messages sent on the server's behalf, each to its own recipients.
             struct Chunk
             {
-                std::vector<Message> Records;
-                std::vector<Connection> Recipients;
+                std::vector<Message> Records {};
+                std::vector<Connection> Recipients {};
             };
 
             // A client taking part, and the numbers its new nodes were given.
             struct Member
             {
-                Connection Link;
-                std::map<std::int64_t, std::int64_t> Assigned;
+                Connection Link {};
+                std::map<std::int64_t, std::int64_t> Assigned {};
             };
 
             ShareState(Table table, bool server, std::string name)

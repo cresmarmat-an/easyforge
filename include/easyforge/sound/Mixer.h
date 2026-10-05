@@ -67,11 +67,11 @@ namespace easyforge
 
         // The bus to play through, made the first time it is named. Empty plays
         // straight to the mixer.
-        std::string Bus;
+        std::string Bus {};
 
         // A place in the world. The sound pans and fades with its place around
         // the mixer's listener, and Pan is not used.
-        std::optional<Vector3> Position;
+        std::optional<Vector3> Position {};
 
         // Within the minimum distance the sound plays at full volume; it gets
         // quieter with distance, as sound does in the open, and is silent past

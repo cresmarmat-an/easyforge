@@ -46,6 +46,12 @@ if(EASYFORGE_SANITIZE)
     endif()
 endif()
 
+# Windows 10 is the oldest Windows easyforge runs on. Saying so makes every
+# compiler's Windows headers declare what it adds, such as per-screen scaling.
+if(WIN32)
+    add_compile_definitions(_WIN32_WINNT=0x0A00 WINVER=0x0A00)
+endif()
+
 configure_file(cmake/version.h.in "${EASYFORGE_GENERATED_INCLUDE_DIRECTORY}/easyforge/version.h" @ONLY)
 
 easyforge_add_libraries()

@@ -35,8 +35,8 @@ namespace easyforge
     struct RectangleStyle
     {
         // The top left corner and the size, in points.
-        Vector2 Position;
-        Vector2 Size;
+        Vector2 Position {};
+        Vector2 Size {};
 
         // Turns the rectangle about its center, in radians. On screen, where Y
         // grows downward, positive angles turn it clockwise.
@@ -52,7 +52,7 @@ namespace easyforge
         easyforge::Color BorderColor = easyforge::Color::Transparent;
 
         // Fills the shape with a gradient instead of Color.
-        std::optional<LinearGradient> Gradient;
+        std::optional<LinearGradient> Gradient {};
 
         // Softens the edge over this many points, half inside and half outside,
         // as a shadow or a glow does.
@@ -61,7 +61,7 @@ namespace easyforge
         // An area left undrawn, in points, with its own rounded corners: the box
         // a shadow belongs to, so a see-through box does not show its shadow
         // through itself. Not used with a gradient.
-        std::optional<easyforge::Rectangle> Hole;
+        std::optional<easyforge::Rectangle> Hole {};
         float HoleCornerRadius = 0.0f;
     };
 
@@ -70,7 +70,7 @@ namespace easyforge
         easyforge::Color Color = easyforge::Color::White;
         float BorderWidth = 0.0f;
         easyforge::Color BorderColor = easyforge::Color::Transparent;
-        std::optional<LinearGradient> Gradient;
+        std::optional<LinearGradient> Gradient {};
         float Blur = 0.0f;
     };
 
@@ -85,18 +85,18 @@ namespace easyforge
     struct ImageStyle
     {
         // The top left corner, in points.
-        Vector2 Position;
+        Vector2 Position {};
 
         // The size to draw at, in points. Zero draws one point for each pixel of
         // the part of the texture shown.
-        Vector2 Size;
+        Vector2 Size {};
 
         // Turns the image about its center, in radians, clockwise on screen. Not
         // used with a slice.
         float Rotation = 0.0f;
 
         // The part of the texture to draw, in its pixels. Empty draws all of it.
-        easyforge::Rectangle Source;
+        easyforge::Rectangle Source {};
 
         // Multiplies every pixel. White leaves the image as it is; lowering the
         // alpha fades it.
@@ -115,7 +115,7 @@ namespace easyforge
     struct TextStyle
     {
         // The top left corner of the first line, in points.
-        Vector2 Position;
+        Vector2 Position {};
 
         // The font size in points: the height of an em.
         float Size = 16.0f;
@@ -129,8 +129,8 @@ namespace easyforge
         // Runs every pixel of the layer through the shader, which reads the
         // content with Sample(input.Content, ...). No shader draws the content as
         // it is.
-        easyforge::Shader Shader;
-        std::vector<ShaderValue> Values;
+        easyforge::Shader Shader {};
+        std::vector<ShaderValue> Values {};
 
         // Fades the whole layer.
         float Opacity = 1.0f;

@@ -33,7 +33,7 @@ namespace easyforge
         // handlers then run on that thread.
         bool Threaded = false;
 
-        NetworkConditions Conditions;
+        NetworkConditions Conditions {};
 
         // Seconds without hearing from a client before it is dropped.
         float Timeout = 5.0f;
@@ -115,8 +115,8 @@ namespace easyforge
 
     struct FoundServer
     {
-        std::string Name;
-        std::string Address;
+        std::string Name {};
+        std::string Address {};
         std::uint16_t Port = 0;
         int Clients = 0;
         int MaximumClients = 0;

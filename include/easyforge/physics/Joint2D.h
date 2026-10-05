@@ -21,10 +21,10 @@ namespace easyforge
     // Keeps two points at a distance: a rod, or with Stiffness, a spring.
     struct DistanceJointSettings
     {
-        Body2D First;
-        Body2D Second;
-        Vector2 FirstAnchor;
-        Vector2 SecondAnchor;
+        Body2D First {};
+        Body2D Second {};
+        Vector2 FirstAnchor {};
+        Vector2 SecondAnchor {};
 
         // Negative keeps the distance the anchors have now.
         float Length = -1.0f;
@@ -45,9 +45,9 @@ namespace easyforge
     // Pins two bodies together at a point they turn around: a wheel, a door.
     struct HingeJointSettings
     {
-        Body2D First;
-        Body2D Second;
-        Vector2 Anchor;
+        Body2D First {};
+        Body2D Second {};
+        Vector2 Anchor {};
 
         // Keeps the angle between them, counted from where they are now, within
         // a range in radians.
@@ -68,9 +68,9 @@ namespace easyforge
     // a piston, an elevator.
     struct SliderJointSettings
     {
-        Body2D First;
-        Body2D Second;
-        Vector2 Anchor;
+        Body2D First {};
+        Body2D Second {};
+        Vector2 Anchor {};
 
         // The direction of sliding, in the world when the joint is made.
         Vector2 Axis { 1.0f, 0.0f };
@@ -90,9 +90,9 @@ namespace easyforge
     // Holds two bodies together as one, rigidly or with some give.
     struct WeldJointSettings
     {
-        Body2D First;
-        Body2D Second;
-        Vector2 Anchor;
+        Body2D First {};
+        Body2D Second {};
+        Vector2 Anchor {};
 
         // Hertz; 0 holds rigidly.
         float Stiffness = 0.0f;
@@ -105,12 +105,12 @@ namespace easyforge
     // with limited force: dragging with the mouse, or a character controller.
     struct MotorJointSettings
     {
-        Body2D First;
-        Body2D Second;
+        Body2D First {};
+        Body2D Second {};
 
         // Where the second body's origin should be, in the first body's
         // coordinates, and its angle relative to the first.
-        Vector2 LinearOffset;
+        Vector2 LinearOffset {};
         float AngularOffset = 0.0f;
 
         float MaximumForce = 1.0f;

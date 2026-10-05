@@ -182,12 +182,12 @@ namespace easyforge
     {
         std::uint64_t Version = 0;
         ChangeKind Kind = ChangeKind::PropertySet;
-        Node Target;
-        Node Parent;
-        Node OldParent;
-        std::string Property;
-        DataValue Old;
-        DataValue New;
+        Node Target {};
+        Node Parent {};
+        Node OldParent {};
+        std::string Property {};
+        DataValue Old {};
+        DataValue New {};
     };
 
     struct TableSettings

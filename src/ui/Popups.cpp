@@ -14,8 +14,8 @@ namespace easyforge::ui::internal
     {
         struct PopupRow
         {
-            std::string Text;
-            std::string Shortcut;
+            std::string Text {};
+            std::string Shortcut {};
             bool Enabled = true;
             bool Separator = false;
         };
