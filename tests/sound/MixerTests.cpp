@@ -335,3 +335,50 @@ EASYFORGE_TEST(LoudPeaksBendBelowOne)
     output = Render(mixer, 2000);
     EASYFORGE_EXPECT_NEAR(output[1500 * 2], 0.2f, 1e-5f);
 }
+
+EASYFORGE_TEST(EveryControlCanBeUsedFromManyThreadsAtOnce)
+{
+    // Playing, pausing, fading, stopping, buses, and the listener, all from
+    // several threads while another one mixes, as a game's threads might.
+    Mixer mixer = Mixer::NewOffline();
+    Sound blip = Steady(48000, { 0.01f, 0.01f }, 4800);
+    std::atomic<bool> done { false };
+    std::vector<std::thread> threads;
+    for (int thread = 0; thread < 4; ++thread)
+    {
+        threads.emplace_back([&, thread] {
+            for (int index = 0; index < 150; ++index)
+            {
+                PlayingSound playing = mixer.Play(blip, { .Volume = 0.5f, .Loop = index % 3 == 0, .Bus = thread % 2 == 0 ? "Effects" : "Music" });
+                playing.Pan = static_cast<float>(index % 5) * 0.2f - 0.4f;
+                playing.Pause();
+                playing.Resume();
+                playing.FadeTo(0.2f, 0.01f);
+                if (index % 2 == 0)
+                {
+                    playing.Stop(0.005f);
+                }
+                mixer.Bus(thread % 2 == 0 ? "Effects" : "Music").Volume = static_cast<float>(index % 10) * 0.1f;
+                mixer.Listener.Position = Vector3 { static_cast<float>(index), 0.0f, 0.0f };
+                (void)playing.IsPlaying();
+                (void)playing.Time();
+            }
+        });
+    }
+    std::thread renderer([&] {
+        while (!done)
+        {
+            Render(mixer, 256);
+        }
+    });
+    for (std::thread& thread : threads)
+    {
+        thread.join();
+    }
+    done = true;
+    renderer.join();
+    // Everything that was not looping ends; what loops is stopped here.
+    mixer.StopAll();
+    Render(mixer, 48000);
+    EASYFORGE_EXPECT_EQUAL(mixer.PlayingCount(), std::size_t(0));
+}

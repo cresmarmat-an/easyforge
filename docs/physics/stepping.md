@@ -93,9 +93,19 @@ jittering, and overlapping bodies are pushed apart at no more than 3 metres a
 second, so a body pushed deep into another comes out gently instead of shooting
 away.
 
+## What a step costs
+
+Each step works on the bodies that are awake and the contacts and joints
+between them; [sleeping](bodies-and-shapes.md#sleeping) bodies cost almost
+nothing. Finding which bodies are near each other uses a tree of boxes, so it
+grows with the number of bodies only a little faster than linearly. Once a
+world has settled into its size, a step allocates no memory: everything it
+needs is kept from the steps before.
+
 ## Limitations
 
-- A very fast, small body can pass through a thin wall within one step.
-- Bodies never sleep: every body costs a little time every step, resting or not.
+- A bullet is swept against other dynamic bodies where they are at the end of
+  the step, so two very fast bodies flying at each other can still pass through
+  one another.
 - Very different masses resting on each other, such as a 1000 kilogram block on
   a 1 kilogram box, sink in a little.

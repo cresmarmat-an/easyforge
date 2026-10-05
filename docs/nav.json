@@ -44,6 +44,7 @@
         "logging",
         "background-jobs",
         "measuring-time",
+        "file-paths",
         "testing"
       ]
     },

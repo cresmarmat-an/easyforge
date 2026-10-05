@@ -254,6 +254,14 @@ namespace easyforge::internal::gpu
         // A number no other device in this run of the program has, to keep
         // per-device copies of textures and fonts apart.
         virtual std::uint64_t Identifier() const = 0;
+
+        // True once the device can no longer be used: its driver was updated or
+        // restarted, the GPU stopped answering and was reset, or it was taken
+        // out. Everything made on it has to be made again on a new device.
+        virtual bool IsLost() const = 0;
+
+        // Loses the device on purpose, for tests of what happens then.
+        virtual void SimulateLoss() = 0;
     };
 
     // The device for an adapter, shared by every renderer that asks for the same

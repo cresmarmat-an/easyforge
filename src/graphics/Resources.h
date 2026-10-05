@@ -30,6 +30,14 @@ namespace easyforge::internal
         std::uint64_t Version = 0;
     };
 
+    // Lets go of copies made on a device that was lost, so the device can be
+    // freed. Called when a copy for another device is about to be made.
+    template <typename Copies>
+    void ForgetLostDevices(Copies& copies)
+    {
+        std::erase_if(copies, [](const auto& entry) { return entry.second.Device && entry.second.Device->IsLost(); });
+    }
+
     class TextureState
     {
     public:

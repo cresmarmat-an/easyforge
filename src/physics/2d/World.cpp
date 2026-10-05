@@ -37,6 +37,18 @@ namespace easyforge::internal
                 body.InverseInertia = !body.FixedRotation && body.Inertia > 0.0f ? 1.0f / body.Inertia : 0.0f;
             }
             body.Center = Apply(body.Origin, body.LocalCenter);
+            body.Extents = ComputeReach(body.Outline, body.LocalCenter);
+        }
+
+        bool IsAwakeDynamic(const BodyData& body)
+        {
+            return body.Alive && body.Type == BodyType::Dynamic && body.Awake;
+        }
+
+        // A body's origin from its center of mass, which a step moves first.
+        Pose CurrentOrigin(const BodyData& body)
+        {
+            return { body.Center - Rotate(body.Origin.Turn, body.LocalCenter), body.Origin.Turn };
         }
 
         Vector2 ApproachVelocity(const BodyData& first, const BodyData& second, Vector2 point)
@@ -66,7 +78,8 @@ namespace easyforge::internal
         : Gravity(settings.Gravity),
           Substeps(std::clamp(settings.Substeps, 1, 64)),
           StepSeconds(std::isfinite(settings.StepSeconds) && settings.StepSeconds > 0.0f ? settings.StepSeconds : 1.0f / 60.0f),
-          MaximumStepsPerUpdate(std::max(settings.MaximumStepsPerUpdate, 1))
+          MaximumStepsPerUpdate(std::max(settings.MaximumStepsPerUpdate, 1)),
+          AllowSleep(settings.AllowSleep)
     {
     }
 
@@ -126,6 +139,8 @@ namespace easyforge::internal
         body.Sensor = definition.Sensor;
         body.Layer = definition.Layer;
         body.CollidesWith = definition.CollidesWith;
+        body.Bullet = definition.Bullet;
+        body.AllowSleep = definition.AllowSleep;
         SetMass(body);
         if (body.Type != BodyType::Static)
         {
@@ -134,6 +149,15 @@ namespace easyforge::internal
         }
         body.Proxy = Tree.Insert(ComputeExtent(body.Outline, body.Origin), index);
         Moved.push_back(index);
+        // Whatever it was put next to wakes, so a body added onto a sleeping
+        // stack or a wall added into it is felt at once.
+        Tree.Query(Tree.StoredExtent(body.Proxy), [&](int other) {
+            if (other != index)
+            {
+                Wake(other);
+            }
+            return true;
+        });
         return index;
     }
 
@@ -149,6 +173,8 @@ namespace easyforge::internal
         {
             RemoveJoint(joint);
         }
+        // What rested on it falls.
+        WakeNeighbors(index);
 
         // The bodies it was touching are told it has gone.
         std::vector<TouchEvent> separations;
@@ -196,6 +222,7 @@ namespace easyforge::internal
         {
             Moved.push_back(index);
         }
+        WakeNeighbors(index);
     }
 
     void WorldState2D::Retyped(int index)
@@ -207,7 +234,76 @@ namespace easyforge::internal
             body.Velocity = {};
             body.AngularVelocity = 0.0f;
         }
+        if (body.Type != BodyType::Dynamic)
+        {
+            body.Awake = true;
+            body.SleepGroup = -1;
+        }
         Moved.push_back(index);
+        WakeNeighbors(index);
+    }
+
+    void WorldState2D::Wake(int index)
+    {
+        BodyData& body = Bodies[static_cast<std::size_t>(index)];
+        if (!body.Alive)
+        {
+            return;
+        }
+        body.StillTime = 0.0f;
+        if (body.Awake)
+        {
+            return;
+        }
+        int group = body.SleepGroup;
+        for (BodyData& other : Bodies)
+        {
+            if (other.Alive && !other.Awake && other.SleepGroup == group)
+            {
+                other.Awake = true;
+                other.StillTime = 0.0f;
+                other.SleepGroup = -1;
+            }
+        }
+    }
+
+    void WorldState2D::WakeNeighbors(int index)
+    {
+        Wake(index);
+        for (const ContactData& contact : Contacts)
+        {
+            if (contact.First == index)
+            {
+                Wake(contact.Second);
+            }
+            else if (contact.Second == index)
+            {
+                Wake(contact.First);
+            }
+        }
+    }
+
+    void WorldState2D::WakeAll()
+    {
+        for (BodyData& body : Bodies)
+        {
+            body.Awake = true;
+            body.StillTime = 0.0f;
+            body.SleepGroup = -1;
+        }
+    }
+
+    bool WorldState2D::IsMoving(const BodyData& body)
+    {
+        if (!body.Alive)
+        {
+            return false;
+        }
+        if (body.Type == BodyType::Dynamic)
+        {
+            return body.Awake;
+        }
+        return body.Type == BodyType::Kinematic && (body.Velocity.X != 0.0f || body.Velocity.Y != 0.0f || body.AngularVelocity != 0.0f);
     }
 
     // ---- Joints -----------------------------------------------------------------
@@ -230,6 +326,8 @@ namespace easyforge::internal
         Joints[static_cast<std::size_t>(index)] = joint;
         Bodies[static_cast<std::size_t>(joint.First)].Joints.push_back(index);
         Bodies[static_cast<std::size_t>(joint.Second)].Joints.push_back(index);
+        Wake(joint.First);
+        Wake(joint.Second);
         if (!joint.Collide)
         {
             auto found = ContactIndex.find(PairKey(joint.First, joint.Second));
@@ -254,6 +352,7 @@ namespace easyforge::internal
             list.erase(std::remove(list.begin(), list.end(), index), list.end());
             // Bodies that may collide again look for each other.
             Moved.push_back(body);
+            Wake(body);
         }
         joint.Alive = false;
         ++joint.Generation;
@@ -303,7 +402,8 @@ namespace easyforge::internal
         }
         std::sort(Moved.begin(), Moved.end());
         Moved.erase(std::unique(Moved.begin(), Moved.end()), Moved.end());
-        std::vector<std::uint64_t> found;
+        std::vector<std::uint64_t>& found = FoundPairs;
+        found.clear();
         for (int index : Moved)
         {
             const BodyData& body = Bodies[static_cast<std::size_t>(index)];
@@ -381,6 +481,14 @@ namespace easyforge::internal
                 continue;
             }
 
+            // Neither body moved since the last step, so what was found then
+            // still holds.
+            if (!IsMoving(first) && !IsMoving(second))
+            {
+                ++index;
+                continue;
+            }
+
             Manifold manifold = Collide(first.Outline, first.Origin, second.Outline, second.Origin);
             float deepest = std::numeric_limits<float>::infinity();
             for (int point = 0; point < manifold.Count; ++point)
@@ -412,6 +520,19 @@ namespace easyforge::internal
             }
             contact.Points = manifold;
             contact.Touching = touching;
+
+            // Something moving that reaches a sleeping body wakes it.
+            if (manifold.Count > 0 && !contact.Sensor)
+            {
+                if (first.Type == BodyType::Dynamic && !first.Awake)
+                {
+                    Wake(contact.First);
+                }
+                if (second.Type == BodyType::Dynamic && !second.Awake)
+                {
+                    Wake(contact.Second);
+                }
+            }
             ++index;
         }
     }
@@ -429,12 +550,184 @@ namespace easyforge::internal
             body.PreviousOrigin = body.Origin;
         }
         StepShare = 1.0f;
-        std::vector<TouchEvent> events;
+        StepEvents.clear();
         FindNewContacts();
-        UpdateContacts(events);
+        UpdateContacts(StepEvents);
         Solve(seconds);
+        SweepFastBodies();
         FinishBodies();
-        Report(events);
+        UpdateSleep(seconds);
+        // The events are reported from a second list, since a touch handler may
+        // step the world again, which fills StepEvents anew. A step started
+        // from inside a report reports from a list of its own.
+        if (Reporting)
+        {
+            std::vector<TouchEvent> events = std::move(StepEvents);
+            StepEvents.clear();
+            Report(events);
+            return;
+        }
+        std::swap(StepEvents, ReportedEvents);
+        Reporting = true;
+        Report(ReportedEvents);
+        Reporting = false;
+        ReportedEvents.clear();
+    }
+
+    void WorldState2D::SweepFastBodies()
+    {
+        for (std::size_t index = 0; index < Bodies.size(); ++index)
+        {
+            BodyData& body = Bodies[index];
+            if (!IsAwakeDynamic(body) || body.Sensor)
+            {
+                continue;
+            }
+            Sweep sweep;
+            sweep.LocalCenter = body.LocalCenter;
+            sweep.Move = body.DeltaPosition;
+            sweep.Start = body.Center - body.DeltaPosition;
+            sweep.StartTurn = body.StartTurn;
+            sweep.Angle = RelativeAngle(body.StartTurn, body.Origin.Turn);
+            float travel = Length(sweep.Move) + std::abs(sweep.Angle) * body.Extents.Most;
+            if (travel <= SweepShare * body.Extents.Least)
+            {
+                continue;
+            }
+
+            // Everything solid along the way: walls and moving platforms, and
+            // for a bullet, other dynamic bodies too, where the step left them.
+            Extent swept = Join(ComputeExtent(body.Outline, sweep.At(0.0f)), ComputeExtent(body.Outline, sweep.At(1.0f)));
+            float first = 1.0f;
+            int self = static_cast<int>(index);
+            Tree.Query(swept, [&](int other) {
+                const BodyData& obstacle = Bodies[static_cast<std::size_t>(other)];
+                if (other == self || obstacle.Sensor || !ShouldCollide(self, other))
+                {
+                    return true;
+                }
+                if (obstacle.Type == BodyType::Dynamic && (!body.Bullet || obstacle.Bullet))
+                {
+                    return true;
+                }
+                float time = TimeOfImpact(body.Outline, sweep, body.Extents.Most, obstacle.Outline, CurrentOrigin(obstacle), LinearSlop);
+                if (time > 0.0f && time < first)
+                {
+                    first = time;
+                }
+                return true;
+            });
+            if (first < 1.0f)
+            {
+                // Stopped where it first touches, keeping its velocity: the
+                // contact next step takes it from there.
+                Pose stopped = sweep.At(first);
+                body.Origin.Turn = stopped.Turn;
+                body.Center = sweep.Start + sweep.Move * first;
+            }
+        }
+    }
+
+    void WorldState2D::UpdateSleep(float seconds)
+    {
+        std::size_t count = Bodies.size();
+        IslandParents.resize(count);
+        IslandStillTimes.assign(count, std::numeric_limits<float>::infinity());
+        for (std::size_t index = 0; index < count; ++index)
+        {
+            IslandParents[index] = static_cast<int>(index);
+        }
+        auto root = [&](int index) {
+            while (IslandParents[static_cast<std::size_t>(index)] != index)
+            {
+                int parent = IslandParents[static_cast<std::size_t>(index)];
+                IslandParents[static_cast<std::size_t>(index)] = IslandParents[static_cast<std::size_t>(parent)];
+                index = parent;
+            }
+            return index;
+        };
+        // The lower index becomes the root, so islands come out the same every run.
+        auto join = [&](int first, int second) {
+            int one = root(first);
+            int other = root(second);
+            if (one != other)
+            {
+                IslandParents[static_cast<std::size_t>(std::max(one, other))] = std::min(one, other);
+            }
+        };
+
+        for (BodyData& body : Bodies)
+        {
+            if (!IsAwakeDynamic(body))
+            {
+                continue;
+            }
+            bool still = AllowSleep && body.AllowSleep && LengthSquared(body.Velocity) <= SleepSpeed * SleepSpeed &&
+                         std::abs(body.AngularVelocity) <= SleepTurning;
+            body.StillTime = still ? body.StillTime + seconds : 0.0f;
+        }
+
+        // Bodies touching or joined sleep together. Resting on something that
+        // moves keeps a body awake.
+        auto link = [&](int first, int second) {
+            BodyData& one = Bodies[static_cast<std::size_t>(first)];
+            BodyData& other = Bodies[static_cast<std::size_t>(second)];
+            bool oneAwake = IsAwakeDynamic(one);
+            bool otherAwake = IsAwakeDynamic(other);
+            if (oneAwake && otherAwake)
+            {
+                join(first, second);
+            }
+            else if (oneAwake && IsMoving(other))
+            {
+                one.StillTime = 0.0f;
+            }
+            else if (otherAwake && IsMoving(one))
+            {
+                other.StillTime = 0.0f;
+            }
+        };
+        for (const ContactData& contact : Contacts)
+        {
+            if (contact.Touching && !contact.Sensor)
+            {
+                link(contact.First, contact.Second);
+            }
+        }
+        for (const JointData& joint : Joints)
+        {
+            if (joint.Alive)
+            {
+                link(joint.First, joint.Second);
+            }
+        }
+
+        for (std::size_t index = 0; index < count; ++index)
+        {
+            if (IsAwakeDynamic(Bodies[index]))
+            {
+                float& least = IslandStillTimes[static_cast<std::size_t>(root(static_cast<int>(index)))];
+                least = std::min(least, Bodies[index].StillTime);
+            }
+        }
+        for (std::size_t index = 0; index < count; ++index)
+        {
+            BodyData& body = Bodies[index];
+            if (!IsAwakeDynamic(body))
+            {
+                continue;
+            }
+            int island = root(static_cast<int>(index));
+            if (IslandStillTimes[static_cast<std::size_t>(island)] >= SleepAfter)
+            {
+                body.Awake = false;
+                body.SleepGroup = island;
+                body.Velocity = {};
+                body.AngularVelocity = 0.0f;
+                body.Force = {};
+                body.Torque = 0.0f;
+            }
+        }
     }
 
     int WorldState2D::Update(float seconds)
@@ -478,7 +771,7 @@ namespace easyforge::internal
             }
             body.Force = {};
             body.Torque = 0.0f;
-            if (body.Type == BodyType::Static)
+            if (body.Type == BodyType::Static || !body.Awake)
             {
                 continue;
             }

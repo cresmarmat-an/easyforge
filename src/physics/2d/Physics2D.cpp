@@ -132,6 +132,7 @@ namespace easyforge
                   if (resolved && resolved.Body->Type != BodyType::Static)
                   {
                       resolved.Body->Velocity = value;
+                      resolved.World->Wake(resolved.Index);
                   }
               }),
           AngularVelocity(reference.get(), ReadField<float, &BodyData::AngularVelocity>,
@@ -140,6 +141,7 @@ namespace easyforge
                   if (resolved && resolved.Body->Type != BodyType::Static && !resolved.Body->FixedRotation)
                   {
                       resolved.Body->AngularVelocity = value;
+                      resolved.World->Wake(resolved.Index);
                   }
               }),
           Type(reference.get(), ReadField<BodyType, &BodyData::Type>,
@@ -159,7 +161,14 @@ namespace easyforge
               [](void* owner, const float& value) { WriteField<float, &BodyData::LinearDamping>(owner, std::max(value, 0.0f)); }),
           AngularDamping(reference.get(), ReadField<float, &BodyData::AngularDamping>,
               [](void* owner, const float& value) { WriteField<float, &BodyData::AngularDamping>(owner, std::max(value, 0.0f)); }),
-          GravityScale(reference.get(), ReadField<float, &BodyData::GravityScale>, WriteField<float, &BodyData::GravityScale>),
+          GravityScale(reference.get(), ReadField<float, &BodyData::GravityScale>,
+              [](void* owner, const float& value) {
+                  if (Resolved resolved = Resolve(owner))
+                  {
+                      resolved.Body->GravityScale = value;
+                      resolved.World->Wake(resolved.Index);
+                  }
+              }),
           FixedRotation(reference.get(), ReadField<bool, &BodyData::FixedRotation>,
               [](void* owner, const bool& value) {
                   if (Resolved resolved = Resolve(owner))
@@ -186,6 +195,18 @@ namespace easyforge
                   {
                       resolved.Body->CollidesWith = value;
                       resolved.World->Retyped(resolved.Index);
+                  }
+              }),
+          Bullet(reference.get(), ReadField<bool, &BodyData::Bullet>, WriteField<bool, &BodyData::Bullet>),
+          AllowSleep(reference.get(), ReadField<bool, &BodyData::AllowSleep>,
+              [](void* owner, const bool& value) {
+                  if (Resolved resolved = Resolve(owner))
+                  {
+                      resolved.Body->AllowSleep = value;
+                      if (!value)
+                      {
+                          resolved.World->Wake(resolved.Index);
+                      }
                   }
               }),
           OnTouch(reference.get(), ReadField<std::function<void(const Contact2D&)>, &BodyData::OnTouch>,
@@ -228,6 +249,8 @@ namespace easyforge
         FixedRotation.Rebind(owner);
         Layer.Rebind(owner);
         CollidesWith.Rebind(owner);
+        Bullet.Rebind(owner);
+        AllowSleep.Rebind(owner);
         OnTouch.Rebind(owner);
         OnSeparate.Rebind(owner);
     }
@@ -348,11 +371,27 @@ namespace easyforge
         return resolved ? Apply(resolved.World->SmoothOrigin(*resolved.Body), local) : local;
     }
 
+    bool Body2D::IsAwake() const
+    {
+        Resolved resolved = Resolve(*Reference);
+        return resolved && resolved.Body->Awake;
+    }
+
+    void Body2D::Wake() const
+    {
+        if (Resolved resolved = Resolve(*Reference))
+        {
+            resolved.World->Wake(resolved.Index);
+        }
+    }
+
+    // Pushing a body wakes it, and everything asleep with it.
     void Body2D::ApplyForce(Vector2 force) const
     {
         Resolved resolved = Resolve(*Reference);
         if (resolved && resolved.Body->Type == BodyType::Dynamic)
         {
+            resolved.World->Wake(resolved.Index);
             resolved.Body->Force += force;
         }
     }
@@ -362,6 +401,7 @@ namespace easyforge
         Resolved resolved = Resolve(*Reference);
         if (resolved && resolved.Body->Type == BodyType::Dynamic)
         {
+            resolved.World->Wake(resolved.Index);
             resolved.Body->Force += force;
             resolved.Body->Torque += Cross(point - resolved.Body->Center, force);
         }
@@ -372,6 +412,7 @@ namespace easyforge
         Resolved resolved = Resolve(*Reference);
         if (resolved && resolved.Body->Type == BodyType::Dynamic)
         {
+            resolved.World->Wake(resolved.Index);
             resolved.Body->Velocity += impulse * resolved.Body->InverseMass;
         }
     }
@@ -381,6 +422,7 @@ namespace easyforge
         Resolved resolved = Resolve(*Reference);
         if (resolved && resolved.Body->Type == BodyType::Dynamic)
         {
+            resolved.World->Wake(resolved.Index);
             resolved.Body->Velocity += impulse * resolved.Body->InverseMass;
             resolved.Body->AngularVelocity += resolved.Body->InverseInertia * Cross(point - resolved.Body->Center, impulse);
         }
@@ -391,6 +433,7 @@ namespace easyforge
         Resolved resolved = Resolve(*Reference);
         if (resolved && resolved.Body->Type == BodyType::Dynamic)
         {
+            resolved.World->Wake(resolved.Index);
             resolved.Body->Torque += torque;
         }
     }
@@ -400,6 +443,7 @@ namespace easyforge
         Resolved resolved = Resolve(*Reference);
         if (resolved && resolved.Body->Type == BodyType::Dynamic)
         {
+            resolved.World->Wake(resolved.Index);
             resolved.Body->AngularVelocity += resolved.Body->InverseInertia * impulse;
         }
     }
@@ -428,6 +472,8 @@ namespace easyforge
                   if (ResolvedJoint resolved = ResolveJoint(owner); resolved.Joint)
                   {
                       resolved.Joint->MotorSpeed = value;
+                      resolved.World->Wake(resolved.Joint->First);
+                      resolved.World->Wake(resolved.Joint->Second);
                   }
               }),
           Length(reference.get(),
@@ -439,6 +485,8 @@ namespace easyforge
                   if (ResolvedJoint resolved = ResolveJoint(owner); resolved.Joint)
                   {
                       resolved.Joint->Length = std::max(value, 0.0f);
+                      resolved.World->Wake(resolved.Joint->First);
+                      resolved.World->Wake(resolved.Joint->Second);
                   }
               }),
           LinearOffset(reference.get(),
@@ -450,6 +498,8 @@ namespace easyforge
                   if (ResolvedJoint resolved = ResolveJoint(owner); resolved.Joint)
                   {
                       resolved.Joint->LinearOffset = value;
+                      resolved.World->Wake(resolved.Joint->First);
+                      resolved.World->Wake(resolved.Joint->Second);
                   }
               }),
           AngularOffset(reference.get(),
@@ -461,6 +511,8 @@ namespace easyforge
                   if (ResolvedJoint resolved = ResolveJoint(owner); resolved.Joint)
                   {
                       resolved.Joint->AngularOffset = value;
+                      resolved.World->Wake(resolved.Joint->First);
+                      resolved.World->Wake(resolved.Joint->Second);
                   }
               }),
           Reference(std::move(reference))
@@ -567,6 +619,8 @@ namespace easyforge
             definition.Sensor = settings.Sensor;
             definition.Layer = settings.Layer;
             definition.CollidesWith = settings.CollidesWith;
+            definition.Bullet = settings.Bullet;
+            definition.AllowSleep = settings.AllowSleep;
             return definition;
         }
     }
@@ -582,6 +636,7 @@ namespace easyforge
                   if (owner)
                   {
                       static_cast<WorldState2D*>(owner)->Gravity = value;
+                      static_cast<WorldState2D*>(owner)->WakeAll();
                   }
               }),
           Substeps(state.get(),
@@ -606,6 +661,19 @@ namespace easyforge
                   if (owner)
                   {
                       static_cast<WorldState2D*>(owner)->MaximumStepsPerUpdate = std::max(value, 1);
+                  }
+              }),
+          AllowSleep(state.get(),
+              [](const void* owner) { return owner ? static_cast<const WorldState2D*>(owner)->AllowSleep : false; },
+              [](void* owner, const bool& value) {
+                  if (owner)
+                  {
+                      auto* world = static_cast<WorldState2D*>(owner);
+                      world->AllowSleep = value;
+                      if (!value)
+                      {
+                          world->WakeAll();
+                      }
                   }
               }),
           State(std::move(state))
@@ -641,6 +709,7 @@ namespace easyforge
         Substeps.Rebind(State.get());
         StepSeconds.Rebind(State.get());
         MaximumStepsPerUpdate.Rebind(State.get());
+        AllowSleep.Rebind(State.get());
     }
 
     Physics2D::operator bool() const

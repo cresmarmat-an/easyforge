@@ -28,6 +28,22 @@ option(EASYFORGE_BUILD_TESTS "Build the easyforge tests" ${PROJECT_IS_TOP_LEVEL}
 option(EASYFORGE_INSTALL "Add the rules that install easyforge" ${PROJECT_IS_TOP_LEVEL})
 set(EASYFORGE_ONLY "" CACHE STRING
     "Build only this library and the libraries it depends on, for example 'network'")
+option(EASYFORGE_SANITIZE "Build with AddressSanitizer, so the tests catch memory errors" OFF)
+
+if(EASYFORGE_SANITIZE)
+    if(MSVC)
+        # MSVC's sanitizer cannot be used with its own run-time checks, and needs
+        # whole programs linked at once.
+        foreach(flags CMAKE_CXX_FLAGS_DEBUG CMAKE_C_FLAGS_DEBUG)
+            string(REPLACE "/RTC1" "" ${flags} "${${flags}}")
+        endforeach()
+        add_compile_options(/fsanitize=address /Zi)
+        add_link_options(/INCREMENTAL:NO /DEBUG)
+    else()
+        add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=address,undefined)
+    endif()
+endif()
 
 configure_file(cmake/version.h.in "${EASYFORGE_GENERATED_INCLUDE_DIRECTORY}/easyforge/version.h" @ONLY)
 

@@ -29,7 +29,8 @@ target_link_libraries(my_program PRIVATE easyforge::core)
 | [Results](results.md) | `Result`, `Failure` |
 | [Logging](logging.md) | `Log`, `LogLevel`, `SetLogHandler` |
 | [Background jobs](background-jobs.md) | `Jobs`, `Job`, `ParallelFor` |
-| [Measuring time](measuring-time.md) | `Clock` |
+| [Measuring time](measuring-time.md) | `Clock`, `FrameTimer` |
+| [File paths](file-paths.md) | `PathFromText`, `TextFromPath`, paths in any language |
 | [Testing](testing.md) | `EASYFORGE_TEST`, `EASYFORGE_EXPECT`, `RunTests` |
 
 ## Including less

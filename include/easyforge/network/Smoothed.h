@@ -97,7 +97,7 @@ namespace easyforge
                 LatenessPeak[0] = 0.0;
                 LatenessWindowStarted = now;
             }
-            LatenessPeak[0] = std::max(LatenessPeak[0], std::max(now - sentAt, 0.0));
+            LatenessPeak[0] = Max(LatenessPeak[0], Max(now - sentAt, 0.0));
 
             // A second and a half of history, and never more than 128 values.
             while (Samples.size() > 128 || (Samples.size() > 2 && Samples.back().Time - Samples.front().Time > 1.5))
@@ -135,19 +135,19 @@ namespace easyforge
                 // moves at exactly the speed it was sent. Outside it, the delay
                 // moves by a few hundredths of the time passed, so what is shown
                 // runs that much slower or faster instead of jumping.
-                double passed = std::clamp(now - LastGet, 0.0, 0.25);
+                double passed = Clamp(now - LastGet, 0.0, 0.25);
                 if (CurrentDelay < wanted)
                 {
-                    CurrentDelay = std::min(wanted, CurrentDelay + passed * 0.05);
+                    CurrentDelay = Min(wanted, CurrentDelay + passed * 0.05);
                 }
                 else if (CurrentDelay > wanted * 1.3 + 0.01)
                 {
-                    CurrentDelay = std::max(wanted, CurrentDelay - passed * 0.02);
+                    CurrentDelay = Max(wanted, CurrentDelay - passed * 0.02);
                 }
             }
             LastGet = now;
 
-            double time = std::max(now - CurrentDelay, LastShown);
+            double time = Max(now - CurrentDelay, LastShown);
             LastShown = time;
 
             // Values before the one at or just before the time are done with.
@@ -162,7 +162,7 @@ namespace easyforge
             }
             const Sample& to = Samples[1];
             auto amount = static_cast<float>((time - from.Time) / (to.Time - from.Time));
-            return Blend(from.Item, to.Item, std::clamp(amount, 0.0f, 1.0f));
+            return Blend(from.Item, to.Item, Clamp(amount, 0.0f, 1.0f));
         }
 
         // Jumps to `value` at once and forgets the values before it, as when a
@@ -171,7 +171,7 @@ namespace easyforge
         {
             Samples.clear();
             Samples.push_back(Sample { Started ? LastShown : 0.0, value });
-            Received = std::max(Received, 1);
+            Received = Max(Received, 1);
         }
 
         bool HasValue() const { return !Samples.empty(); }
@@ -219,7 +219,7 @@ namespace easyforge
                 Interval = gap;
                 return;
             }
-            double spans = std::max(std::round(gap / Interval), 1.0);
+            double spans = Max(std::round(gap / Interval), 1.0);
             LongGaps = spans > 1.0 ? LongGaps + 1 : 0;
             if (LongGaps >= 4)
             {
@@ -234,7 +234,7 @@ namespace easyforge
         // plus a little, and never more than half a second.
         double WantedDelay() const
         {
-            return std::min(Interval * 2.0 + std::max(LatenessPeak[0], LatenessPeak[1]) + 0.004, 0.5);
+            return Min(Interval * 2.0 + Max(LatenessPeak[0], LatenessPeak[1]) + 0.004, 0.5);
         }
 
         std::deque<Sample> Samples;

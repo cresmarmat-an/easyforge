@@ -5,6 +5,7 @@
 #include <iterator>
 
 #include <easyforge/core/Log.h>
+#include <easyforge/core/Paths.h>
 
 #include "TableState.h"
 #include "TreeText.h"
@@ -260,7 +261,7 @@ namespace easyforge
 
     Table Table::Load(std::string_view path)
     {
-        std::ifstream file { std::string(path), std::ios::binary };
+        std::ifstream file { PathFromText(path), std::ios::binary };
         if (!file)
         {
             auto state = std::make_shared<TableState>(TableSettings {});
@@ -557,7 +558,7 @@ namespace easyforge
     Result<> Table::Save(std::string_view path) const
     {
         std::string text = ToText();
-        std::ofstream file { std::string(path), std::ios::binary };
+        std::ofstream file { PathFromText(path), std::ios::binary };
         file << text;
         if (!file)
         {

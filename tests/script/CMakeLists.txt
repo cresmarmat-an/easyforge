@@ -1,8 +1,10 @@
 add_executable(easyforge-script-tests
     Main.cpp
+    DamagedSourceTests.cpp
     LanguageTests.cpp)
 
 target_link_libraries(easyforge-script-tests PRIVATE easyforge::script)
+target_include_directories(easyforge-script-tests PRIVATE "${PROJECT_SOURCE_DIR}/tests/common")
 target_compile_definitions(easyforge-script-tests PRIVATE
     EASYFORGE_TEST_SCRIPTS="${CMAKE_CURRENT_SOURCE_DIR}/data/"
     EASYFORGE_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/output/")

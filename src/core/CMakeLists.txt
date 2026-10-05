@@ -8,6 +8,7 @@ easyforge_add_library(core
         language/Tokens.cpp
         Log.cpp
         Matrix.cpp
+        Paths.cpp
         Quaternion.cpp
         Random.cpp
         Result.cpp

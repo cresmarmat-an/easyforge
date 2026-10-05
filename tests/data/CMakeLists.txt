@@ -1,11 +1,13 @@
 add_executable(easyforge-data-tests
     Main.cpp
     ChangeTests.cpp
+    DamagedTextTests.cpp
     TableTests.cpp
     TreeTextTests.cpp
     ValueTests.cpp)
 
 target_link_libraries(easyforge-data-tests PRIVATE easyforge::data)
+target_include_directories(easyforge-data-tests PRIVATE "${PROJECT_SOURCE_DIR}/tests/common")
 target_compile_definitions(easyforge-data-tests PRIVATE
     EASYFORGE_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/output/")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/output")

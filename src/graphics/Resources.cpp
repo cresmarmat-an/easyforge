@@ -11,6 +11,10 @@ namespace easyforge::internal
         {
             return nullptr;
         }
+        if (!Copies.contains(device->Identifier()))
+        {
+            ForgetLostDevices(Copies);
+        }
         DeviceCopy<gpu::Texture>& copy = Copies[device->Identifier()];
         if (copy.Object && copy.Version == Version)
         {
@@ -112,6 +116,10 @@ namespace easyforge::internal
 
     const GpuModel& ModelState::On(const std::shared_ptr<gpu::Device>& device)
     {
+        if (!Copies.contains(device->Identifier()))
+        {
+            ForgetLostDevices(Copies);
+        }
         GpuModel& copy = Copies[device->Identifier()];
         if (copy.Device)
         {

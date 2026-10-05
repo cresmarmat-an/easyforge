@@ -80,6 +80,16 @@ namespace easyforge
         // with. Two bodies collide when each is on a layer the other collides with.
         std::uint32_t Layer = 1;
         std::uint32_t CollidesWith = AllLayers;
+
+        // A body that moves more than about half its own size in a step is
+        // swept through its whole move against static and kinematic bodies,
+        // so it cannot pass through a wall. A bullet is swept against dynamic
+        // bodies too, for small fast things such as projectiles.
+        bool Bullet = false;
+
+        // Lets the body sleep once it and everything it touches have been
+        // still for half a second.
+        bool AllowSleep = true;
     };
 
     struct CircleSettings
@@ -101,6 +111,8 @@ namespace easyforge
         bool Sensor = false;
         std::uint32_t Layer = 1;
         std::uint32_t CollidesWith = AllLayers;
+        bool Bullet = false;
+        bool AllowSleep = true;
     };
 
     // A rectangle with round ends, lying along the body's X axis: Length is the
@@ -125,6 +137,8 @@ namespace easyforge
         bool Sensor = false;
         std::uint32_t Layer = 1;
         std::uint32_t CollidesWith = AllLayers;
+        bool Bullet = false;
+        bool AllowSleep = true;
     };
 
     // A convex shape around the given points, in the body's own coordinates.
@@ -149,6 +163,8 @@ namespace easyforge
         bool Sensor = false;
         std::uint32_t Layer = 1;
         std::uint32_t CollidesWith = AllLayers;
+        bool Bullet = false;
+        bool AllowSleep = true;
     };
 
     struct Contact2D;
@@ -217,6 +233,16 @@ namespace easyforge
         float SmoothRotation() const;
         Vector2 SmoothWorldPoint(Vector2 local) const;
 
+        // False while the body sleeps. A dynamic body that has been still,
+        // along with everything it touches, for half a second sleeps: it is not
+        // moved or solved, so resting bodies cost almost nothing, until
+        // something moving reaches it, a force or impulse pushes it, or one of
+        // its settings changes. Static and kinematic bodies are always awake.
+        bool IsAwake() const;
+
+        // Wakes the body and everything that fell asleep with it.
+        void Wake() const;
+
         // A force acts over the next step, at the center of mass or at a point in
         // the world. An impulse changes the velocity at once.
         void ApplyForce(Vector2 force) const;
@@ -243,6 +269,8 @@ namespace easyforge
         Property<bool> FixedRotation;
         Property<std::uint32_t> Layer;
         Property<std::uint32_t> CollidesWith;
+        Property<bool> Bullet;
+        Property<bool> AllowSleep;
 
         // Called after a step when another body starts or stops touching this one.
         Property<std::function<void(const Contact2D&)>> OnTouch;

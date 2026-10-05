@@ -1,12 +1,17 @@
 add_executable(easyforge-graphics-tests
     Main.cpp
     CanvasTests.cpp
+    DamagedShaderTests.cpp
+    DeviceLossTests.cpp
     EffectTests.cpp
     ShaderTests.cpp
     TextAndSceneTests.cpp)
 
 target_link_libraries(easyforge-graphics-tests PRIVATE easyforge::graphics)
+# The device loss test reaches the GPU layer directly, to lose a device on purpose.
+target_include_directories(easyforge-graphics-tests PRIVATE "${PROJECT_SOURCE_DIR}/tests/common" "${PROJECT_SOURCE_DIR}/src/graphics")
 target_compile_definitions(easyforge-graphics-tests PRIVATE
+    EASYFORGE_TEST_SHADERS="${CMAKE_CURRENT_SOURCE_DIR}/data/"
     EASYFORGE_TEST_FONT="${PROJECT_SOURCE_DIR}/tests/assets/data/fonts/test_regular.ttf"
     EASYFORGE_TEST_MODEL="${PROJECT_SOURCE_DIR}/tests/assets/data/models/cube.obj"
     EASYFORGE_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/output/")

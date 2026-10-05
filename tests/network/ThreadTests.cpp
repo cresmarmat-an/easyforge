@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <easyforge/core/Testing.h>
@@ -102,4 +103,89 @@ EASYFORGE_TEST(ServersCanBeFound)
     server.Stop();
     std::vector<FoundServer> none = FindServers({ .Port = server.Port(), .Seconds = 0.1f, .ThisComputerOnly = true });
     EASYFORGE_EXPECT(none.empty());
+}
+
+EASYFORGE_TEST(ManyThreadsSendAndAskAtOnce)
+{
+    // Threaded ends, with several program threads per client sending reliable
+    // messages and requests together: every message arrives exactly once and
+    // every request is answered.
+    Server server = LocalServer({ .Threaded = true });
+    EASYFORGE_REQUIRE(server);
+    std::mutex lock;
+    std::vector<int> heard(3 * 4 * 200, 0);
+    server.OnMessage("Tick", [&](Connection, const Message& message) {
+        std::scoped_lock guard(lock);
+        ++heard[static_cast<std::size_t>(message["Number"].As<int>())];
+    });
+    server.OnRequest("Double", [](Connection, const Message& request) { return Message { { "Value", request["Value"].As<int>() * 2 } }; });
+
+    std::vector<Client> clients;
+    for (int index = 0; index < 3; ++index)
+    {
+        clients.push_back(LocalClient(server, { .Threaded = true }));
+    }
+    EASYFORGE_REQUIRE(WaitUntil([&] {
+        for (const Client& client : clients)
+        {
+            if (!client.IsConnected())
+            {
+                return false;
+            }
+        }
+        return true;
+    }));
+
+    std::atomic<int> answered { 0 };
+    std::atomic<int> wrong { 0 };
+    std::vector<std::thread> senders;
+    for (int client = 0; client < 3; ++client)
+    {
+        for (int thread = 0; thread < 4; ++thread)
+        {
+            senders.emplace_back([&, client, thread] {
+                for (int index = 0; index < 200; ++index)
+                {
+                    int number = (client * 4 + thread) * 200 + index;
+                    clients[static_cast<std::size_t>(client)].Send("Tick", { { "Number", number } });
+                    if (index % 10 == 0)
+                    {
+                        clients[static_cast<std::size_t>(client)].Request("Double", { { "Value", number } }, [&, number](const Reply& reply) {
+                            if (reply && reply.Message["Value"].As<int>() == number * 2)
+                            {
+                                ++answered;
+                            }
+                            else
+                            {
+                                ++wrong;
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    }
+    for (std::thread& sender : senders)
+    {
+        sender.join();
+    }
+    EASYFORGE_EXPECT(WaitUntil(
+        [&] {
+            std::scoped_lock guard(lock);
+            for (int count : heard)
+            {
+                if (count != 1)
+                {
+                    return false;
+                }
+            }
+            return answered.load() == 3 * 4 * 20;
+        },
+        15.0));
+    EASYFORGE_EXPECT_EQUAL(wrong.load(), 0);
+    std::scoped_lock guard(lock);
+    for (int count : heard)
+    {
+        EASYFORGE_EXPECT(count <= 1);
+    }
 }

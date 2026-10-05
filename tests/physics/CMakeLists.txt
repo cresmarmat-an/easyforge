@@ -3,7 +3,8 @@ add_executable(easyforge-physics-tests
     BodyTests.cpp
     CollisionTests.cpp
     JointTests.cpp
-    SteppingTests.cpp)
+    SteppingTests.cpp
+    StrengthTests.cpp)
 
 target_link_libraries(easyforge-physics-tests PRIVATE easyforge::physics)
 easyforge_set_warnings(easyforge-physics-tests)

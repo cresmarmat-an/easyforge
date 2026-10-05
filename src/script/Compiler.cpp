@@ -1,6 +1,7 @@
 #include "Compiler.h"
 
 #include <bit>
+#include <charconv>
 #include <format>
 #include <unordered_map>
 
@@ -898,7 +899,11 @@ namespace easyforge::internal::scripting
                     {
                         return 1.0;
                     }
-                    return static_cast<double>(std::stoi(digits.substr(index * 2, 2), nullptr, 16)) / 255.0;
+                    // Read without exceptions; anything that is not a hex digit
+                    // counts as 0.
+                    int value = 0;
+                    std::from_chars(digits.data() + index * 2, digits.data() + index * 2 + 2, value, 16);
+                    return static_cast<double>(value) / 255.0;
                 };
                 int table = Allocate(expression.Where);
                 Emit(Operation::NewTable, table, 0, 0, expression.Where);

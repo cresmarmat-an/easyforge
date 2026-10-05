@@ -58,6 +58,8 @@ namespace easyforge::internal::physics2d
         bool Sensor = false;
         std::uint32_t Layer = 1;
         std::uint32_t CollidesWith = AllLayers;
+        bool Bullet = false;
+        bool AllowSleep = true;
     };
 
     struct BodyData
@@ -98,6 +100,21 @@ namespace easyforge::internal::physics2d
         bool Sensor = false;
         std::uint32_t Layer = 1;
         std::uint32_t CollidesWith = AllLayers;
+
+        // Swept through its move against dynamic bodies too, not only walls.
+        bool Bullet = false;
+
+        // A dynamic body still for long enough, with everything it touches,
+        // sleeps: it is not moved or solved until something wakes it. Bodies
+        // that fell asleep together share a group and wake together. Static and
+        // kinematic bodies are always awake.
+        bool AllowSleep = true;
+        bool Awake = true;
+        float StillTime = 0.0f;
+        int SleepGroup = -1;
+
+        // How far the shape reaches from the center of mass.
+        Reach Extents;
 
         int Proxy = -1;
         std::vector<int> Joints;
@@ -171,6 +188,35 @@ namespace easyforge::internal::physics2d
         float MotorImpulse = 0.0f;
     };
 
+    // A contact point as the solver works on it during a step.
+    struct PointConstraint
+    {
+        // From each body's center of mass to the point, at the start of the step.
+        Vector2 ArmFirst;
+        Vector2 ArmSecond;
+        // The separation with the arms taken out, so the current separation
+        // follows from how far the bodies have moved.
+        float BaseSeparation = 0.0f;
+        float NormalMass = 0.0f;
+        float TangentMass = 0.0f;
+        float NormalImpulse = 0.0f;
+        float TangentImpulse = 0.0f;
+        float MaximumNormalImpulse = 0.0f;
+        float RelativeVelocity = 0.0f;
+    };
+
+    struct ContactConstraint
+    {
+        std::size_t Contact = 0;
+        int First = -1;
+        int Second = -1;
+        Vector2 Normal;
+        float Friction = 0.0f;
+        float Restitution = 0.0f;
+        PointConstraint Points[2];
+        int Count = 0;
+    };
+
     // A step's report of two bodies starting or stopping to touch.
     struct TouchEvent
     {
@@ -204,6 +250,9 @@ namespace easyforge::internal
         double Waiting = 0.0;
         float StepShare = 1.0f;
 
+        // Whether bodies may fall asleep at all.
+        bool AllowSleep = true;
+
         std::vector<physics2d::BodyData> Bodies;
         std::vector<physics2d::JointData> Joints;
 
@@ -220,6 +269,14 @@ namespace easyforge::internal
         void Placed(int index);
         void Retyped(int index);
 
+        // Wakes a sleeping body and everything that fell asleep with it.
+        void Wake(int index);
+
+        // Wakes a body and every body it has a contact with.
+        void WakeNeighbors(int index);
+
+        void WakeAll();
+
         void Step(float seconds);
         int Update(float seconds);
 
@@ -232,12 +289,30 @@ namespace easyforge::internal
 
     private:
         bool ShouldCollide(int first, int second) const;
+
+        // Moving this step: an awake dynamic body, or a kinematic one with a
+        // velocity.
+        static bool IsMoving(const physics2d::BodyData& body);
+
         void FindNewContacts();
         void DestroyContact(std::size_t index);
         void UpdateContacts(std::vector<physics2d::TouchEvent>& events);
         void Solve(float seconds);
+        void SweepFastBodies();
         void FinishBodies();
+        void UpdateSleep(float seconds);
         void Report(const std::vector<physics2d::TouchEvent>& events);
+
+        // Kept between steps, so a step allocates nothing once the world has
+        // settled into its size.
+        std::vector<physics2d::TouchEvent> StepEvents;
+        std::vector<physics2d::TouchEvent> ReportedEvents;
+        bool Reporting = false;
+        std::vector<std::uint64_t> FoundPairs;
+        std::vector<physics2d::ContactConstraint> Constraints;
+        std::vector<physics2d::JointData*> ActiveJoints;
+        std::vector<int> IslandParents;
+        std::vector<float> IslandStillTimes;
 
         physics2d::BoundsTree Tree;
         std::vector<int> FreeBodies;

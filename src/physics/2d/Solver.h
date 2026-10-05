@@ -27,6 +27,21 @@ namespace easyforge::internal::physics2d
 
     inline constexpr float MaximumLinearSpeed = 400.0f;
 
+    // The most a body turns in one substep, in radians: an eighth of a turn.
+    // Faster spinning, such as from a thin rod struck at its end, is slowed to
+    // this, which keeps the solver and the sweeps of fast bodies dependable.
+    inline constexpr float MaximumSubstepTurn = 0.25f * 3.14159265f;
+
+    // A body slower than these, in metres and radians a second, for this long
+    // along with everything it touches, falls asleep.
+    inline constexpr float SleepSpeed = 0.05f;
+    inline constexpr float SleepTurning = 0.035f;
+    inline constexpr float SleepAfter = 0.5f;
+
+    // A body that moves more than this share of its least reach in a step is
+    // swept, so it cannot pass through anything in between.
+    inline constexpr float SweepShare = 0.5f;
+
     struct Softness
     {
         float BiasRate = 0.0f;

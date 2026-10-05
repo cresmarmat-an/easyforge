@@ -9,6 +9,7 @@
 #include <span>
 
 #include <easyforge/core/Clock.h>
+#include <easyforge/core/Paths.h>
 #include <easyforge/core/Scalar.h>
 
 #include "Gamepads.h"
@@ -899,7 +900,7 @@ namespace easyforge
 
     Result<> Controls::SaveBindings(std::string_view path) const
     {
-        std::ofstream file { std::string(path), std::ios::binary };
+        std::ofstream file { PathFromText(path), std::ios::binary };
         file << BindingsText();
         if (!file)
         {
@@ -910,7 +911,7 @@ namespace easyforge
 
     Result<> Controls::LoadBindings(std::string_view path) const
     {
-        std::ifstream file { std::string(path), std::ios::binary };
+        std::ifstream file { PathFromText(path), std::ios::binary };
         if (!file)
         {
             return Failure(std::format("{}: the file could not be opened", path));

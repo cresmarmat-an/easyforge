@@ -15,6 +15,16 @@
   `Message::SentAt` tells when a received message was sent.
 - `FramePacer` and `Host::SetFramePacer` in `core`, so a renderer can start its
   window's frames when the screen can take another image.
+- Physics bodies sleep once they and everything they touch have been still for
+  half a second, and wake when anything reaches, pushes, or changes them, with
+  `IsAwake`, `Wake`, and `AllowSleep` on bodies and worlds.
+- Fast physics bodies are swept through each step, so they cannot pass through
+  thin walls, and `Bullet` bodies are swept against dynamic bodies too.
+- Renderers start again on a new device by themselves when the GPU is reset,
+  and textures, fonts, models, and shaders follow.
+- `PathFromText` and `TextFromPath` in `core`, for UTF-8 file paths.
+- The `EASYFORGE_SANITIZE` build option, and tests that feed damaged input to
+  every reader and run jobs, sounds, and network ends from many threads at once.
 
 ### Changed
 
@@ -23,6 +33,17 @@
 - A window with a renderer now starts each frame when the screen can take
   another image, before reading input, and at most one finished frame waits to
   be shown, so what is shown answers input sooner.
+- A physics body turns at most an eighth of a turn per substep.
+- Input recordings and bindings, `.tree` files, and scripts open files named in
+  any language on Windows; before, names outside the system's code page failed.
+- A color in a script that the compiler could not read no longer ends the
+  program.
+- A file path that is not valid UTF-8, given to any easyforge function, no
+  longer throws from inside the standard library; and making a pack from a
+  folder with a subfolder that cannot be read fails with an error instead of
+  throwing.
+- Physics steps allocate no memory once a world has settled into its size, and
+  bounds tree queries no longer allocate at all.
 - Packets carry the sender's clock. The wire format's revision marker is now
   `EFN2`, so programs built with 0.0.1 cannot talk to programs built with this
   change.

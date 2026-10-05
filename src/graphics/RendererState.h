@@ -30,6 +30,14 @@ namespace easyforge::internal
 
         Result<> Start(std::shared_ptr<Host> host, const RendererSettings& settings);
 
+        // When the device was lost, lets go of everything made on it and tries
+        // to make it all again on a new device, at most twice a second. Frames
+        // draw nothing until that works.
+        void RecoverIfLost();
+
+        // The device was lost and the renderer has not started again yet.
+        bool Lost = false;
+
         Vector2 PixelSize() const;
         float Scale() const;
 
@@ -92,6 +100,12 @@ namespace easyforge::internal
         Color Clear;
 
     private:
+        // The device, the context, the surface or image drawn into, and the
+        // pipelines: everything made on a device.
+        Result<> CreateDeviceObjects();
+        void ReleaseDeviceObjects();
+        double NextAttempt = 0.0;
+
         void DrawScene(gpu::Commands& commands, const ScenePass& pass, SceneTargets& targets);
         void DrawRecorded(gpu::Commands& commands, const internal::DrawList& list, gpu::Texture& target, Color clear);
         void DrawBlur(gpu::Commands& commands, const DrawStep& step, gpu::Texture& target);

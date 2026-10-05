@@ -11,6 +11,8 @@
 #include <system_error>
 #include <unordered_map>
 
+#include <easyforge/core/Paths.h>
+
 #include "ProgramFolder.h"
 
 namespace easyforge
@@ -91,13 +93,12 @@ namespace easyforge
 
         std::filesystem::path ToPath(std::string_view utf8)
         {
-            return std::filesystem::path(std::u8string(utf8.begin(), utf8.end()));
+            return PathFromText(utf8);
         }
 
         std::string ToText(const std::filesystem::path& path)
         {
-            std::u8string text = path.generic_u8string();
-            return std::string(text.begin(), text.end());
+            return TextFromPath(path);
         }
 
         // Forward slashes, no "." or ".." parts, no leading "./".
@@ -431,9 +432,14 @@ namespace easyforge
             std::uint64_t Size = 0;
         };
         std::vector<Source> sources;
-        for (const auto& item : std::filesystem::recursive_directory_iterator(root, error))
+        // Walked with error codes throughout, since the plain forms throw when a
+        // folder cannot be read.
+        std::filesystem::recursive_directory_iterator walk(root, std::filesystem::directory_options::skip_permission_denied, error);
+        for (; !error && walk != std::filesystem::recursive_directory_iterator(); walk.increment(error))
         {
-            if (!item.is_regular_file())
+            const std::filesystem::directory_entry& item = *walk;
+            std::error_code kindError;
+            if (!item.is_regular_file(kindError))
             {
                 continue;
             }
@@ -442,7 +448,12 @@ namespace easyforge
             {
                 return Failure(std::format("the path {} is too long for a pack", name));
             }
-            sources.push_back({ name, item.path(), item.file_size() });
+            std::uintmax_t size = item.file_size(kindError);
+            if (kindError)
+            {
+                return Failure(std::format("cannot read the size of {}", name));
+            }
+            sources.push_back({ name, item.path(), static_cast<std::uint64_t>(size) });
         }
         if (error)
         {

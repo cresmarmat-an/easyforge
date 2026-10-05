@@ -51,6 +51,8 @@ After the shape's own settings, every Add takes the same ones:
 | `FixedRotation` | false | the body never turns |
 | `Sensor` | false | the body reports what touches it but collides with nothing |
 | `Layer`, `CollidesWith` | 1, every layer | [collision layers](collisions-and-queries.md#layers) |
+| `Bullet` | false | swept against dynamic bodies too, not only walls; see [fast bodies](#fast-bodies) |
+| `AllowSleep` | true | the body may sleep once it has been still; see [sleeping](#sleeping) |
 
 Everything except the shape and the density can be changed later through the
 body's properties of the same names.
@@ -71,10 +73,53 @@ mass unless given a point in the world, where they also turn the body. Setting
 `Position` or `Rotation` moves the body straight there, without passing what is
 in between. Forces, impulses, and velocities do nothing to static bodies.
 
+Pushing or moving a sleeping body wakes it, so none of this needs a
+[wake](#sleeping) first.
+
 `Mass()` and `Inertia()` give a dynamic body's mass in kilograms and its
 inertia about its center of mass, `Center()` the center of mass in the world,
 `Bounds()` the smallest box around it, and `WorldPoint` and `LocalPoint` turn
 points between the world and the body's own coordinates.
+
+## Sleeping
+
+A dynamic body that has been still for half a second, along with everything it
+touches or is joined to, falls asleep: it is not moved or solved until something
+wakes it, so a pile of resting bodies costs almost nothing and stays perfectly
+still. "Still" means slower than 5 centimetres and 2 degrees a second.
+
+A sleeping body wakes, with everything that fell asleep with it, when:
+
+- something moving reaches it, or a body is added next to it;
+- a force, torque, or impulse is applied to it, or its velocity, position,
+  rotation, type, gravity scale, or collision layers are set;
+- a joint is added to it, removed from it, or changed;
+- the body it rests on is removed or moved, or the world's gravity changes;
+- `Wake()` is called.
+
+`IsAwake()` tells whether a body is awake. Static and kinematic bodies are
+always awake, and a body resting on a kinematic body that moves stays awake.
+`AllowSleep = false` keeps one body, and whatever touches it, awake;
+`physics.AllowSleep = false` keeps every body awake. A sleeping body reports no
+new touches, since nothing about it changes.
+
+## Fast bodies
+
+A body that moves more than about half its own thickness in one step is swept:
+its whole move through the step is checked against static and kinematic
+bodies, and it stops where it would first touch one, keeping its velocity, so
+the contact in the next step takes it from there. It cannot pass through a
+wall however thin the wall or however fast the body. A body already resting on
+or sliding along a wall keeps sliding; only a part of it that turns toward the
+wall is caught.
+
+A bullet (`Bullet = true`) is also swept against dynamic bodies, where the step
+left them, for small fast things such as projectiles. Sweeping costs a little
+time for each fast body, so it is not on for every body by default.
+
+A body turns at most an eighth of a turn in each substep, which is about 190
+radians a second with the default settings. Faster spinning, such as a thin
+rod struck at its end, is slowed to that.
 
 ## Removing bodies
 

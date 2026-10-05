@@ -26,33 +26,11 @@ namespace easyforge::internal::physics2d
 
     namespace
     {
-        struct PointConstraint
+        // Solved this step: dynamic and awake.
+        bool Active(const BodyData& body)
         {
-            // From each body's center of mass to the point, at the start of the step.
-            Vector2 ArmFirst;
-            Vector2 ArmSecond;
-            // The separation with the arms taken out, so the current separation
-            // follows from how far the bodies have moved.
-            float BaseSeparation = 0.0f;
-            float NormalMass = 0.0f;
-            float TangentMass = 0.0f;
-            float NormalImpulse = 0.0f;
-            float TangentImpulse = 0.0f;
-            float MaximumNormalImpulse = 0.0f;
-            float RelativeVelocity = 0.0f;
-        };
-
-        struct ContactConstraint
-        {
-            std::size_t Contact = 0;
-            int First = -1;
-            int Second = -1;
-            Vector2 Normal;
-            float Friction = 0.0f;
-            float Restitution = 0.0f;
-            PointConstraint Points[2];
-            int Count = 0;
-        };
+            return body.Alive && body.Type == BodyType::Dynamic && body.Awake;
+        }
 
         void Apply(BodyData& first, BodyData& second, Vector2 armFirst, Vector2 armSecond, Vector2 impulse)
         {
@@ -146,8 +124,8 @@ namespace easyforge::internal
 
         // Contact constraints, from this step's manifolds, starting from last
         // step's impulses.
-        std::vector<ContactConstraint> constraints;
-        constraints.reserve(Contacts.size());
+        std::vector<ContactConstraint>& constraints = Constraints;
+        constraints.clear();
         for (std::size_t index = 0; index < Contacts.size(); ++index)
         {
             const ContactData& contact = Contacts[index];
@@ -157,7 +135,8 @@ namespace easyforge::internal
             }
             const BodyData& first = Bodies[static_cast<std::size_t>(contact.First)];
             const BodyData& second = Bodies[static_cast<std::size_t>(contact.Second)];
-            if (first.InverseMass == 0.0f && second.InverseMass == 0.0f && first.InverseInertia == 0.0f && second.InverseInertia == 0.0f)
+            // Between bodies that are asleep, still, or both: nothing to solve.
+            if (!Active(first) && !Active(second))
             {
                 continue;
             }
@@ -195,10 +174,11 @@ namespace easyforge::internal
             constraints.push_back(constraint);
         }
 
-        std::vector<JointData*> joints;
+        std::vector<JointData*>& joints = ActiveJoints;
+        joints.clear();
         for (JointData& joint : Joints)
         {
-            if (joint.Alive)
+            if (joint.Alive && (Active(Bodies[static_cast<std::size_t>(joint.First)]) || Active(Bodies[static_cast<std::size_t>(joint.Second)])))
             {
                 joints.push_back(&joint);
             }
@@ -209,7 +189,7 @@ namespace easyforge::internal
             // Velocities from gravity, forces, and damping.
             for (BodyData& body : Bodies)
             {
-                if (!body.Alive || body.Type != BodyType::Dynamic)
+                if (!Active(body))
                 {
                     continue;
                 }
@@ -222,6 +202,8 @@ namespace easyforge::internal
                 {
                     body.Velocity *= MaximumLinearSpeed / speed;
                 }
+                float mostTurning = MaximumSubstepTurn * context.InverseStep;
+                body.AngularVelocity = std::clamp(body.AngularVelocity, -mostTurning, mostTurning);
             }
 
             // Last substep's impulses first, which is most of the answer when
@@ -254,7 +236,7 @@ namespace easyforge::internal
 
             for (BodyData& body : Bodies)
             {
-                if (!body.Alive || body.Type == BodyType::Static)
+                if (!body.Alive || body.Type == BodyType::Static || (body.Type == BodyType::Dynamic && !body.Awake))
                 {
                     continue;
                 }

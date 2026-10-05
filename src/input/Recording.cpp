@@ -8,6 +8,8 @@
 #include <optional>
 #include <string>
 
+#include <easyforge/core/Paths.h>
+
 namespace easyforge
 {
     namespace
@@ -331,7 +333,7 @@ namespace easyforge
     Result<> Recording::Save(std::string_view path) const
     {
         std::vector<std::uint8_t> bytes = Encode();
-        std::ofstream file(std::string(path), std::ios::binary);
+        std::ofstream file(PathFromText(path), std::ios::binary);
         file.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
         if (!file)
         {
@@ -342,7 +344,7 @@ namespace easyforge
 
     Result<Recording> Recording::Load(std::string_view path)
     {
-        std::ifstream file(std::string(path), std::ios::binary);
+        std::ifstream file(PathFromText(path), std::ios::binary);
         if (!file)
         {
             return Failure(std::format("{}: the file could not be opened", path));

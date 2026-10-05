@@ -5,6 +5,8 @@
 #include <fstream>
 #include <sstream>
 
+#include <easyforge/core/Paths.h>
+
 #include "EngineState.h"
 
 namespace easyforge
@@ -43,7 +45,7 @@ namespace easyforge
         {
             return NoEngine();
         }
-        std::ifstream file(std::filesystem::path(std::string(path)), std::ios::binary);
+        std::ifstream file(PathFromText(path), std::ios::binary);
         if (!file)
         {
             return Failure(std::format("cannot read {}", path));
@@ -51,7 +53,7 @@ namespace easyforge
         std::ostringstream contents;
         contents << file.rdbuf();
         std::error_code error;
-        std::string key = std::filesystem::weakly_canonical(std::filesystem::path(std::string(path)), error).generic_string();
+        std::string key = TextFromPath(std::filesystem::weakly_canonical(PathFromText(path), error));
         return Engine->RunSource(contents.str(), path, key.empty() ? std::string(path) : key);
     }
 

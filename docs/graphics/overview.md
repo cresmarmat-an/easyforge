@@ -79,6 +79,14 @@ A window has one renderer at a time; asking for a second fails with an error
 that says so. Renderers share one GPU device for each adapter, so a texture
 drawn in two windows is only sent to the GPU once.
 
+When the GPU is reset, as happens when its driver is updated, it stops
+answering for a moment, or an external GPU is unplugged, a renderer starts
+again on a new device by itself at the next frame, and logs that it did.
+Textures, fonts, models, and shaders keep their own copies in memory and are
+sent to the new device the next time they are drawn, so a program needs to do
+nothing. Frames drawn while no device can be made show nothing, and the
+renderer tries again twice a second.
+
 A window's renderer follows the window: each frame is the window's current size,
 in its current scaling, and waits for the screen when the window's
 `VerticalSync` is on. At most one finished frame waits to be shown, and the

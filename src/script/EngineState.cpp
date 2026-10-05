@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 
+#include <easyforge/core/Paths.h>
 #include <easyforge/core/language/Syntax.h>
 
 #include "Builtins.h"
@@ -403,15 +404,15 @@ namespace easyforge::internal::scripting
         std::vector<std::filesystem::path> candidates;
         if (from && !from->Path.empty())
         {
-            candidates.push_back(std::filesystem::path(from->Path).parent_path() / file);
+            candidates.push_back(PathFromText(from->Path).parent_path() / PathFromText(file));
         }
         for (const std::string& folder : Settings.SearchFolders)
         {
-            candidates.push_back(std::filesystem::path(folder) / file);
+            candidates.push_back(PathFromText(folder) / PathFromText(file));
         }
         if (candidates.empty())
         {
-            candidates.push_back(file);
+            candidates.push_back(PathFromText(file));
         }
         std::error_code error;
         for (const std::filesystem::path& candidate : candidates)
@@ -420,7 +421,7 @@ namespace easyforge::internal::scripting
             {
                 continue;
             }
-            std::string key = std::filesystem::weakly_canonical(candidate, error).generic_string();
+            std::string key = TextFromPath(std::filesystem::weakly_canonical(candidate, error));
             auto found = ModulesByPath.find(key);
             if (found != ModulesByPath.end())
             {
@@ -437,10 +438,10 @@ namespace easyforge::internal::scripting
             std::string source;
             if (!ReadWhole(candidate, source))
             {
-                problem = std::format("cannot read {}", candidate.generic_string());
+                problem = std::format("cannot read {}", TextFromPath(candidate));
                 return nullptr;
             }
-            Result<ScriptValue> ran = RunSource(source, candidate.generic_string(), key);
+            Result<ScriptValue> ran = RunSource(source, TextFromPath(candidate), key);
             if (!ran)
             {
                 problem = ran.Error();

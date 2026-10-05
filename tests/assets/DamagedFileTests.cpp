@@ -132,3 +132,22 @@ EASYFORGE_TEST(DamagedModelsNeverCrash)
             seed++);
     }
 }
+
+EASYFORGE_TEST(DamagedCompressedDataNeverCrashes)
+{
+    std::uint64_t seed = 400;
+    for (const char* name : { "compression/blocks.zlib", "compression/dynamic.zlib", "compression/fixed.zlib", "compression/stored.zlib" })
+    {
+        Batter(
+            testdata::Read(name), [](const std::vector<std::uint8_t>& bytes) {
+                // A small limit, so damage that claims a huge output stops early.
+                (void)Decompress(bytes, CompressedFormat::Zlib, 0, 1 << 20);
+            },
+            seed++);
+    }
+    Batter(
+        testdata::Read("compression/raw.deflate"), [](const std::vector<std::uint8_t>& bytes) {
+            (void)Decompress(bytes, CompressedFormat::Deflate, 0, 1 << 20);
+        },
+        seed++);
+}

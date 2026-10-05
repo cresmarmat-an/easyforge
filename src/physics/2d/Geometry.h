@@ -206,4 +206,52 @@ namespace easyforge::internal::physics2d
 
     // The closest points of two segments.
     SegmentDistance ClosestOnSegments(Vector2 firstStart, Vector2 firstEnd, Vector2 secondStart, Vector2 secondEnd);
+
+    // The gap between two shapes' rounded outlines at the given poses: 0 when
+    // they touch, negative when they overlap. Normal points from the first
+    // shape toward the second, along which the gap is measured; it is zero
+    // when there is no telling, as for two capsules whose cores cross.
+    struct ShapeGap
+    {
+        float Distance = 0.0f;
+        Vector2 Normal;
+    };
+
+    ShapeGap Gap(const Shape& first, const Pose& firstPose, const Shape& second, const Pose& secondPose);
+
+    // The least and the most distance from a point, such as the center of mass,
+    // to a shape's outline: how far the shape reaches. A body that moves more
+    // than about half its least reach in a step could pass through something.
+    struct Reach
+    {
+        float Least = 0.0f;
+        float Most = 0.0f;
+    };
+
+    Reach ComputeReach(const Shape& shape, Vector2 center);
+
+    // A body's move through a step, by its center of mass: from `start` to
+    // `start + move`, turning by `angle`.
+    struct Sweep
+    {
+        Vector2 LocalCenter;
+        Vector2 Start;
+        Vector2 Move;
+        Rotation StartTurn;
+        float Angle = 0.0f;
+
+        Pose At(float time) const
+        {
+            Rotation turn = Combine(StartTurn, Rotation::FromAngle(Angle * time));
+            return { Start + Move * time - Rotate(turn, LocalCenter), turn };
+        }
+    };
+
+    // How far through its sweep, from 0 to 1, a moving shape gets before it
+    // comes within `target` of a still shape, or 1 when it never does. A shape
+    // that starts closer than that counts once it gets deeper than it started.
+    // `reach` is the moving shape's most reach from its center of mass. Found by conservative advancement: the shape moves on by
+    // as much as the gap allows, since nothing on it moves faster than its
+    // center plus its turning times its reach, until the gap closes.
+    float TimeOfImpact(const Shape& moving, const Sweep& sweep, float reach, const Shape& still, const Pose& stillPose, float target);
 }

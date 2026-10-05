@@ -40,6 +40,10 @@ namespace easyforge
             {
                 return nullptr;
             }
+            if (!Pipelines.contains(device->Identifier()))
+            {
+                ForgetLostDevices(Pipelines);
+            }
             DeviceCopy<gpu::Pipeline>& copy = Pipelines[device->Identifier()];
             if (copy.Object)
             {

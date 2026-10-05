@@ -127,6 +127,12 @@ namespace easyforge
                 return Failure("a renderer without a host needs a Width and Height in pixels");
             }
 
+            return CreateDeviceObjects();
+        }
+
+        Result<> RendererState::CreateDeviceObjects()
+        {
+            const RendererSettings& settings = Settings;
             Result<std::shared_ptr<gpu::Device>> device = gpu::SharedDevice(settings.Adapter);
             if (!device)
             {
@@ -221,6 +227,58 @@ namespace easyforge
             BlurPipeline = std::move(blur).Get();
             Made = true;
             return {};
+        }
+
+        void RendererState::ReleaseDeviceObjects()
+        {
+            // Everything made on the device goes before the device itself.
+            SceneTargetPool.clear();
+            LayerTargetPool.clear();
+            BlurTargetPool.clear();
+            ShapePipeline.reset();
+            ReplacePipeline.reset();
+            MeshPipeline.reset();
+            BlurPipeline.reset();
+            Offscreen.reset();
+            Surface.reset();
+            Context.reset();
+            Resources.reset();
+            Device.reset();
+        }
+
+        void RendererState::RecoverIfLost()
+        {
+            if (!Made || (!Lost && !(Device && Device->IsLost())))
+            {
+                return;
+            }
+            if (!Lost)
+            {
+                Lost = true;
+                Log(LogLevel::Warning, "The GPU was reset, as happens when its driver is updated or it stops answering; "
+                                       "the renderer is starting again on a new device");
+                Frame.Lists.clear();
+                Frame.Scenes.clear();
+                Frame.Used.clear();
+                Frame.Active = false;
+                ReleaseDeviceObjects();
+            }
+            double now = SinceStart.Seconds();
+            if (now < NextAttempt)
+            {
+                return;
+            }
+            NextAttempt = now + 0.5;
+            Result<> started = CreateDeviceObjects();
+            if (started)
+            {
+                Lost = false;
+                ErrorText.clear();
+                Log(LogLevel::Information, "The renderer is drawing again, on {}", Device->Description());
+                return;
+            }
+            ReleaseDeviceObjects();
+            ErrorText = started.Error();
         }
 
         Vector2 RendererState::PixelSize() const
@@ -572,7 +630,8 @@ namespace easyforge
 
     Canvas Renderer::BeginFrame(Color clear) const
     {
-        if (!State->Made)
+        State->RecoverIfLost();
+        if (!State->Made || State->Lost)
         {
             return Canvas();
         }
@@ -602,7 +661,7 @@ namespace easyforge
 
     ImageData Renderer::Capture() const
     {
-        if (!State->Made)
+        if (!State->Made || State->Lost)
         {
             return {};
         }

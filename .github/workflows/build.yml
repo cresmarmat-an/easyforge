@@ -19,7 +19,21 @@ jobs:
       - name: Build
         run: cmake --build build --config ${{ matrix.configuration }} --parallel
       - name: Test
-        run: ctest --test-dir build -C ${{ matrix.configuration }} --output-on-failure
+        run: ctest --test-dir build -C ${{ matrix.configuration }} --output-on-failure --timeout 1200
+
+  sanitized:
+    # Every test again with AddressSanitizer, which stops at the first read or
+    # write outside memory a test owns.
+    name: Every library with AddressSanitizer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Configure
+        run: cmake -S . -B build -D EASYFORGE_SANITIZE=ON
+      - name: Build
+        run: cmake --build build --config Debug --parallel
+      - name: Test
+        run: ctest --test-dir build -C Debug --output-on-failure --timeout 1800
 
   alone:
     # Each library built with only the libraries it depends on, which is how
@@ -37,4 +51,4 @@ jobs:
       - name: Build
         run: cmake --build build --config Debug --parallel
       - name: Test
-        run: ctest --test-dir build -C Debug --output-on-failure
+        run: ctest --test-dir build -C Debug --output-on-failure --timeout 1200

@@ -4,6 +4,7 @@
 #include <cstring>
 #include <map>
 #include <mutex>
+#include <unordered_set>
 #include <vector>
 
 #include <easyforge/core/Log.h>
@@ -65,6 +66,19 @@ namespace easyforge::internal::direct3d12
 
     class Device;
 
+    // Something made on a device that holds Direct3D objects of it. Direct3D 12
+    // gives back the same lost device for as long as anything holds it, so when
+    // a device is lost every child lets go of its objects at once and becomes an
+    // empty shell, and the next device made is a new one.
+    class DeviceChild
+    {
+    public:
+        virtual void Abandon() = 0;
+
+    protected:
+        ~DeviceChild() = default;
+    };
+
     // CPU descriptors of one kind, handed out and taken back by index.
     class DescriptorPool
     {
@@ -106,6 +120,8 @@ namespace easyforge::internal::direct3d12
         }
 
         static constexpr UINT Invalid = ~0u;
+
+        void Abandon() { Heap.Reset(); }
 
     private:
         ComPtr<ID3D12DescriptorHeap> Heap;
@@ -156,6 +172,12 @@ namespace easyforge::internal::direct3d12
             Offset = 0;
         }
 
+        void Abandon()
+        {
+            Pages.clear();
+            Reset();
+        }
+
     private:
         struct Page
         {
@@ -190,12 +212,20 @@ namespace easyforge::internal::direct3d12
         UINT64 Offset = 0;
     };
 
-    class Texture final : public gpu::Texture
+    class Texture final : public gpu::Texture, public DeviceChild
     {
     public:
         Texture(Device& owner, ComPtr<ID3D12Resource> resource, gpu::TextureFormat format, int width, int height,
             int sampleCount, D3D12_RESOURCE_STATES state, bool owned);
         ~Texture() override;
+
+        void Abandon() override
+        {
+            Resource.Reset();
+            ShaderView = DescriptorPool::Invalid;
+            TargetView = DescriptorPool::Invalid;
+            DepthView = DescriptorPool::Invalid;
+        }
 
         int Width() const override { return TextureWidth; }
         int Height() const override { return TextureHeight; }
@@ -214,11 +244,12 @@ namespace easyforge::internal::direct3d12
         bool Owned;
     };
 
-    class Buffer final : public gpu::Buffer
+    class Buffer final : public gpu::Buffer, public DeviceChild
     {
     public:
         Buffer(Device& owner, ComPtr<ID3D12Resource> resource, std::size_t size, bool indices);
         ~Buffer() override;
+        void Abandon() override { Resource.Reset(); }
         std::size_t Size() const override { return BufferSize; }
 
         Device& Owner;
@@ -227,11 +258,12 @@ namespace easyforge::internal::direct3d12
         bool Indices;
     };
 
-    class Pipeline final : public gpu::Pipeline
+    class Pipeline final : public gpu::Pipeline, public DeviceChild
     {
     public:
-        explicit Pipeline(Device& owner) : Owner(owner) {}
+        explicit Pipeline(Device& owner);
         ~Pipeline() override;
+        void Abandon() override { State.Reset(); }
 
         Device& Owner;
         ComPtr<ID3D12PipelineState> State;
@@ -258,6 +290,23 @@ namespace easyforge::internal::direct3d12
         std::unique_ptr<gpu::Context> CreateContext() override;
         ImageData ReadTexture(gpu::Texture& texture) override;
         std::uint64_t Identifier() const override { return UniqueNumber; }
+        bool IsLost() const override { return Abandoned || Device3D->GetDeviceRemovedReason() != S_OK; }
+
+        void Adopt(DeviceChild& child) { Children.insert(&child); }
+        void Disown(DeviceChild& child) { Children.erase(&child); }
+
+        // Every child, and the device itself, lets go of its Direct3D objects.
+        // Used once the device is lost, before a new one is made.
+        void AbandonEverything();
+
+        void SimulateLoss() override
+        {
+            ComPtr<ID3D12Device5> removable;
+            if (SUCCEEDED(Device3D.As(&removable)))
+            {
+                removable->RemoveDevice();
+            }
+        }
 
         // Keeps an object alive until the GPU can no longer be using it.
         void Retire(ComPtr<IUnknown> object);
@@ -267,7 +316,7 @@ namespace easyforge::internal::direct3d12
         UINT64 Submit(std::span<ID3D12CommandList* const> lists);
         void WaitFor(UINT64 fence);
         void WaitUntilIdle() { WaitFor(Submit({})); }
-        UINT64 CompletedFence() const { return Fence->GetCompletedValue(); }
+        UINT64 CompletedFence() const { return Fence ? Fence->GetCompletedValue() : ~UINT64 { 0 }; }
 
         // Reports what the validation layer found, when it is on.
         void ReportValidationMessages();
@@ -308,6 +357,8 @@ namespace easyforge::internal::direct3d12
         ComPtr<ID3D12InfoQueue> Validation;
         std::string DescriptionText;
         std::uint64_t UniqueNumber = 0;
+        std::unordered_set<DeviceChild*> Children;
+        bool Abandoned = false;
     };
 
     Texture::Texture(Device& owner, ComPtr<ID3D12Resource> resource, gpu::TextureFormat format, int width, int height,
@@ -315,10 +366,12 @@ namespace easyforge::internal::direct3d12
         : Owner(owner), Resource(std::move(resource)), TextureFormat(format), TextureWidth(width), TextureHeight(height),
           SampleCount(sampleCount), State(state), Owned(owned)
     {
+        Owner.Adopt(*this);
     }
 
     Texture::~Texture()
     {
+        Owner.Disown(*this);
         Owner.ShaderViews.Release(ShaderView);
         Owner.TargetViews.Release(TargetView);
         Owner.DepthViews.Release(DepthView);
@@ -331,27 +384,51 @@ namespace easyforge::internal::direct3d12
     Buffer::Buffer(Device& owner, ComPtr<ID3D12Resource> resource, std::size_t size, bool indices)
         : Owner(owner), Resource(std::move(resource)), BufferSize(size), Indices(indices)
     {
+        Owner.Adopt(*this);
     }
 
     Buffer::~Buffer()
     {
+        Owner.Disown(*this);
         Owner.Retire(Resource);
+    }
+
+    Pipeline::Pipeline(Device& owner) : Owner(owner)
+    {
+        Owner.Adopt(*this);
     }
 
     // A frame still on the GPU may use the pipeline, so it is kept until then.
     Pipeline::~Pipeline()
     {
+        Owner.Disown(*this);
         Owner.Retire(State);
     }
 
     // ---- Surface ------------------------------------------------------------
 
-    class Surface final : public gpu::Surface
+    class Surface final : public gpu::Surface, public DeviceChild
     {
     public:
-        Surface(Device& owner) : Owner(owner) {}
+        Surface(Device& owner) : Owner(owner) { Owner.Adopt(*this); }
+
+        // The back buffers are children of their own and let go by themselves.
+        void Abandon() override
+        {
+            SwapChain.Reset();
+            CompositionVisual.Reset();
+            CompositionTarget.Reset();
+            Composition.Reset();
+            if (Ready)
+            {
+                CloseHandle(Ready);
+                Ready = nullptr;
+            }
+        }
+
         ~Surface() override
         {
+            Owner.Disown(*this);
             Owner.WaitUntilIdle();
             Buffers = {};
             if (Ready)
@@ -443,11 +520,23 @@ namespace easyforge::internal::direct3d12
 
     // ---- Context and commands --------------------------------------------------
 
-    class Context final : public gpu::Context, public gpu::Commands
+    class Context final : public gpu::Context, public gpu::Commands, public DeviceChild
     {
     public:
         explicit Context(Device& owner);
         ~Context() override;
+
+        void Abandon() override
+        {
+            for (Slot& slot : Slots)
+            {
+                slot.Allocator.Reset();
+                slot.Upload.Abandon();
+                slot.Fence = 0;
+            }
+            List.Reset();
+            Recording = false;
+        }
 
         gpu::Commands& BeginFrame() override;
         void EndFrame(gpu::Surface* surface, bool verticalSync) override;
@@ -492,6 +581,7 @@ namespace easyforge::internal::direct3d12
 
     Context::Context(Device& owner) : Owner(owner)
     {
+        Owner.Adopt(*this);
         for (UINT slice = 0; slice < SlicesAvailable; ++slice)
         {
             if (!Owner.SliceUsed[slice])
@@ -513,6 +603,7 @@ namespace easyforge::internal::direct3d12
 
     Context::~Context()
     {
+        Owner.Disown(*this);
         WaitUntilIdle();
         Owner.SliceUsed[Slice] = false;
     }
@@ -950,8 +1041,38 @@ namespace easyforge::internal::direct3d12
         }
     }
 
+    void Device::AbandonEverything()
+    {
+        if (Abandoned)
+        {
+            return;
+        }
+        Abandoned = true;
+        std::vector<DeviceChild*> children(Children.begin(), Children.end());
+        for (DeviceChild* child : children)
+        {
+            child->Abandon();
+        }
+        OpenUploads = nullptr;
+        UploadBatches.clear();
+        Retired.clear();
+        ShaderViews.Abandon();
+        TargetViews.Abandon();
+        DepthViews.Abandon();
+        VisibleHeap.Reset();
+        RootSignature.Reset();
+        Validation.Reset();
+        Queue.Reset();
+        Fence.Reset();
+        Device3D.Reset();
+    }
+
     void Device::Retire(ComPtr<IUnknown> object)
     {
+        if (Abandoned || !object)
+        {
+            return;
+        }
         // Frames still being recorded are sent later and get later fence values.
         Retired.emplace_back(std::move(object), NextFence + static_cast<UINT64>(OpenRecordings));
     }
@@ -1005,6 +1126,10 @@ namespace easyforge::internal::direct3d12
 
     UINT64 Device::Submit(std::span<ID3D12CommandList* const> lists)
     {
+        if (Abandoned)
+        {
+            return 0;
+        }
         std::vector<ID3D12CommandList*> all;
         UploadBatch* uploads = OpenUploads;
         if (uploads)
@@ -1030,7 +1155,7 @@ namespace easyforge::internal::direct3d12
 
     void Device::WaitFor(UINT64 fence)
     {
-        if (fence == 0 || Fence->GetCompletedValue() >= fence)
+        if (fence == 0 || !Fence || Fence->GetCompletedValue() >= fence)
         {
             return;
         }
@@ -1495,9 +1620,15 @@ namespace easyforge::internal::gpu
     Result<std::shared_ptr<Device>> SharedDevice(GraphicsAdapter adapter)
     {
         static std::map<GraphicsAdapter, std::weak_ptr<Device>> devices;
-        if (std::shared_ptr<Device> existing = devices[adapter].lock())
+        // A lost device is replaced; whatever still holds it lets go in time.
+        std::shared_ptr<Device> existing = devices[adapter].lock();
+        if (existing && !existing->IsLost())
         {
             return existing;
+        }
+        if (existing)
+        {
+            static_cast<direct3d12::Device&>(*existing).AbandonEverything();
         }
         Result<std::shared_ptr<direct3d12::Device>> created = direct3d12::Device::Create(adapter);
         if (!created)

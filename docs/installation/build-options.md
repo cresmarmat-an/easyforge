@@ -8,6 +8,7 @@ configuring, or with `set()` before `FetchContent_MakeAvailable`.
 | `EASYFORGE_BUILD_TESTS` | `ON` when easyforge is built on its own, `OFF` when fetched | Builds the tests and the build checks |
 | `EASYFORGE_INSTALL` | `ON` when easyforge is built on its own, `OFF` when fetched | Adds the rules `cmake --install` uses |
 | `EASYFORGE_ONLY` | empty | Builds one library and the libraries it depends on |
+| `EASYFORGE_SANITIZE` | `OFF` | Builds everything with AddressSanitizer, so the tests catch memory errors |
 | `EASYFORGE_BUILD_CORE` | `ON` | Builds the `core` library |
 | `EASYFORGE_BUILD_ASSETS` | `ON` | Builds the `assets` library |
 | `EASYFORGE_BUILD_WINDOW` | `ON` | Builds the `window` library, on platforms it supports |
@@ -59,6 +60,26 @@ Besides each library's tests, three checks run:
   otherwise call functions that do not exist.
 - **library-includes** fails if a library's code includes a header of a library
   it does not depend on.
+
+## Checking memory
+
+```bash
+cmake -S . -B build-sanitized -D EASYFORGE_SANITIZE=ON
+cmake --build build-sanitized --config Debug
+ctest --test-dir build-sanitized -C Debug --output-on-failure
+```
+
+`EASYFORGE_SANITIZE` builds easyforge and its tests with AddressSanitizer, which
+stops a test at the first read or write outside memory it owns, use of freed
+memory, or similar mistake, and says where. The repository's checks run every
+test this way on every change. Programs built this way run a few times slower,
+so it is for testing, not for programs people use.
+
+The tests also feed every reader damaged input: images, sounds, fonts, models,
+compressed data, `.tree` files, values, scripts, shaders, network messages,
+and packets damaged, made up, or repeated on their way between a client and a
+server. Each reader must turn it away with an error, or read something it can
+write back the same way, without crashing or hanging.
 
 ## Warnings
 

@@ -424,4 +424,228 @@ namespace easyforge::internal::physics2d
         result.DistanceSquared = Dot(gap, gap);
         return result;
     }
+
+    namespace
+    {
+        // A shape's core in the world: its points, and its outward normals.
+        struct WorldShape
+        {
+            Vector2 Points[MaximumPoints] {};
+            Vector2 Normals[MaximumPoints] {};
+            int Count = 0;
+        };
+
+        WorldShape InWorld(const Shape& shape, const Pose& pose)
+        {
+            WorldShape placed;
+            placed.Count = shape.Count;
+            for (int index = 0; index < shape.Count; ++index)
+            {
+                placed.Points[index] = Apply(pose, shape.Points[index]);
+                placed.Normals[index] = Rotate(pose.Turn, shape.Normals[index]);
+            }
+            return placed;
+        }
+
+        bool Inside(const WorldShape& polygon, Vector2 point)
+        {
+            for (int index = 0; index < polygon.Count; ++index)
+            {
+                if (Dot(polygon.Normals[index], point - polygon.Points[index]) > 0.0f)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // How far the second shape's core is outside the first polygon along the
+        // polygon's best edge normal, and that normal: positive when an edge has
+        // all of it outside, negative by about how deep it is in when none has.
+        struct EdgeGap
+        {
+            float Separation = -std::numeric_limits<float>::infinity();
+            Vector2 Normal;
+        };
+
+        EdgeGap EdgeSeparation(const WorldShape& polygon, const WorldShape& other)
+        {
+            EdgeGap best;
+            for (int edge = 0; edge < polygon.Count; ++edge)
+            {
+                float nearest = std::numeric_limits<float>::infinity();
+                for (int point = 0; point < other.Count; ++point)
+                {
+                    nearest = std::min(nearest, Dot(polygon.Normals[edge], other.Points[point] - polygon.Points[edge]));
+                }
+                if (nearest > best.Separation)
+                {
+                    best = { nearest, polygon.Normals[edge] };
+                }
+            }
+            return best;
+        }
+
+        bool Separates(const WorldShape& first, const WorldShape& second)
+        {
+            return EdgeSeparation(first, second).Separation > 0.0f;
+        }
+
+        // Cores overlap when a polygon holds a point of the other shape, or two
+        // polygons have no edge between them. A segment crossing a polygon
+        // without a point inside it is caught by the edge distances instead.
+        bool CoresOverlap(const WorldShape& first, const WorldShape& second)
+        {
+            if (first.Count >= 3 && second.Count >= 3)
+            {
+                return !Separates(first, second) && !Separates(second, first);
+            }
+            if (first.Count >= 3)
+            {
+                return Inside(first, second.Points[0]);
+            }
+            if (second.Count >= 3)
+            {
+                return Inside(second, first.Points[0]);
+            }
+            return false;
+        }
+
+        // One point for a circle, one segment for a capsule, every side for a
+        // polygon.
+        int EdgeCount(const WorldShape& shape)
+        {
+            return shape.Count >= 3 ? shape.Count : 1;
+        }
+
+        Vector2 EdgeEnd(const WorldShape& shape, int edge)
+        {
+            return shape.Count == 1 ? shape.Points[0] : shape.Points[(edge + 1) % shape.Count];
+        }
+    }
+
+    ShapeGap Gap(const Shape& first, const Pose& firstPose, const Shape& second, const Pose& secondPose)
+    {
+        WorldShape one = InWorld(first, firstPose);
+        WorldShape other = InWorld(second, secondPose);
+        float radius = first.Radius + second.Radius;
+        if (CoresOverlap(one, other))
+        {
+            // How deep, along the polygons' best edge normal, so getting deeper
+            // shows as a smaller gap. The second polygon's normal points back
+            // toward the first, so it is turned around.
+            EdgeGap best;
+            if (one.Count >= 3)
+            {
+                best = EdgeSeparation(one, other);
+            }
+            if (other.Count >= 3)
+            {
+                EdgeGap reverse = EdgeSeparation(other, one);
+                if (reverse.Separation > best.Separation)
+                {
+                    best = { reverse.Separation, -reverse.Normal };
+                }
+            }
+            if (!std::isfinite(best.Separation))
+            {
+                return { -radius, {} };
+            }
+            return { std::min(best.Separation, 0.0f) - radius, best.Normal };
+        }
+
+        SegmentDistance closest;
+        closest.DistanceSquared = std::numeric_limits<float>::infinity();
+        for (int edge = 0; edge < EdgeCount(one); ++edge)
+        {
+            for (int otherEdge = 0; otherEdge < EdgeCount(other); ++otherEdge)
+            {
+                SegmentDistance distance = ClosestOnSegments(one.Points[edge], EdgeEnd(one, edge), other.Points[otherEdge],
+                    EdgeEnd(other, otherEdge));
+                if (distance.DistanceSquared < closest.DistanceSquared)
+                {
+                    closest = distance;
+                }
+            }
+        }
+        float length = std::sqrt(closest.DistanceSquared);
+        Vector2 normal = length > 1e-6f ? (closest.Second - closest.First) / length : Vector2 {};
+        return { length - radius, normal };
+    }
+
+    Reach ComputeReach(const Shape& shape, Vector2 center)
+    {
+        Reach reach;
+        float most = 0.0f;
+        for (int index = 0; index < shape.Count; ++index)
+        {
+            most = std::max(most, Length(shape.Points[index] - center));
+        }
+        reach.Most = most + shape.Radius;
+
+        float least = 0.0f;
+        if (shape.Count >= 3)
+        {
+            least = std::numeric_limits<float>::infinity();
+            for (int index = 0; index < shape.Count; ++index)
+            {
+                least = std::min(least, Dot(shape.Normals[index], shape.Points[index] - center));
+            }
+            least = std::max(least, 0.0f) + shape.Radius;
+        }
+        else
+        {
+            Vector2 end = shape.Count == 2 ? shape.Points[1] : shape.Points[0];
+            float away = std::sqrt(ClosestOnSegments(shape.Points[0], end, center, center).DistanceSquared);
+            least = std::max(shape.Radius - away, 0.0f);
+        }
+        reach.Least = std::max(least, LinearSlop);
+        return reach;
+    }
+
+    float TimeOfImpact(const Shape& moving, const Sweep& sweep, float reach, const Shape& still, const Pose& stillPose, float target)
+    {
+        float turning = std::abs(sweep.Angle) * reach;
+        if (!(Length(sweep.Move) + turning > 1e-6f))
+        {
+            return 1.0f;
+        }
+        // A shape that starts closer than the target, such as one resting on
+        // or sliding along the still shape, counts only once it gets deeper
+        // than it started, so it can slide on while a part of it that turns
+        // toward the still shape is still caught.
+        ShapeGap gap = Gap(moving, sweep.At(0.0f), still, stillPose);
+        if (gap.Distance <= target)
+        {
+            target = gap.Distance - LinearSlop;
+        }
+        // Aiming a little inside the target makes each move end within it when
+        // heading straight on, so few moves are needed.
+        float aim = target - LinearSlop * 0.5f;
+        float time = 0.0f;
+        for (int iteration = 0; iteration < 100; ++iteration)
+        {
+            // Along the line between the closest points, nothing on the moving
+            // shape closes in faster than its move toward the still one plus its
+            // turning, so the gap cannot close before then. Moving alongside
+            // closes nothing.
+            bool known = gap.Normal.X != 0.0f || gap.Normal.Y != 0.0f;
+            float approach = turning + (known ? std::max(Dot(sweep.Move, gap.Normal), 0.0f) : Length(sweep.Move));
+            if (!(approach > 1e-6f))
+            {
+                return 1.0f;
+            }
+            time += (gap.Distance - aim) / approach;
+            if (time >= 1.0f)
+            {
+                return 1.0f;
+            }
+            gap = Gap(moving, sweep.At(time), still, stillPose);
+            if (gap.Distance <= target)
+            {
+                return time;
+            }
+        }
+        return time;
+    }
 }

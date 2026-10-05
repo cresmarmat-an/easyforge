@@ -1,11 +1,50 @@
 #pragma once
 
+#include <array>
+#include <cstddef>
 #include <vector>
 
 #include "Geometry.h"
 
 namespace easyforge::internal::physics2d
 {
+    // The nodes a query still has to visit, last in first out. They stay on the
+    // machine stack while they fit, which they do for any balanced tree, so a
+    // query allocates nothing; a deeper tree spills into the heap.
+    class NodeStack
+    {
+    public:
+        void Push(int node)
+        {
+            if (Count < Fixed.size())
+            {
+                Fixed[Count++] = node;
+            }
+            else
+            {
+                Spilled.push_back(node);
+            }
+        }
+
+        int Pop()
+        {
+            if (!Spilled.empty())
+            {
+                int node = Spilled.back();
+                Spilled.pop_back();
+                return node;
+            }
+            return Fixed[--Count];
+        }
+
+        bool IsEmpty() const { return Count == 0 && Spilled.empty(); }
+
+    private:
+        std::array<int, 128> Fixed {};
+        std::size_t Count = 0;
+        std::vector<int> Spilled;
+    };
+
     // A balanced tree of boxes around bodies, for finding the bodies near a box
     // or along a ray without testing every one. Each body's box is made larger
     // than the body, so small moves leave the tree alone.
@@ -30,11 +69,11 @@ namespace easyforge::internal::physics2d
             {
                 return;
             }
-            std::vector<int> stack { Root };
-            while (!stack.empty())
+            NodeStack stack;
+            stack.Push(Root);
+            while (!stack.IsEmpty())
             {
-                int index = stack.back();
-                stack.pop_back();
+                int index = stack.Pop();
                 const Node& node = Nodes[static_cast<std::size_t>(index)];
                 if (!node.Box.Overlaps(extent))
                 {
@@ -48,8 +87,8 @@ namespace easyforge::internal::physics2d
                     }
                     continue;
                 }
-                stack.push_back(node.First);
-                stack.push_back(node.Second);
+                stack.Push(node.First);
+                stack.Push(node.Second);
             }
         }
 
@@ -64,11 +103,11 @@ namespace easyforge::internal::physics2d
             {
                 return;
             }
-            std::vector<int> stack { Root };
-            while (!stack.empty())
+            NodeStack stack;
+            stack.Push(Root);
+            while (!stack.IsEmpty())
             {
-                int index = stack.back();
-                stack.pop_back();
+                int index = stack.Pop();
                 const Node& node = Nodes[static_cast<std::size_t>(index)];
                 if (!SegmentTouches(node.Box.Grown(grow), origin, translation, fraction))
                 {
@@ -83,8 +122,8 @@ namespace easyforge::internal::physics2d
                     }
                     continue;
                 }
-                stack.push_back(node.First);
-                stack.push_back(node.Second);
+                stack.Push(node.First);
+                stack.Push(node.Second);
             }
         }
 

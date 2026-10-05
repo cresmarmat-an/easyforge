@@ -15,6 +15,7 @@
 #include <easyforge/core/Keys.h>
 #include <easyforge/core/Log.h>
 #include <easyforge/core/Matrix.h>
+#include <easyforge/core/Paths.h>
 #include <easyforge/core/Property.h>
 #include <easyforge/core/Quaternion.h>
 #include <easyforge/core/Random.h>

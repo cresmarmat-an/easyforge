@@ -35,6 +35,10 @@ namespace easyforge
         // being dragged, the world falls behind a little instead of the program
         // spending ever longer catching up.
         int MaximumStepsPerUpdate = 8;
+
+        // Lets bodies that have been still for half a second sleep until
+        // something wakes them.
+        bool AllowSleep = true;
     };
 
     // A world of 2D bodies that collide, rest on each other, and are joined
@@ -109,6 +113,7 @@ namespace easyforge
         Property<int> Substeps;
         Property<float> StepSeconds;
         Property<int> MaximumStepsPerUpdate;
+        Property<bool> AllowSleep;
 
     private:
         explicit Physics2D(std::shared_ptr<internal::WorldState2D> state);

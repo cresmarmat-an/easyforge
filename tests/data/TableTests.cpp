@@ -1,5 +1,8 @@
 #include <algorithm>
+#include <filesystem>
+#include <string>
 
+#include <easyforge/core/Paths.h>
 #include <easyforge/core/Testing.h>
 #include <easyforge/data.h>
 
@@ -229,4 +232,18 @@ EASYFORGE_TEST(EmptyTablesTestFalse)
     EASYFORGE_EXPECT(!nothing);
     EASYFORGE_EXPECT(!nothing.Add("Player"));
     EASYFORGE_EXPECT(!Node());
+}
+
+EASYFORGE_TEST(TablesSaveAndLoadInFoldersNamedInAnyLanguage)
+{
+    std::filesystem::path folder = PathFromText(std::string(EASYFORGE_TEST_OUTPUT) + "Café 文字 κείμενο");
+    std::error_code error;
+    std::filesystem::create_directories(folder, error);
+    std::string path = TextFromPath(folder / PathFromText("partie ✓.tree"));
+    Table table = Table::New();
+    table.Add("Joueur")["Nom"] = "Zoë";
+    EASYFORGE_REQUIRE(table.Save(path));
+    Table loaded = Table::Load(path);
+    EASYFORGE_REQUIRE(loaded);
+    EASYFORGE_EXPECT_EQUAL(loaded.ToText(), table.ToText());
 }

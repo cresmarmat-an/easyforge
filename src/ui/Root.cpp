@@ -5,6 +5,7 @@
 #include <filesystem>
 
 #include <easyforge/core/Log.h>
+#include <easyforge/core/Paths.h>
 
 #include "Drawing.h"
 #include "Properties.h"
@@ -215,7 +216,7 @@ namespace easyforge::ui::internal
             for (const std::string& path : candidates)
             {
                 std::error_code error;
-                if (std::filesystem::exists(path, error))
+                if (std::filesystem::exists(PathFromText(path), error))
                 {
                     easyforge::Font loaded = easyforge::Font::Load(path);
                     if (loaded)
