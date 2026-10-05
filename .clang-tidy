@@ -1,0 +1,28 @@
+# Checks for easyforge's own code: mistakes that compile but are wrong, work
+# that is slower than it needs to be, and misuse of threads. Style is left to
+# the code itself. The repository's checks run these on every change.
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  -bugprone-implicit-widening-of-multiplication-result,
+  -bugprone-switch-missing-default-case,
+  concurrency-*,
+  performance-*,
+  -performance-enum-size,
+  clang-analyzer-*,
+  -clang-analyzer-optin.*,
+  misc-redundant-expression,
+  misc-misplaced-const,
+  misc-unconventional-assign-operator,
+  cppcoreguidelines-slicing,
+  cppcoreguidelines-virtual-class-destructor
+
+# Findings are reported; they do not yet fail the build.
+WarningsAsErrors: ''
+
+# Only easyforge's own headers, not the system's or the platform SDKs'.
+HeaderFilterRegex: '.*[/\\](include|src)[/\\]easyforge.*|.*[/\\]src[/\\].*'
+
+FormatStyle: none

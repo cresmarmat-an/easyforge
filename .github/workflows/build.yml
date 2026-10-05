@@ -35,6 +35,68 @@ jobs:
       - name: Test
         run: ctest --test-dir build -C Debug --output-on-failure --timeout 1800
 
+  clang:
+    # Every library built and tested with Clang as well, through Visual
+    # Studio's ClangCL toolset, which warns about things MSVC lets pass.
+    name: Every library with Clang
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Configure
+        run: cmake -S . -B build -T ClangCL
+      - name: Build
+        run: cmake --build build --config Debug --parallel
+      - name: Test
+        run: ctest --test-dir build -C Debug --output-on-failure --timeout 1200
+
+  analysis:
+    # clang-tidy's checks from .clang-tidy over every source file: mistakes
+    # that compile but are wrong, slow code, and misuse of threads.
+    name: Static analysis
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Configure
+        run: >
+          cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Debug
+          -D CMAKE_C_COMPILER=clang-cl -D CMAKE_CXX_COMPILER=clang-cl
+          -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Build
+        # Makes the generated headers and shaders the sources include.
+        run: cmake --build build
+      - name: Analyze
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem src -Recurse -Include *.cpp | ForEach-Object { $_.FullName }
+          clang-tidy -p build --quiet $files
+
+  coverage:
+    # Which lines the tests run, as a report to download from the run.
+    name: Test coverage
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install OpenCppCoverage
+        run: choco install opencppcoverage -y --no-progress
+      - name: Configure
+        run: cmake -S . -B build
+      - name: Build
+        run: cmake --build build --config Debug --parallel
+      - name: Measure
+        shell: pwsh
+        run: >
+          & "C:\Program Files\OpenCppCoverage\OpenCppCoverage.exe"
+          --sources "$PWD\src" --sources "$PWD\include" --cover_children
+          --export_type cobertura:coverage.xml --export_type html:coverage
+          -- ctest --test-dir build -C Debug --timeout 1800
+      - uses: actions/upload-artifact@v5
+        with:
+          name: coverage
+          path: |
+            coverage.xml
+            coverage
+
   alone:
     # Each library built with only the libraries it depends on, which is how
     # someone using just that library gets it.

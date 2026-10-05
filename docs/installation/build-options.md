@@ -62,6 +62,21 @@ Besides each library's tests, three checks run:
 - **library-includes** fails if a library's code includes a header of a library
   it does not depend on.
 
+## What the repository checks on every change
+
+| Check | What it does |
+|---|---|
+| Every library | Builds and tests everything with Visual Studio, in Debug and in Release |
+| With Clang | The same with Clang, through Visual Studio's ClangCL toolset |
+| With AddressSanitizer | Every test again with `EASYFORGE_SANITIZE` ([checking memory](#checking-memory)) |
+| Each library alone | Each library built and tested with only what it depends on ([one library](#building-one-library)) |
+| Static analysis | clang-tidy over every source file, with the checks in `.clang-tidy`: mistakes that compile but are wrong, slow code, and misuse of threads |
+| Test coverage | Which lines the tests run, as a report each run keeps for download |
+
+Warnings are errors in every build of easyforge's own code. The analysis
+reports what it finds without failing the build, until its first findings
+are worked through.
+
 ## Checking memory
 
 ```bash
