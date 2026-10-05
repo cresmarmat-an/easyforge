@@ -264,6 +264,7 @@ namespace easyforge::internal::networking
             packets.push_back(std::move(packet));
             LastSent = now;
             ReceivedSinceSent = 0;
+            GapSeen = false;
             ackDue = false;
             keepAliveDue = false;
         }
@@ -272,19 +273,19 @@ namespace easyforge::internal::networking
         UnreliableQueue.clear();
     }
 
-    void Peer::NoteReceived(std::uint16_t sequence)
+    bool Peer::NoteReceived(std::uint16_t sequence)
     {
         if (!ReceivedAny)
         {
             ReceivedAny = true;
             NewestReceived = sequence;
             ReceivedBits = 0;
-            return;
+            return false;
         }
         std::uint16_t ahead = Ahead(NewestReceived, sequence);
         if (ahead == 0)
         {
-            return;
+            return false;
         }
         if (ahead < 32768)
         {
@@ -298,13 +299,14 @@ namespace easyforge::internal::networking
                 ReceivedBits = ahead == 32 ? 1u << 31 : 0;
             }
             NewestReceived = sequence;
-            return;
+            return ahead > 1;
         }
         std::uint16_t behind = Ahead(sequence, NewestReceived);
         if (behind <= 32)
         {
             ReceivedBits |= 1u << (behind - 1);
         }
+        return true;
     }
 
     void Peer::Acknowledge(double now, std::uint16_t sequence, bool newest)
@@ -377,7 +379,7 @@ namespace easyforge::internal::networking
         double late = LossTimeShare * roundTrip + AckDelaySeconds;
         // With nothing after it acknowledged either, a packet is given up on
         // after twice as long, as when every packet of a burst was lost.
-        double gone = std::max(2.0 * late, 2.0 * MinimumResendSeconds);
+        double gone = 2.0 * late;
         while (!Outstanding.empty())
         {
             std::uint16_t sequence = Outstanding.front();
@@ -435,10 +437,11 @@ namespace easyforge::internal::networking
         PacketSentAt = StampedTime(now, stamp);
 
         LastHeard = now;
-        NoteReceived(sequence);
+        bool outOfOrder = NoteReceived(sequence);
         if (keepAlive || !reader.IsAtEnd())
         {
             ++ReceivedSinceSent;
+            GapSeen = GapSeen || outOfOrder;
         }
 
         Acknowledge(now, newest, true);

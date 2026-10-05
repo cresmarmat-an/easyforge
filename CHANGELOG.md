@@ -76,7 +76,8 @@
   bounds tree queries no longer allocate at all.
 - Connections send as fast as the path to the other end carries, found with
   congestion control after TCP's NewReno and QUIC, instead of at most 1 MB a
-  second; packets found lost have their messages sent again at once.
+  second; packets found lost have their messages sent again at once, and a
+  packet that arrives out of order is acknowledged at once.
 - Packets carry the sender's clock. The wire format's revision marker is now
   `EFN2`, so programs built with 0.0.1 cannot talk to programs built with this
   change.

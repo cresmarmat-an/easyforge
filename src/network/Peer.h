@@ -54,7 +54,10 @@ namespace easyforge::internal::networking
 
         // True when enough packets arrived since the last one sent that the
         // other end should hear about them now.
-        bool AckOverdue() const { return ReceivedSinceSent >= PacketsBeforeAck; }
+        bool AckOverdue() const
+        {
+            return ReceivedSinceSent >= PacketsBeforeAck || (ReceivedSinceSent > 0 && GapSeen);
+        }
 
         double LastReceived() const { return LastHeard; }
 
@@ -139,7 +142,8 @@ namespace easyforge::internal::networking
         void FindLosses(double now);
         void Lose(double now, PacketRecord& record);
         Piece* FindPiece(std::uint8_t channel, std::uint16_t identifier);
-        void NoteReceived(std::uint16_t sequence);
+        // Returns whether the packet came out of order: after a gap, or into one.
+        bool NoteReceived(std::uint16_t sequence);
         void ReceiveOrdered(Piece piece, std::vector<DeliveredMessage>& delivered);
         void ReceiveUnordered(Piece piece, std::vector<DeliveredMessage>& delivered);
         void WriteHeader(std::vector<std::uint8_t>& packet, std::uint64_t token, std::uint16_t sequence, double now) const;
@@ -171,6 +175,11 @@ namespace easyforge::internal::networking
         double LastSent = -1.0;
         double LastAsked = -1.0;
         int ReceivedSinceSent = 0;
+
+        // A packet with messages came out of order since the last
+        // acknowledgement, so the sender should hear of the gap at once, as
+        // TCP and QUIC do.
+        bool GapSeen = false;
 
         // Receiving.
         std::uint16_t NewestReceived = 0;

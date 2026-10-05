@@ -51,7 +51,8 @@ kept small enough that networks rarely have to split them.
 Every packet carries a number and says which of the other end's last 33
 packets arrived. The receiver answers every second packet with messages at
 once, and any other within 8 milliseconds, often in a packet it was sending
-anyway. A packet counts as lost once three packets sent after it have arrived,
+anyway; a packet that arrives out of order is answered at once, so the sender
+hears of the gap before the next one. A packet counts as lost once three packets sent after it have arrived,
 or once it is later than a round trip after a later one arrived, and the
 reliable messages it carried are sent again at once. Any reliable message not
 acknowledged in about one and a half round trips is sent again too. The
