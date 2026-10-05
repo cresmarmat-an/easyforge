@@ -30,6 +30,9 @@ Every image, whatever its file format, becomes the same thing in memory:
 
 Colors are sRGB, as the file stored them. Alpha is straight, not premultiplied.
 
+Wherever an `ImageData` is expected, such as a window's `Icon`, a path works
+too: `ImageData` can be made from one, which is the same as `Load`.
+
 To make an image yourself:
 
 ```cpp

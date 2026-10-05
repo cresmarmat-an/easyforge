@@ -5,4 +5,8 @@ namespace easyforge::internal
     void WriteToDebugger(std::string_view)
     {
     }
+
+    void StopErrorDialogs()
+    {
+    }
 }

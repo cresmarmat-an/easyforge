@@ -23,24 +23,20 @@ namespace easyforge
             return *static_cast<const WindowState*>(owner);
         }
 
-        void ApplyIcon(WindowState& state)
+        // An empty image goes back to the program's own icon; one that failed to
+        // load changes nothing.
+        void ApplyIcon(WindowState& state, const ImageData& image)
         {
-            if (!state.Platform)
-            {
-                return;
-            }
-            if (state.IconPath.empty())
-            {
-                state.Platform->SetIcon(ImageData());
-                return;
-            }
-            ImageData image = ImageData::Load(state.IconPath);
-            if (!image)
+            if (!image && !image.Error().empty())
             {
                 Log(LogLevel::Warning, "The window icon was not changed: {}", image.Error());
                 return;
             }
-            state.Platform->SetIcon(image);
+            state.IconImage = image;
+            if (state.Platform)
+            {
+                state.Platform->SetIcon(image);
+            }
         }
 
         Vector2 CurrentSize(const WindowState& state)
@@ -81,7 +77,7 @@ namespace easyforge
             return Window(state);
         }
 
-        ApplyIcon(*state);
+        ApplyIcon(*state, settings.Icon);
         state->Platform->SetBackground(state->Background);
         if (settings.Fullscreen)
         {
@@ -102,8 +98,10 @@ namespace easyforge
     {
         // One round of the loop. With `skipIdle`, a window runs a frame only when
         // it needs one, and while none does the round first waits until one
-        // does: for input, a request, or the time a view asked for.
-        void RunRound(bool skipIdle)
+        // does: for input, a request, or the time a view asked for. The wait
+        // also ends when `running`, the window Run was called on, closes, so Run
+        // returns even while other windows wait.
+        void RunRound(bool skipIdle, const WindowState* running = nullptr)
         {
             std::vector<std::shared_ptr<WindowState>>& open = internal::OpenWindows();
             auto due = [skipIdle](const WindowState& window) { return !skipIdle || window.SecondsUntilFrame() <= 0.0f; };
@@ -112,6 +110,10 @@ namespace easyforge
                 internal::HandlePlatformMessages();
                 while (!open.empty())
                 {
+                    if (running && !running->IsOpen())
+                    {
+                        return;
+                    }
                     float wait = std::numeric_limits<float>::infinity();
                     for (const std::shared_ptr<WindowState>& window : open)
                     {
@@ -224,12 +226,8 @@ namespace easyforge
                   }
               }),
           Icon(state.get(),
-              [](const void* owner) { return StateOf(owner).IconPath; },
-              [](void* owner, const std::string& value) {
-                  WindowState& state = StateOf(owner);
-                  state.IconPath = value;
-                  ApplyIcon(state);
-              }),
+              [](const void* owner) { return StateOf(owner).IconImage; },
+              [](void* owner, const ImageData& value) { ApplyIcon(StateOf(owner), value); }),
           Width(state.get(),
               [](const void* owner) { return CurrentSize(StateOf(owner)).X; },
               [](void* owner, const float& value) {
@@ -414,7 +412,7 @@ namespace easyforge
         std::shared_ptr<WindowState> state = State;
         while (state->IsOpen())
         {
-            RunRound(true);
+            RunRound(true, state.get());
         }
     }
 
@@ -488,10 +486,7 @@ namespace easyforge
 
     void Window::SetIcon(const ImageData& image) const
     {
-        if (State->Platform && image)
-        {
-            State->Platform->SetIcon(image);
-        }
+        ApplyIcon(*State, image);
     }
 
     void Window::SetCursorImage(const ImageData& image, Vector2 hotSpot) const

@@ -4,6 +4,8 @@
 #include <string>
 #include <type_traits>
 
+#include <easyforge/core/Scalar.h>
+
 namespace easyforge
 {
     // Runs every test written with EASYFORGE_TEST and returns 0 when all pass,
@@ -39,6 +41,37 @@ namespace easyforge
                 return "(a value that cannot be printed)";
             }
         }
+
+        // The checks behind EASYFORGE_EXPECT_EQUAL and EASYFORGE_EXPECT_NEAR. The
+        // values are parameters, so a temporary they come from, such as the
+        // vector in `body.Position.Get().Y`, lives until the check is done.
+        template <typename Actual, typename Expected>
+        bool CheckEqual(const char* file, int line, const char* actualText, const char* expectedText,
+            const Actual& actual, const Expected& expected)
+        {
+            if (actual == expected)
+            {
+                return true;
+            }
+            ReportFailure(file, line,
+                std::string("expected ") + actualText + " to equal " + expectedText + ", but it was " + Describe(actual) +
+                    " instead of " + Describe(expected));
+            return false;
+        }
+
+        template <typename Actual, typename Expected, typename Tolerance>
+        bool CheckNear(const char* file, int line, const char* actualText, const char* expectedText, const Actual& actual,
+            const Expected& expected, const Tolerance& tolerance)
+        {
+            if (NearlyEqual(actual, expected, tolerance))
+            {
+                return true;
+            }
+            ReportFailure(file, line,
+                std::string("expected ") + actualText + " to be near " + expectedText + ", but it was " +
+                    Describe(actual) + " instead of " + Describe(expected));
+            return false;
+        }
     }
 }
 
@@ -65,35 +98,13 @@ namespace easyforge
     } while (false)
 
 // Records a failure when the two are not equal, showing both values when it can.
-#define EASYFORGE_EXPECT_EQUAL(actual, expected)                                                                  \
-    do                                                                                                            \
-    {                                                                                                             \
-        const auto& easyforgeActual = (actual);                                                                   \
-        const auto& easyforgeExpected = (expected);                                                               \
-        if (!(easyforgeActual == easyforgeExpected))                                                              \
-        {                                                                                                         \
-            ::easyforge::testing::ReportFailure(__FILE__, __LINE__,                                               \
-                "expected " #actual " to equal " #expected ", but it was " +                                      \
-                    ::easyforge::testing::Describe(easyforgeActual) + " instead of " +                            \
-                    ::easyforge::testing::Describe(easyforgeExpected));                                           \
-        }                                                                                                         \
-    } while (false)
+#define EASYFORGE_EXPECT_EQUAL(actual, expected) \
+    ((void)::easyforge::testing::CheckEqual(__FILE__, __LINE__, #actual, #expected, (actual), (expected)))
 
 // Records a failure unless NearlyEqual(actual, expected, tolerance) is true.
 // Works with numbers, vectors, quaternions, matrices, and colors.
-#define EASYFORGE_EXPECT_NEAR(actual, expected, tolerance)                                                        \
-    do                                                                                                            \
-    {                                                                                                             \
-        const auto& easyforgeActual = (actual);                                                                   \
-        const auto& easyforgeExpected = (expected);                                                               \
-        if (!::easyforge::NearlyEqual(easyforgeActual, easyforgeExpected, (tolerance)))                           \
-        {                                                                                                         \
-            ::easyforge::testing::ReportFailure(__FILE__, __LINE__,                                               \
-                "expected " #actual " to be near " #expected ", but it was " +                                    \
-                    ::easyforge::testing::Describe(easyforgeActual) + " instead of " +                            \
-                    ::easyforge::testing::Describe(easyforgeExpected));                                           \
-        }                                                                                                         \
-    } while (false)
+#define EASYFORGE_EXPECT_NEAR(actual, expected, tolerance) \
+    ((void)::easyforge::testing::CheckNear(__FILE__, __LINE__, #actual, #expected, (actual), (expected), (tolerance)))
 
 // Records a failure and ends the test when `condition` is false. Use it when the
 // rest of the test cannot run, for example before reading a failed Result.

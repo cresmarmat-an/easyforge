@@ -9,6 +9,7 @@ configuring, or with `set()` before `FetchContent_MakeAvailable`.
 | `EASYFORGE_INSTALL` | `ON` when easyforge is built on its own, `OFF` when fetched | Adds the rules `cmake --install` uses |
 | `EASYFORGE_ONLY` | empty | Builds one library and the libraries it depends on |
 | `EASYFORGE_SANITIZE` | `OFF` | Builds everything with AddressSanitizer, so the tests catch memory errors |
+| `EASYFORGE_BUILD_BENCHMARKS` | `OFF` | Builds `easyforge-benchmarks`, a program that times the libraries' heavy work ([measuring speed](#measuring-speed)) |
 | `EASYFORGE_BUILD_CORE` | `ON` | Builds the `core` library |
 | `EASYFORGE_BUILD_ASSETS` | `ON` | Builds the `assets` library |
 | `EASYFORGE_BUILD_WINDOW` | `ON` | Builds the `window` library, on platforms it supports |
@@ -73,13 +74,30 @@ ctest --test-dir build-sanitized -C Debug --output-on-failure
 stops a test at the first read or write outside memory it owns, use of freed
 memory, or similar mistake, and says where. The repository's checks run every
 test this way on every change. Programs built this way run a few times slower,
-so it is for testing, not for programs people use.
+so it is for testing, not for programs people use. With Visual Studio, the
+sanitizer's runtime DLL is copied next to every program built, so they start
+from any prompt.
 
 The tests also feed every reader damaged input: images, sounds, fonts, models,
 compressed data, `.tree` files, values, scripts, shaders, network messages,
 and packets damaged, made up, or repeated on their way between a client and a
 server. Each reader must turn it away with an error, or read something it can
 write back the same way, without crashing or hanging.
+
+## Measuring speed
+
+```bash
+cmake -S . -B build -D EASYFORGE_BUILD_BENCHMARKS=ON
+cmake --build build --config Release --target easyforge-benchmarks
+build/tests/benchmarks/Release/easyforge-benchmarks
+```
+
+`easyforge-benchmarks` times heavy work in each library that was built: 2,000
+physics bodies, 10,000 table nodes, script loops and calls, 50,000 shapes on a
+canvas, an interface of 5,000 elements, and network messages through lost
+packets. It prints the median time of many runs, with the fastest and slowest.
+Give it a name, such as `Physics`, to run only the benchmarks whose name
+contains it. Times from a debug build say little, so build it in Release.
 
 ## Warnings
 

@@ -103,9 +103,9 @@ EASYFORGE_TEST(WindowPropertiesChangeTheWindow)
     EASYFORGE_EXPECT(window.Cursor == Cursor::Hand);
     window.VerticalSync = false;
     EASYFORGE_EXPECT(!window.VerticalSync);
+    // A file that cannot be read leaves the icon as it was.
     window.Icon = "a file that does not exist.png";
-    std::string icon = window.Icon;
-    EASYFORGE_EXPECT_EQUAL(icon, std::string("a file that does not exist.png"));
+    EASYFORGE_EXPECT(!window.Icon.Get());
     window.Close();
 }
 
@@ -338,10 +338,36 @@ EASYFORGE_TEST(WindowIconFromFileAndFromProgram)
     }
     withIcon.SetIcon(red);
     EASYFORGE_EXPECT(SendMessageW(HandleOf(withIcon), WM_GETICON, ICON_BIG, 0) != reinterpret_cast<LRESULT>(icon));
+    EASYFORGE_EXPECT_EQUAL(withIcon.Icon.Get().Width, 8);
     withIcon.SetCursorImage(red, { 4, 4 });
 
     plain.Close();
     withIcon.Close();
+}
+
+EASYFORGE_TEST(WindowIconsAreImagesLoadedAnywhere)
+{
+    // An image loaded once can be given to settings and properties, and kept
+    // in a variable like any other value.
+    ImageData loaded = ImageData::Load(EASYFORGE_TEST_ICON);
+    EASYFORGE_REQUIRE(loaded);
+    Window first = Window::New({ .Icon = loaded, .Visible = false });
+    Window second = Window::New({ .Icon = ImageData::Load(EASYFORGE_TEST_ICON), .Visible = false });
+    EASYFORGE_EXPECT_EQUAL(first.Icon.Get().Width, loaded.Width);
+    EASYFORGE_EXPECT_EQUAL(second.Icon.Get().Width, loaded.Width);
+    EASYFORGE_EXPECT(SendMessageW(HandleOf(first), WM_GETICON, ICON_BIG, 0) != 0);
+
+    // A path works the same way, and an empty image goes back to the
+    // program's own icon.
+    auto fromFile = reinterpret_cast<HICON>(SendMessageW(HandleOf(second), WM_GETICON, ICON_BIG, 0));
+    second.Icon = ImageData();
+    EASYFORGE_EXPECT(!second.Icon.Get());
+    EASYFORGE_EXPECT(SendMessageW(HandleOf(second), WM_GETICON, ICON_BIG, 0) != reinterpret_cast<LRESULT>(fromFile));
+    second.Icon = EASYFORGE_TEST_ICON;
+    EASYFORGE_EXPECT_EQUAL(second.Icon.Get().Width, loaded.Width);
+
+    first.Close();
+    second.Close();
 }
 
 EASYFORGE_TEST(WindowScaleChangeKeepsPoints)

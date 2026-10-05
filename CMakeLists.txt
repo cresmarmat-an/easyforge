@@ -29,6 +29,7 @@ option(EASYFORGE_INSTALL "Add the rules that install easyforge" ${PROJECT_IS_TOP
 set(EASYFORGE_ONLY "" CACHE STRING
     "Build only this library and the libraries it depends on, for example 'network'")
 option(EASYFORGE_SANITIZE "Build with AddressSanitizer, so the tests catch memory errors" OFF)
+option(EASYFORGE_BUILD_BENCHMARKS "Build the programs that time the libraries' heavy work" OFF)
 
 if(EASYFORGE_SANITIZE)
     if(MSVC)
@@ -62,6 +63,48 @@ endforeach()
 if(EASYFORGE_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+if(EASYFORGE_BUILD_BENCHMARKS)
+    add_subdirectory(tests/benchmarks)
+endif()
+
+# MSVC's sanitizer runtime is a DLL next to the compiler, which is on the PATH
+# only in a developer prompt. A copy next to every program lets the tests and
+# tools start from anywhere; without it they cannot start at all.
+if(EASYFORGE_SANITIZE AND MSVC)
+    get_filename_component(compiler_folder "${CMAKE_CXX_COMPILER}" DIRECTORY)
+    file(GLOB sanitizer_runtimes "${compiler_folder}/clang_rt.asan*_dynamic-x86_64.dll")
+    if(NOT sanitizer_runtimes)
+        message(WARNING "The sanitizer runtime was not found next to ${CMAKE_CXX_COMPILER}")
+    endif()
+    # Adds the programs made in `directory` and below it to the list named `into`.
+    function(easyforge_find_programs directory into)
+        set(found ${${into}})
+        get_property(targets DIRECTORY "${directory}" PROPERTY BUILDSYSTEM_TARGETS)
+        foreach(target IN LISTS targets)
+            get_target_property(type ${target} TYPE)
+            if(type STREQUAL "EXECUTABLE")
+                list(APPEND found ${target})
+            endif()
+        endforeach()
+        get_property(folders DIRECTORY "${directory}" PROPERTY SUBDIRECTORIES)
+        foreach(folder IN LISTS folders)
+            easyforge_find_programs("${folder}" found)
+        endforeach()
+        set(${into} ${found} PARENT_SCOPE)
+    endfunction()
+    set(sanitized_programs)
+    easyforge_find_programs("${PROJECT_SOURCE_DIR}" sanitized_programs)
+    set(copies)
+    foreach(program IN LISTS sanitized_programs)
+        list(APPEND copies
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${program}>"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${sanitizer_runtimes} "$<TARGET_FILE_DIR:${program}>")
+    endforeach()
+    if(sanitized_programs AND sanitizer_runtimes)
+        add_custom_target(easyforge_sanitizer_runtime ALL ${copies} VERBATIM)
+    endif()
 endif()
 
 easyforge_install_package()

@@ -85,7 +85,7 @@ namespace easyforge::internal
         FramePacer* Pacer = nullptr;
         bool MouseLocked = false;
         std::string Title;
-        std::string IconPath;
+        ImageData IconImage;
         Vector2 MinimumSize;
         bool Resizable = true;
         bool AlwaysOnTop = false;

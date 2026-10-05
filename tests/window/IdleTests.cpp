@@ -216,4 +216,29 @@ EASYFORGE_TEST(RunOneFrameAlwaysRunsAFrame)
     window.Content = view;
     testwindows::Pump(5);
     EASYFORGE_EXPECT_EQUAL(view->Deltas.size(), std::size_t { 5 });
+    window.Close();
+}
+
+EASYFORGE_TEST(RunReturnsWhenItsWindowClosesWhileAnotherWaits)
+{
+    // A second window with nothing to do waits for input; closing the first
+    // must still end Run instead of waiting along with it.
+    Window other = NewHidden();
+    Window window = NewHidden();
+    int frames = 0;
+    window.OnFrame = [&](float) {
+        if (++frames == 3)
+        {
+            PostMessageW(HandleOf(window), WM_CLOSE, 0, 0);
+        }
+    };
+    {
+        // Closing the other window would end a wait that never ends otherwise.
+        Deadline deadline(other, 5.0);
+        window.Run();
+        EASYFORGE_EXPECT(!deadline.Expired.load());
+    }
+    EASYFORGE_EXPECT(!window.IsOpen());
+    EASYFORGE_EXPECT(other.IsOpen());
+    other.Close();
 }

@@ -47,6 +47,13 @@ namespace easyforge
         // An image from pixels you already have; `pixels` must hold width * height * 4 bytes.
         ImageData(int width, int height, std::vector<std::uint8_t> pixels);
 
+        // The image in a file, the same as Load, so whatever takes an image can
+        // be given a path instead: `.Icon = "icon.png"`. An empty path gives an
+        // empty image.
+        ImageData(const char* path);
+        ImageData(const std::string& path);
+        ImageData(std::string_view path);
+
         static ImageData Load(std::string_view path);
 
         // Decodes an image from bytes in memory. `name` is used in error messages

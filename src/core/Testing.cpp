@@ -5,6 +5,8 @@
 #include <string_view>
 #include <vector>
 
+#include "DebuggerOutput.h"
+
 namespace easyforge
 {
     namespace
@@ -63,6 +65,7 @@ namespace easyforge
 
     int RunTests(int argumentCount, char** arguments)
     {
+        internal::StopErrorDialogs();
         std::vector<std::string_view> filters;
         bool listOnly = false;
         for (int index = 1; index < argumentCount; ++index)

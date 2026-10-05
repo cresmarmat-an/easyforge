@@ -33,6 +33,12 @@
 
 ### Changed
 
+- A window's `Icon`, in its settings and as a property, is an `ImageData`, so it
+  takes an image loaded anywhere as well as a path: `.Icon = icon` or
+  `.Icon = ImageData::Load("art/icon.png")`. An `ImageData` can be made from a
+  path, which is the same as `Load`.
+- `Window::Run` returns when its window closes even while another open window
+  waits with nothing to do.
 - `Window::Run` runs frames of a window without `OnFrame` only while something
   changes, and waits without using the processor in between. An interface that
   is still uses no processor time; `Window::RunOneFrame` still runs every frame.
@@ -50,6 +56,10 @@
   longer throws from inside the standard library; and making a pack from a
   folder with a subfolder that cannot be read fails with an error instead of
   throwing.
+- `RunTests` turns off the error dialogs of Windows and of the C++ library's
+  debug build, so a crashing test fails at once instead of waiting.
+- With `EASYFORGE_SANITIZE`, the sanitizer's runtime is copied next to every
+  program, so the sanitized tests start outside a developer prompt.
 - Physics steps allocate no memory once a world has settled into its size, and
   bounds tree queries no longer allocate at all.
 - Packets carry the sender's clock. The wire format's revision marker is now

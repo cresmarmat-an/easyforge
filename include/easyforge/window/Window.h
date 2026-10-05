@@ -31,9 +31,10 @@ namespace easyforge
     {
         std::string Title = "easyforge";
 
-        // An image file for the window's icon, shown in its title bar and the
-        // taskbar. Empty uses the icon built into the program, if it has one.
-        std::string Icon;
+        // The window's icon, shown in its title bar and the taskbar: the path of
+        // an image file, or an image loaded already. Empty uses the icon built
+        // into the program, if it has one.
+        ImageData Icon;
 
         // The size of the content, not counting the system's frame.
         float Width = 1280.0f;
@@ -150,6 +151,7 @@ namespace easyforge
         void SetTextInput(bool enabled, Rectangle caret = {}) const;
 
         // Sets the icon from an image in memory instead of a file.
+        // The same as assigning Icon.
         void SetIcon(const ImageData& image) const;
 
         // Shows the image as the mouse cursor, with `hotSpot` (in pixels of the
@@ -166,8 +168,9 @@ namespace easyforge
 
         Property<std::string> Title;
 
-        // An image file, as in WindowSettings.
-        Property<std::string> Icon;
+        // As in WindowSettings: a path or an image. An image that could not be
+        // loaded leaves the icon as it was, with a warning in the log.
+        Property<ImageData> Icon;
 
         // The content's size in points. Size sets both at once.
         Property<float> Width;

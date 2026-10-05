@@ -54,7 +54,7 @@ anything you do not need.
 | Setting | Default | Meaning |
 |---|---|---|
 | `Title` | `"easyforge"` | The text in the title bar and the taskbar |
-| `Icon` | empty | An image file for the window's icon; empty uses the program's own icon ([icons](icons-and-cursors.md)) |
+| `Icon` | empty | The window's icon: an image file's path, or an `ImageData` loaded already; empty uses the program's own icon ([icons](icons-and-cursors.md)) |
 | `Width`, `Height` | 1280, 720 | The size of the content in points, not counting the system's frame |
 | `MinimumWidth`, `MinimumHeight` | 0, 0 | The smallest the person can make the content |
 | `Position` | empty | The top left of the content in desktop pixels; empty centers the window on the primary screen |
@@ -99,7 +99,8 @@ if (window.Maximized)
 
 | Property | Type | Notes |
 |---|---|---|
-| `Title`, `Icon` | `std::string` | |
+| `Title` | `std::string` | |
+| `Icon` | `ImageData` | Takes a path too: `window.Icon = "icon.png"` |
 | `Width`, `Height` | `float` | The content's size in points |
 | `Size` | `Vector2` | Both at once, with one resize |
 | `MinimumWidth`, `MinimumHeight` | `float` | |
@@ -131,7 +132,7 @@ Other things a window can tell you or do:
 | `window.SystemColorScheme()` | `ColorScheme::Light` or `ColorScheme::Dark` |
 | `window.ClipboardText()`, `window.SetClipboardText(text)` | The system clipboard, as UTF-8 text |
 | `window.SetTextInput(enabled, caret)` | Turns input methods for Chinese, Japanese, and Korean on or off ([events](events.md#text)) |
-| `window.SetIcon(image)`, `window.SetCursorImage(image, hotSpot)` | Icons and cursors from images in memory |
+| `window.SetCursorImage(image, hotSpot)` | A cursor from an image in memory ([cursors](icons-and-cursors.md#cursors)) |
 | `window.NativeSurface()` | The platform's own window handle |
 | `window.IsTransparent()` | True for a window made with `Transparent` |
 

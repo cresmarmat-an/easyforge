@@ -57,6 +57,33 @@ replaces some of its files, searches the one mounted last first. Shipped
 programs can put the same folder into a pack with `Files::CreatePack` and
 mount that instead, without changing a single path.
 
+### Loading once, using anywhere
+
+Whatever takes a file's path also takes what was loaded from it. Load an asset
+where it suits the program, keep it in a variable, a member, or a table of
+your own, and hand it to settings and properties like any other value:
+
+```cpp
+ImageData icon = ImageData::Load("art/icons/notes.png");
+Font title = Font::Load("fonts/Title.ttf");
+Texture logo = Texture::Load("art/logo.png");
+Shader ripple = Shader::Load("effects/ripple.shader");
+
+Window window = Window::New({ .Title = "Notes", .Icon = icon });
+ui::Label heading("Notes", { .FontSize = 32, .Font = title });
+ui::Image picture(logo, { .Width = 64, .Height = 64, .Shader = ripple });
+```
+
+| Setting or property | Takes |
+|---|---|
+| A window's `Icon` | A path or an `ImageData` |
+| `Font` in ui settings and themes | A path or a `Font` |
+| `Shader` in ui settings | A path or a `Shader` |
+| `ui::Image`, `ui::Background::Image` | A path or a `Texture` |
+
+A loaded asset is checked once, where it was loaded, so a missing file shows
+up in one place: `if (!icon) { Log(icon.Error()); }`.
+
 ## Reading
 
 | Written | Result |

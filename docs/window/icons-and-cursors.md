@@ -6,24 +6,38 @@
 Window window = Window::New({ .Title = "Notes", .Icon = "icon.png" });
 ```
 
-`Icon` names an image file, read through [Files](../assets/files-and-packs.md)
-like any other, in any format `assets` reads. The window scales it to the sizes
-its title bar and the taskbar use, and again when the window moves to a screen
-with different scaling. A square image of at least 256 by 256 pixels looks best;
-an image that is not square is fitted and centered.
+`Icon` is an [ImageData](../assets/images.md): the path of an image file, read
+through [Files](../assets/files-and-packs.md) like any other, or an image
+loaded already, wherever and however the program keeps it:
 
-The icon can be changed at any time, from a file or from an image in memory:
+```cpp
+ImageData icon = ImageData::Load("art/icons/notes.png");
+
+Window main = Window::New({ .Title = "Notes", .Icon = icon });
+Window tools = Window::New({ .Title = "Tools", .Icon = icon });
+Window about = Window::New({ .Title = "About", .Icon = ImageData::Load("art/about.png") });
+```
+
+Any format `assets` reads works. The window scales the image to the sizes its
+title bar and the taskbar use, and again when the window moves to a screen with
+different scaling. A square image of at least 256 by 256 pixels looks best; an
+image that is not square is fitted and centered.
+
+The icon can be changed at any time, the same ways:
 
 ```cpp
 window.Icon = "icons/unsaved.png";
 
 ImageData badge = ImageData::Load("icon.png");
 badge.SetColorAt(0, 0, Color::Hex("#FF4040"));
-window.SetIcon(badge);
+window.Icon = badge;
+
+window.Icon = ImageData();   // back to the program's own icon
 ```
 
-If the file cannot be read, the window keeps its current icon and logs a
-warning.
+`window.Icon.Get()` gives the image shown. If an image could not be loaded,
+such as a file that does not exist, the window keeps its current icon and logs
+a warning. `window.SetIcon(image)` does the same as assigning `Icon`.
 
 ## The program's icon
 

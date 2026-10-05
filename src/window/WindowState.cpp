@@ -72,7 +72,6 @@ namespace easyforge::internal
     Result<> WindowState::Open(const WindowSettings& settings)
     {
         Title = settings.Title;
-        IconPath = settings.Icon;
         MinimumSize = { Max(settings.MinimumWidth, 0.0f), Max(settings.MinimumHeight, 0.0f) };
         Resizable = settings.Resizable;
         AlwaysOnTop = settings.AlwaysOnTop;

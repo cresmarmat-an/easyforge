@@ -40,6 +40,12 @@ enable_testing()
 add_test(NAME my_tests COMMAND my_tests)
 ```
 
+On Windows, `RunTests` first turns off the dialogs the system and the C++
+library open when something goes wrong: a crash, a missing DLL, or a failed
+check in a debug build print what happened and end the program instead. A test
+run on a build server then fails at once rather than waiting for someone to
+close a window.
+
 ## Writing tests
 
 | Written | What it does |

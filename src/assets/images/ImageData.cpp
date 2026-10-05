@@ -60,6 +60,22 @@ namespace easyforge
         }
     }
 
+    ImageData::ImageData(const char* path) : ImageData(std::string_view(path ? path : ""))
+    {
+    }
+
+    ImageData::ImageData(const std::string& path) : ImageData(std::string_view(path))
+    {
+    }
+
+    ImageData::ImageData(std::string_view path)
+    {
+        if (!path.empty())
+        {
+            *this = Load(path);
+        }
+    }
+
     ImageData ImageData::Load(std::string_view path)
     {
         Result<std::vector<std::uint8_t>> bytes = Files::Read(path);
