@@ -42,6 +42,9 @@
   path, which is the same as `Load`.
 - Interfaces skip drawing elements wholly outside what can show, such as rows
   scrolled out of view.
+- Drawing keeps its lists of shapes from frame to frame instead of growing new
+  ones, and text keeps how it was laid out, so recording 20,000 rectangles
+  went from 10.2 to 2.7 milliseconds and 2,000 lines of text from 21 to 11.
 - `Window::Run` returns when its window closes even while another open window
   waits with nothing to do.
 - `Window::Run` runs frames of a window without `OnFrame` only while something

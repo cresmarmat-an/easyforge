@@ -113,13 +113,36 @@ namespace easyforge
         return Shared->ErrorText;
     }
 
+    namespace internal
+    {
+        std::shared_ptr<const TextRun> FontState::Run(std::string_view text) const
+        {
+            std::scoped_lock lock(RunsMutex);
+            auto found = Runs.find(text);
+            if (found != Runs.end())
+            {
+                return found->second;
+            }
+            auto run = std::make_shared<TextRun>();
+            run->Size = LayOutText(Data, text, Data.Metrics().UnitsPerEm,
+                [&](int glyph, Vector2 pen) { run->Glyphs.emplace_back(glyph, pen); });
+            if (Runs.size() >= MostRuns)
+            {
+                Runs.clear();
+            }
+            Runs.emplace(std::string(text), run);
+            return run;
+        }
+    }
+
     Vector2 Font::Measure(std::string_view text, float size) const
     {
-        if (!Shared->Data || size <= 0.0f)
+        float unitsPerEm = Shared->Data ? Shared->Data.Metrics().UnitsPerEm : 0.0f;
+        if (unitsPerEm <= 0.0f || size <= 0.0f)
         {
             return {};
         }
-        return internal::LayOutText(Shared->Data, text, size, [](int, Vector2) {});
+        return Shared->Run(text)->Size * (size / unitsPerEm);
     }
 
     float Font::LineHeight(float size) const

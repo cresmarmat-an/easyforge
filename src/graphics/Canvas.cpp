@@ -23,7 +23,8 @@ namespace easyforge
             PixelSize = pixelSize;
             Scale = scale;
             Time = time;
-            Lists.assign(1, DrawList {});
+            ReleaseLists();
+            Lists.push_back(TakeList());
             Lists[0].Size = pixelSize;
             ListStack.assign(1, 0);
             FinishedLayers.clear();
@@ -32,6 +33,31 @@ namespace easyforge
             Used.clear();
             Transforms.assign(1, Placement {});
             Clips.assign(1, Rectangle { 0.0f, 0.0f, pixelSize.X, pixelSize.Y });
+        }
+
+        DrawList FrameRecorder::TakeList()
+        {
+            if (SpareLists.empty())
+            {
+                return {};
+            }
+            DrawList list = std::move(SpareLists.back());
+            SpareLists.pop_back();
+            return list;
+        }
+
+        void FrameRecorder::ReleaseLists()
+        {
+            for (DrawList& list : Lists)
+            {
+                list.Instances.clear();
+                list.Steps.clear();
+                list.Origin = {};
+                list.Size = {};
+                list.Target = nullptr;
+                SpareLists.push_back(std::move(list));
+            }
+            Lists.clear();
         }
 
         void FrameRecorder::Add(ShapeInstance instance, gpu::Texture* texture, gpu::Sampling sampling)
@@ -342,11 +368,20 @@ namespace easyforge
         float pixelsPerEm = style.Size * Recorder->PixelsPerPoint();
         Vector2 origin = Recorder->ToPixels(style.Position);
 
-        internal::LayOutText(state->Data, text, pixelsPerEm, [&](int glyph, Vector2 pen) {
+        float unitsPerEm = state->Data.Metrics().UnitsPerEm;
+        if (unitsPerEm <= 0.0f)
+        {
+            return;
+        }
+        float scale = pixelsPerEm / unitsPerEm;
+        std::shared_ptr<const internal::TextRun> run = state->Run(text);
+        for (const auto& [glyph, penInUnits] : run->Glyphs)
+        {
+            Vector2 pen = penInUnits * scale;
             const internal::GlyphPlacement& placement = atlas.Find(*state, glyph, pixelsPerEm);
             if (placement.Width <= 0)
             {
-                return;
+                continue;
             }
             // Glyphs sit on whole pixels, so they stay sharp.
             Vector2 corner { std::round(origin.X + pen.X) + static_cast<float>(placement.Left),
@@ -360,7 +395,7 @@ namespace easyforge
             instance.Coordinates[2] = static_cast<float>(placement.X + placement.Width) / page;
             instance.Coordinates[3] = static_cast<float>(placement.Y + placement.Height) / page;
             Recorder->Add(instance, atlas.Page(placement.Page), internal::gpu::Sampling::NearestClamp);
-        });
+        }
     }
 
     void Canvas::Draw(const Scene& scene) const
@@ -518,7 +553,7 @@ namespace easyforge
         int width = Max(static_cast<int>(pixels.Width), 1);
         int height = Max(static_cast<int>(pixels.Height), 1);
         std::size_t index = Recorder->Lists.size();
-        internal::DrawList list;
+        internal::DrawList list = Recorder->TakeList();
         list.Origin = pixels.Position();
         list.Size = { static_cast<float>(width), static_cast<float>(height) };
         list.Target = Recorder->Owner.LayerTarget(index - 1, width, height);

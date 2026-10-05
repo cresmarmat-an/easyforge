@@ -8,8 +8,12 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <string_view>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
+#include <easyforge/core/Vector.h>
 #include <easyforge/graphics/Font.h>
 #include <easyforge/graphics/Model.h>
 #include <easyforge/graphics/Scene.h>
@@ -93,12 +97,40 @@ namespace easyforge::internal
         std::map<std::uint64_t, DeviceCopy<gpu::Texture>> Copies;
     };
 
+    // A text laid out in its font's own units: each glyph with its pen position
+    // on the baseline, and the size of the whole. Any size is this times the
+    // size over the font's units per em.
+    struct TextRun
+    {
+        std::vector<std::pair<int, Vector2>> Glyphs;
+        Vector2 Size;
+    };
+
     class FontState
     {
     public:
         FontData Data;
         std::string ErrorText;
         std::uint64_t Identifier = 0;
+
+        // The text laid out, from the runs kept when it was laid out before.
+        // An interface draws and measures the same texts frame after frame,
+        // and this skips the font's tables for them. Safe from any thread.
+        std::shared_ptr<const TextRun> Run(std::string_view text) const;
+
+    private:
+        // Lookups by string_view without making a string.
+        struct TextHash
+        {
+            using is_transparent = void;
+            std::size_t operator()(std::string_view text) const { return std::hash<std::string_view> {}(text); }
+        };
+
+        // Forgotten all at once when there are more than this many.
+        static constexpr std::size_t MostRuns = 4096;
+
+        mutable std::mutex RunsMutex;
+        mutable std::unordered_map<std::string, std::shared_ptr<const TextRun>, TextHash, std::equal_to<>> Runs;
     };
 
     // Where a glyph at one size is in the atlas.
@@ -134,7 +166,21 @@ namespace easyforge::internal
             std::uint64_t Font = 0;
             int Glyph = 0;
             int Size = 0;
-            auto operator<=>(const Key&) const = default;
+            bool operator==(const Key&) const = default;
+        };
+
+        struct KeyHash
+        {
+            std::size_t operator()(const Key& key) const
+            {
+                std::uint64_t mixed = key.Font * 0x9E3779B97F4A7C15ull;
+                mixed ^= (static_cast<std::uint64_t>(static_cast<std::uint32_t>(key.Glyph)) << 32) |
+                         static_cast<std::uint32_t>(key.Size);
+                mixed ^= mixed >> 29;
+                mixed *= 0xBF58476D1CE4E5B9ull;
+                mixed ^= mixed >> 32;
+                return static_cast<std::size_t>(mixed);
+            }
         };
 
         std::shared_ptr<gpu::Device> Device;
@@ -142,7 +188,9 @@ namespace easyforge::internal
         int RowX = 0;
         int RowY = 0;
         int RowHeight = 0;
-        std::map<Key, GlyphPlacement> Glyphs;
+        // Looked up for every glyph drawn, so hashed rather than sorted. What
+        // Find returns stays where it is as the table grows.
+        std::unordered_map<Key, GlyphPlacement, KeyHash> Glyphs;
     };
 
     // What every renderer on one device shares.

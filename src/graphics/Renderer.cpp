@@ -535,7 +535,7 @@ namespace easyforge
             }
             if (TheHost && !TheHost->IsOpen())
             {
-                frame.Lists.clear();
+                frame.ReleaseLists();
                 frame.Scenes.clear();
                 frame.Used.clear();
                 return;
@@ -575,7 +575,7 @@ namespace easyforge
             DrawRecorded(commands, frame.Lists[0], target, Clear);
             Context->EndFrame(Surface.get(), TheHost ? TheHost->VerticalSync() : false);
 
-            frame.Lists.clear();
+            frame.ReleaseLists();
             frame.Scenes.clear();
             frame.Used.clear();
             ++FrameNumber;

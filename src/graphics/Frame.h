@@ -118,6 +118,13 @@ namespace easyforge::internal
 
         void Begin(Vector2 pixelSize, float scale, float time);
 
+        // An empty list, from the ones a past frame finished with when there
+        // are any, so their memory is used again instead of grown anew.
+        DrawList TakeList();
+
+        // Ends the frame's lists, keeping their memory for the next frame.
+        void ReleaseLists();
+
         // Adds a shape to the list being drawn, joining the last step when it uses
         // the same texture. Positions are in frame pixels.
         void Add(ShapeInstance instance, gpu::Texture* texture, gpu::Sampling sampling);
@@ -142,6 +149,7 @@ namespace easyforge::internal
 
         // The frame's list first, then each layer's.
         std::vector<DrawList> Lists;
+        std::vector<DrawList> SpareLists;
         std::vector<std::size_t> ListStack;
 
         // Layers in the order they ended, which draws each before anything that uses it.
