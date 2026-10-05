@@ -30,19 +30,34 @@ reliably and are put together at the other end. An unreliable message that
 large is sent as `ReliableUnordered`. A message is at most 4 MB; a larger one
 is not sent, and a warning is logged.
 
-## The send rate
+## How fast a connection sends
 
-Each connection sends at most 1 MB a second, and what does not fit waits for
-the next update. Unreliable messages that do not fit are dropped, as they may
-be. Packets are kept small enough that networks rarely have to split them.
+Each connection finds out how fast the path to the other end can carry data,
+and sends that fast and no faster, the way TCP and QUIC do. It keeps a window
+of bytes that may be on their way at once. The window starts at ten packets,
+doubles with every round trip while everything arrives, then grows by about a
+packet each round trip, and halves when a packet is lost, since a lost packet
+usually means the path is full. Packets in the window go out spread over the
+round trip rather than all at once.
+
+So a game that sends a few small messages a frame never waits, a large
+transfer over a fast network uses it, and a slow or crowded link is not
+flooded. What does not fit in the window waits for the next update.
+Unreliable messages that do not fit are dropped, as they may be. Packets are
+kept small enough that networks rarely have to split them.
 
 ## How it works
 
 Every packet carries a number and says which of the other end's last 33
-packets arrived. A reliable message is sent again when the packet carrying it
-is not acknowledged in about one and a half round trips. The receiver drops
-repeats and holds early arrivals until the gaps fill. A packet that carries
-nothing but acknowledgements is not acknowledged in turn, and a quiet connection
+packets arrived. The receiver answers every second packet with messages at
+once, and any other within 8 milliseconds, often in a packet it was sending
+anyway. A packet counts as lost once three packets sent after it have arrived,
+or once it is later than a round trip after a later one arrived, and the
+reliable messages it carried are sent again at once. Any reliable message not
+acknowledged in about one and a half round trips is sent again too. The
+receiver drops repeats and holds early arrivals until the gaps fill. A packet
+that carries nothing but acknowledgements is not acknowledged in turn, and a
+quiet connection
 sends a keep-alive four times a second, which the other end does answer, so
 silence means the other end is gone and the round trip stays measured.
 
@@ -80,6 +95,7 @@ between updates is rounded up to it.
 
 ## Limitations
 
-- There is no congestion control beyond the fixed send rate.
+- A packet lost to noise rather than a full path, such as on a poor wireless
+  link, halves the window too, as it does with TCP.
 - Unreliable messages are only compared by name, not by connection order with
   reliable ones.

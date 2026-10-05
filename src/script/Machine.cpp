@@ -355,7 +355,7 @@ namespace easyforge::internal::scripting
                 if (IsKind(left, ObjectKind::Text) && IsKind(right, ObjectKind::Text))
                 {
                     std::string joined = As<TextObject>(left)->Text + As<TextObject>(right)->Text;
-                    registers[instruction.A] = Value::Of(static_cast<Object*>(Engine.TheHeap.Text(joined)));
+                    registers[instruction.A] = Value::Of(static_cast<Object*>(Engine.TheHeap.TakeText(std::move(joined))));
                     break;
                 }
                 bool mixed = (IsKind(left, ObjectKind::Text) && right.IsNumber()) ||
@@ -490,12 +490,29 @@ namespace easyforge::internal::scripting
                 break;
             case Operation::BuildText:
             {
-                std::string joined;
+                // Texts are appended where they are, and the result is made the
+                // right size once, so building a long text copies it only once.
+                std::size_t size = 0;
                 for (int index = 0; index < instruction.C; ++index)
                 {
-                    joined += Engine.Display(registers[instruction.B + index]);
+                    const Value& part = registers[instruction.B + index];
+                    size += IsKind(part, ObjectKind::Text) ? As<TextObject>(part)->Text.size() : 24;
                 }
-                registers[instruction.A] = Value::Of(static_cast<Object*>(Engine.TheHeap.Text(joined)));
+                std::string joined;
+                joined.reserve(size);
+                for (int index = 0; index < instruction.C; ++index)
+                {
+                    const Value& part = registers[instruction.B + index];
+                    if (IsKind(part, ObjectKind::Text))
+                    {
+                        joined += As<TextObject>(part)->Text;
+                    }
+                    else
+                    {
+                        joined += Engine.Display(part);
+                    }
+                }
+                registers[instruction.A] = Value::Of(static_cast<Object*>(Engine.TheHeap.TakeText(std::move(joined))));
                 break;
             }
             case Operation::RangeCheck:

@@ -662,8 +662,8 @@ namespace easyforge::internal
             {
                 continue;
             }
-            bool still = AllowSleep && body.AllowSleep && LengthSquared(body.Velocity) <= SleepSpeed * SleepSpeed &&
-                         std::abs(body.AngularVelocity) <= SleepTurning;
+            float fastestPoint = Length(body.Velocity) + std::abs(body.AngularVelocity) * body.Extents.Most;
+            bool still = AllowSleep && body.AllowSleep && fastestPoint <= SleepSpeed;
             body.StillTime = still ? body.StillTime + seconds : 0.0f;
         }
 

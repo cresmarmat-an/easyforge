@@ -78,8 +78,18 @@ namespace easyforge::internal::scripting
         {
             return found->second;
         }
+        return TakeText(std::string(text));
+    }
+
+    TextObject* Heap::TakeText(std::string&& text)
+    {
+        auto found = Interned.find(std::string_view(text));
+        if (found != Interned.end())
+        {
+            return found->second;
+        }
         TextObject* object = Make<TextObject>();
-        object->Text = std::string(text);
+        object->Text = std::move(text);
         Grew(*object, object->Text.capacity());
         Interned.emplace(object->Text, object);
         return object;

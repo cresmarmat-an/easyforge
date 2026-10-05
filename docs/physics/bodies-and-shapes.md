@@ -86,7 +86,8 @@ points between the world and the body's own coordinates.
 A dynamic body that has been still for half a second, along with everything it
 touches or is joined to, falls asleep: it is not moved or solved until something
 wakes it, so a pile of resting bodies costs almost nothing and stays perfectly
-still. "Still" means slower than 5 centimetres and 2 degrees a second.
+still. "Still" means no point of the body moves faster than 5 centimetres a
+second, counting its turning as well as its movement.
 
 A sleeping body wakes, with everything that fell asleep with it, when:
 

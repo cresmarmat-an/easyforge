@@ -305,6 +305,9 @@ namespace easyforge::internal::scripting
         // Text is interned: the same text is always the same object.
         TextObject* Text(std::string_view text);
 
+        // The same, taking the text so a new one is not copied again.
+        TextObject* TakeText(std::string&& text);
+
         // Records memory an object took on after it was made, such as a list
         // growing.
         void Grew(Object& object, std::size_t bytes);

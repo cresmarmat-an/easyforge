@@ -72,7 +72,8 @@ Link `easyforge::network`. It needs only `core`.
 - [Messages](messages.md): the named values a message carries, and how to read
   and write them.
 - [Delivery](delivery.md): reliable, unreliable, and unordered messages, large
-  messages, the send rate, and testing on a poor network on purpose.
+  messages, how fast a connection sends, and testing on a poor network on
+  purpose.
 - [Requests](requests.md): asking, answering, refusing, and timeouts.
 - [Smoothing values](smoothing.md): showing values another program sends again
   and again, such as positions, evenly however unevenly they arrive.
@@ -109,6 +110,6 @@ the whole local network at once.
   stages. In a browser (stage 3) the connection will use WebSocket, since
   browsers cannot send UDP; there, unreliable messages will arrive reliably.
 - IPv4 only.
-- A message is at most 4 MB, and each connection sends at most 1 MB a second.
+- A message is at most 4 MB.
 - Nothing finds a way through routers (no NAT traversal): a server on the
   internet needs its port forwarded.

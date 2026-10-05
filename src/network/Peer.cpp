@@ -137,7 +137,10 @@ namespace easyforge::internal::networking
 
     void Peer::Flush(double now, std::uint64_t token, std::vector<std::vector<std::uint8_t>>& packets)
     {
-        Budget = std::min(SendBurst, Budget + (now - BudgetTime) * SendRate);
+        FindLosses(now);
+        // Pacing: the window's worth of bytes is spread over a round trip.
+        double rate = PacingGain * CongestionWindow / std::max(SmoothedRoundTrip, 0.001);
+        Budget = std::min(std::max(CongestionWindow, InitialWindow), Budget + (now - BudgetTime) * rate);
         BudgetTime = now;
 
         // Pieces never sent, or not acknowledged in time. Only the first Window
@@ -167,7 +170,8 @@ namespace easyforge::internal::networking
         std::size_t nextDue = 0;
         while (true)
         {
-            bool dataWaiting = Budget > 0.0 && (nextUnreliable < UnreliableQueue.size() || nextDue < due.size());
+            bool roomToSend = Budget > 0.0 && InFlight < CongestionWindow && Outstanding.size() < MostPacketsInFlight;
+            bool dataWaiting = roomToSend && (nextUnreliable < UnreliableQueue.size() || nextDue < due.size());
             if (!dataWaiting && !ackDue && !keepAliveDue)
             {
                 break;
@@ -178,10 +182,18 @@ namespace easyforge::internal::networking
             std::uint16_t sequence = NextSequence++;
             WriteHeader(packet, token, sequence, now);
             PacketRecord& record = Records[sequence % Window];
+            if (record.Used && record.InFlight)
+            {
+                // Never reached while packets in flight stay under the limit, but
+                // a record reused must not stay counted.
+                InFlight -= record.Size;
+            }
             record.Sequence = sequence;
             record.Used = true;
             record.Acknowledged = false;
             record.AskedForAnswer = false;
+            record.InFlight = false;
+            record.Size = 0;
             record.SentAt = now;
             record.Pieces.clear();
 
@@ -240,6 +252,13 @@ namespace easyforge::internal::networking
             {
                 LastAsked = now;
             }
+            if (packet.size() > DataHeaderSize)
+            {
+                record.InFlight = true;
+                record.Size = static_cast<std::uint16_t>(packet.size());
+                InFlight += static_cast<double>(packet.size());
+                Outstanding.push_back(sequence);
+            }
 
             Budget -= static_cast<double>(packet.size());
             packets.push_back(std::move(packet));
@@ -296,9 +315,28 @@ namespace easyforge::internal::networking
             return;
         }
         record.Acknowledged = true;
+        if (!AnyAcknowledged || (Ahead(LargestAcknowledged, sequence) != 0 && Ahead(LargestAcknowledged, sequence) < 32768))
+        {
+            LargestAcknowledged = sequence;
+            AnyAcknowledged = true;
+        }
+        if (record.InFlight)
+        {
+            record.InFlight = false;
+            double size = record.Size;
+            // The window grows only while it was in use, and not for packets
+            // sent before the last cut.
+            if (record.SentAt > RecoveryStarted && InFlight + size >= CongestionWindow * 0.5)
+            {
+                CongestionWindow += CongestionWindow < SlowStartLimit ? size : PacketLimit * size / CongestionWindow;
+                CongestionWindow = std::min(CongestionWindow, MaximumWindow);
+            }
+            InFlight -= size;
+        }
         if (newest && record.AskedForAnswer)
         {
             double sample = now - record.SentAt;
+            LatestRoundTrip = sample;
             if (!MeasuredRoundTrip)
             {
                 SmoothedRoundTrip = sample;
@@ -311,16 +349,76 @@ namespace easyforge::internal::networking
         }
         for (auto [channel, identifier] : record.Pieces)
         {
-            std::deque<Piece>& pieces = Sending[ChannelIndex(static_cast<Channel>(channel))].Pieces;
-            if (pieces.empty())
+            if (Piece* piece = FindPiece(channel, identifier))
             {
+                piece->Acknowledged = true;
+            }
+        }
+    }
+
+    Peer::Piece* Peer::FindPiece(std::uint8_t channel, std::uint16_t identifier)
+    {
+        std::deque<Piece>& pieces = Sending[ChannelIndex(static_cast<Channel>(channel))].Pieces;
+        if (pieces.empty())
+        {
+            return nullptr;
+        }
+        std::uint16_t offset = Ahead(pieces.front().Identifier, identifier);
+        if (offset < pieces.size() && offset < Window && pieces[offset].Identifier == identifier)
+        {
+            return &pieces[offset];
+        }
+        return nullptr;
+    }
+
+    void Peer::FindLosses(double now)
+    {
+        double roundTrip = std::max(SmoothedRoundTrip, LatestRoundTrip);
+        double late = LossTimeShare * roundTrip + AckDelaySeconds;
+        // With nothing after it acknowledged either, a packet is given up on
+        // after twice as long, as when every packet of a burst was lost.
+        double gone = std::max(2.0 * late, 2.0 * MinimumResendSeconds);
+        while (!Outstanding.empty())
+        {
+            std::uint16_t sequence = Outstanding.front();
+            PacketRecord& record = Records[sequence % Window];
+            if (record.Sequence != sequence || !record.InFlight)
+            {
+                Outstanding.pop_front();
                 continue;
             }
-            std::uint16_t offset = Ahead(pieces.front().Identifier, identifier);
-            if (offset < pieces.size() && offset < Window && pieces[offset].Identifier == identifier)
+            std::uint16_t behind = AnyAcknowledged ? Ahead(sequence, LargestAcknowledged) : 0;
+            bool laterArrived = behind != 0 && behind < 32768;
+            double waited = now - record.SentAt;
+            bool lost = (laterArrived && (behind >= LossPacketThreshold || waited >= late)) || waited >= gone;
+            if (!lost)
             {
-                pieces[offset].Acknowledged = true;
+                // Packets go out in order, so the ones after this waited less.
+                break;
             }
+            Lose(now, record);
+            Outstanding.pop_front();
+        }
+    }
+
+    void Peer::Lose(double now, PacketRecord& record)
+    {
+        record.InFlight = false;
+        InFlight -= record.Size;
+        // Its pieces go again at once, unless a later packet carried them.
+        for (auto [channel, identifier] : record.Pieces)
+        {
+            Piece* piece = FindPiece(channel, identifier);
+            if (piece && !piece->Acknowledged && piece->LastSent <= record.SentAt)
+            {
+                piece->LastSent = -1.0;
+            }
+        }
+        if (record.SentAt > RecoveryStarted)
+        {
+            RecoveryStarted = now;
+            CongestionWindow = std::max(CongestionWindow * 0.5, MinimumWindow);
+            SlowStartLimit = CongestionWindow;
         }
     }
 
@@ -351,6 +449,7 @@ namespace easyforge::internal::networking
                 Acknowledge(now, static_cast<std::uint16_t>(newest - 1 - bit), false);
             }
         }
+        FindLosses(now);
         for (SendChannel& sending : Sending)
         {
             while (!sending.Pieces.empty() && sending.Pieces.front().Acknowledged)

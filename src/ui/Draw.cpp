@@ -137,6 +137,23 @@ end
             return { area.X - amount, area.Y - amount, area.Width + amount * 2.0f, area.Height + amount * 2.0f };
         }
 
+        Rectangle Extent(ElementState& element);
+
+        // The element's extent where its parent sees it, after its own offset
+        // and scale.
+        Rectangle PlacedExtent(ElementState& element)
+        {
+            Rectangle extent = Extent(element);
+            const Style& style = element.CurrentStyle();
+            if (style.Offset != Vector2 {} || style.Scale != 1.0f)
+            {
+                Vector2 shift = style.Offset + element.Frame.Center() * (1.0f - style.Scale);
+                extent = { extent.X * style.Scale + shift.X, extent.Y * style.Scale + shift.Y, extent.Width * style.Scale,
+                    extent.Height * style.Scale };
+            }
+            return extent;
+        }
+
         // How far the element and what is drawn with it reach: its effects, and
         // children that overflow it, unless it clips them.
         Rectangle Extent(ElementState& element)
@@ -150,18 +167,22 @@ end
             element.Kind->VisibleChildren(element, children);
             for (ElementState* child : children)
             {
-                Rectangle inner = Extent(*child);
-                const Style& style = child->CurrentStyle();
-                if (style.Offset != Vector2 {} || style.Scale != 1.0f)
-                {
-                    Vector2 shift = style.Offset + child->Frame.Center() * (1.0f - style.Scale);
-                    inner = { inner.X * style.Scale + shift.X, inner.Y * style.Scale + shift.Y, inner.Width * style.Scale,
-                        inner.Height * style.Scale };
-                }
-                extent = Union(extent, inner);
+                extent = Union(extent, PlacedExtent(*child));
             }
             return extent;
         }
+
+        // Whether two areas share any point, edges included, so an element with
+        // no width, such as a line drawn by its border, still counts.
+        bool Touch(const Rectangle& first, const Rectangle& second)
+        {
+            return first.X <= second.X + second.Width && second.X <= first.X + first.Width &&
+                   first.Y <= second.Y + second.Height && second.Y <= first.Y + first.Height;
+        }
+
+        // Room for what is drawn just outside an element without being one of
+        // its effects, such as the focus ring.
+        constexpr float OutsideReach = 4.0f;
     }
 
     FittedPicture FitPicture(Vector2 pictureSize, Rectangle box, ImageFit fit)
@@ -422,9 +443,15 @@ end
                 {
                     kept.push_back(child->shared_from_this());
                 }
+                // Children wholly outside what can show, such as rows scrolled
+                // away, are not drawn at all, so a long list costs what shows.
+                Rectangle showing = canvas.ClipArea();
                 for (const std::shared_ptr<ElementState>& child : kept)
                 {
-                    DrawElement(*child, context);
+                    if (Touch(Grown(PlacedExtent(*child), OutsideReach), showing))
+                    {
+                        DrawElement(*child, context);
+                    }
                 }
             }
             if (clip)

@@ -8,6 +8,7 @@
 #include <bitset>
 #include <cstdint>
 #include <deque>
+#include <limits>
 #include <map>
 #include <optional>
 #include <utility>
@@ -71,6 +72,13 @@ namespace easyforge::internal::networking
         // Messages queued or sent and not yet acknowledged.
         std::size_t Unacknowledged() const;
 
+        // The bytes the connection may have on their way at once, as congestion
+        // control has found the path can carry.
+        double SendWindow() const { return CongestionWindow; }
+
+        // The bytes of data sent and not yet acknowledged or found lost.
+        double BytesInFlight() const { return InFlight; }
+
     private:
         struct Piece
         {
@@ -110,6 +118,11 @@ namespace easyforge::internal::networking
 
             double SentAt = 0.0;
             std::vector<std::pair<std::uint8_t, std::uint16_t>> Pieces;
+
+            // Carried data and counts against the congestion window until it is
+            // acknowledged or found lost.
+            bool InFlight = false;
+            std::uint16_t Size = 0;
         };
 
         struct Assembly
@@ -123,6 +136,9 @@ namespace easyforge::internal::networking
 
         void QueueReliable(Channel channel, std::vector<std::uint8_t> bytes);
         void Acknowledge(double now, std::uint16_t sequence, bool newest);
+        void FindLosses(double now);
+        void Lose(double now, PacketRecord& record);
+        Piece* FindPiece(std::uint8_t channel, std::uint16_t identifier);
         void NoteReceived(std::uint16_t sequence);
         void ReceiveOrdered(Piece piece, std::vector<DeliveredMessage>& delivered);
         void ReceiveUnordered(Piece piece, std::vector<DeliveredMessage>& delivered);
@@ -134,8 +150,24 @@ namespace easyforge::internal::networking
         std::uint32_t NextUnreliable = 1;
         std::uint16_t NextSequence = 0;
         std::vector<PacketRecord> Records = std::vector<PacketRecord>(Window);
-        double Budget = SendBurst;
+        double Budget = InitialWindow;
         double BudgetTime = 0.0;
+
+        // Congestion control, after TCP's NewReno and QUIC: the window grows
+        // while packets arrive, by a packet's size for each one until the first
+        // loss and by about a packet each round trip after, and halves once for
+        // each loss event, so the connection sends as fast as the path carries
+        // and backs off when it is full.
+        double CongestionWindow = InitialWindow;
+        double SlowStartLimit = std::numeric_limits<double>::infinity();
+        double InFlight = 0.0;
+        // Losses of packets sent before this cut the window only once.
+        double RecoveryStarted = -1.0;
+        // Data packets in flight, oldest first.
+        std::deque<std::uint16_t> Outstanding;
+        std::uint16_t LargestAcknowledged = 0;
+        bool AnyAcknowledged = false;
+        double LatestRoundTrip = 0.0;
         double LastSent = -1.0;
         double LastAsked = -1.0;
         int ReceivedSinceSent = 0;

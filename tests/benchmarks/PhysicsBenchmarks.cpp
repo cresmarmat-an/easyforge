@@ -44,8 +44,8 @@ namespace
         return awake;
     }
 
-    // What keeps bodies awake: how many move or turn faster than a body may
-    // while falling asleep, and the fastest of each.
+    // What keeps bodies awake: how many move or turn faster than 5 centimetres
+    // or 2 degrees a second, and the fastest of each.
     std::string Restlessness(const Physics2D& physics)
     {
         int moving = 0;

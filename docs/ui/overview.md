@@ -83,6 +83,8 @@ there show in the same frame. It only lays elements out again in frames where
 something changed. In a window without `OnFrame`, it asks for frames only while
 something changes, so a still interface uses no processor time
 ([waiting while nothing changes](../window/overview.md#waiting-while-nothing-changes)).
+Elements wholly outside what can show, such as rows scrolled out of view, are
+not drawn at all, so a long list costs about what is on the screen.
 
 Elements are stored as rows of a [data table](../data/overview.md): each element
 is a node whose type is its kind, such as `Button`, and each setting you chose

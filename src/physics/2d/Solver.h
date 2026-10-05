@@ -32,10 +32,11 @@ namespace easyforge::internal::physics2d
     // this, which keeps the solver and the sweeps of fast bodies dependable.
     inline constexpr float MaximumSubstepTurn = 0.25f * 3.14159265f;
 
-    // A body slower than these, in metres and radians a second, for this long
-    // along with everything it touches, falls asleep.
+    // A body none of whose points moves faster than this, in metres a second,
+    // for this long along with everything it touches, falls asleep. A point's
+    // speed is at most the body's speed plus its turning times its reach, so a
+    // small body may turn a little faster than a large one and still rest.
     inline constexpr float SleepSpeed = 0.05f;
-    inline constexpr float SleepTurning = 0.035f;
     inline constexpr float SleepAfter = 0.5f;
 
     // A body that moves more than this share of its least reach in a step is

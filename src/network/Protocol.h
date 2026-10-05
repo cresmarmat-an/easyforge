@@ -94,11 +94,27 @@ namespace easyforge::internal::networking
     inline constexpr double ConnectRetrySeconds = 0.1;
     inline constexpr double AckDelaySeconds = 0.008;
     inline constexpr double MinimumResendSeconds = 0.05;
-    inline constexpr int PacketsBeforeAck = 16;
+    // Packets with messages received before an acknowledgement goes back at
+    // once, as with TCP and QUIC. More would make a small window wait out the
+    // acknowledgement delay every round trip.
+    inline constexpr int PacketsBeforeAck = 2;
 
-    // Bytes a second sent on one connection, and how many may go at once.
-    inline constexpr double SendRate = 1024.0 * 1024.0;
-    inline constexpr double SendBurst = 64.0 * 1024.0;
+    // Congestion control: the bytes that may be on their way at once start at
+    // ten packets, as with TCP and QUIC, and stay between two packets and as
+    // many as the packet records can follow.
+    inline constexpr double InitialWindow = 10.0 * PacketLimit;
+    inline constexpr double MinimumWindow = 2.0 * PacketLimit;
+    inline constexpr double MaximumWindow = (Window / 2) * static_cast<double>(PacketLimit);
+    inline constexpr std::size_t MostPacketsInFlight = Window / 2;
+
+    // Packets go out at this many windows per round trip, spread over it
+    // rather than all at once, with room for the window to grow.
+    inline constexpr double PacingGain = 1.25;
+
+    // A packet counts as lost once this many sent after it have arrived, or
+    // once it is late by a share of the round trip after a later one arrived.
+    inline constexpr int LossPacketThreshold = 3;
+    inline constexpr double LossTimeShare = 1.125;
 
     inline constexpr std::size_t UnreliableQueueLimit = 256;
 }

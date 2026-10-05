@@ -37,6 +37,8 @@
   takes an image loaded anywhere as well as a path: `.Icon = icon` or
   `.Icon = ImageData::Load("art/icon.png")`. An `ImageData` can be made from a
   path, which is the same as `Load`.
+- Interfaces skip drawing elements wholly outside what can show, such as rows
+  scrolled out of view.
 - `Window::Run` returns when its window closes even while another open window
   waits with nothing to do.
 - `Window::Run` runs frames of a window without `OnFrame` only while something
@@ -48,6 +50,9 @@
   another image, before reading input, and at most one finished frame waits to
   be shown, so what is shown answers input sooner.
 - A physics body turns at most an eighth of a turn per substep.
+- A physics body counts as still for sleeping when no point of it moves faster
+  than 5 centimetres a second, as in Box2D, rather than when it moves and turns
+  slower than fixed amounts, so piles of small round bodies fall asleep.
 - Input recordings and bindings, `.tree` files, and scripts open files named in
   any language on Windows; before, names outside the system's code page failed.
 - A color in a script that the compiler could not read no longer ends the
@@ -62,6 +67,9 @@
   program, so the sanitized tests start outside a developer prompt.
 - Physics steps allocate no memory once a world has settled into its size, and
   bounds tree queries no longer allocate at all.
+- Connections send as fast as the path to the other end carries, found with
+  congestion control after TCP's NewReno and QUIC, instead of at most 1 MB a
+  second; packets found lost have their messages sent again at once.
 - Packets carry the sender's clock. The wire format's revision marker is now
   `EFN2`, so programs built with 0.0.1 cannot talk to programs built with this
   change.
