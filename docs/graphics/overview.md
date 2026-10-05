@@ -112,6 +112,13 @@ browsers do, so a design picked in a design tool looks the same. 3D lighting is
 worked out in linear light, which is what makes it look physically right, and
 the result goes back to sRGB.
 
+## Threads
+
+A renderer, its canvas, and scenes belong to the thread that made the
+renderer. Textures, fonts, models, and shaders can be made and loaded on any
+thread, since loading does not touch the GPU, and fonts can measure text on any
+thread; `Texture::Update` goes on the renderer's thread. [Threads](../reference/threads.md) lists every type.
+
 ## Limitations
 
 - Direct3D 12 only for now, on Windows 10 with a GPU that supports feature level

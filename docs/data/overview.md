@@ -95,6 +95,11 @@ its nodes. A node handle becomes empty when the node is removed and works again
 if the removal is undone; it never reaches a different node that later takes the
 same row.
 
+## Threads
+
+A table, and its nodes, is used from one thread at a time: from one thread,
+or behind a lock of your own. Values are values. [Threads](../reference/threads.md) lists every type.
+
 ## Limitations
 
 - A table is not safe to use from two threads at once. Use it from one thread,

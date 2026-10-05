@@ -100,6 +100,12 @@ messages, keep-alives and timeouts, a limit on how fast each connection sends,
 request numbers so each reply finds its callback, and finding servers by asking
 the whole local network at once.
 
+## Threads
+
+Servers, clients, and connections can be used from any thread. Handlers run
+on the thread that calls `Update`, or on the network's own thread for a
+threaded end. `Smoothed` values are used from one thread at a time. [Threads](../reference/threads.md) lists every type.
+
 ## Limitations
 
 - **No encryption.** Anything sent can be read and changed by whoever is on the

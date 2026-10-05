@@ -292,6 +292,12 @@ endif()
 
 `Log` still reaches the debugger's output window when one is attached.
 
+## Threads
+
+A window belongs to the thread that made it, normally the main one: make it,
+run it, and change it there. Only `RequestFrame` can be called from any thread,
+which is how work on another thread asks for a frame. [Threads](../reference/threads.md) lists every type.
+
 ## Limitations
 
 - Windows only for now. Linux (X11 and Wayland), the web, macOS, iOS, and

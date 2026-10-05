@@ -28,6 +28,8 @@
 - A `Font` or `Shader` can be named by the path of its file wherever one is
   expected, such as `.Font = "fonts/Inter.ttf"` or `.Shader = "ripple.shader"`
   in settings; everything that names the same file shares one.
+- Versioning and Threads pages in the reference: what each kind of release
+  may change, and what every type allows when a program uses several threads.
 - `RollingResistance` on physics bodies and in every shape's settings, 0.01 by
   default, so round bodies slow down as they roll and piles of them come to
   rest.

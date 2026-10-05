@@ -62,6 +62,11 @@ Nothing in a step depends on the time, the machine's speed, threads, or the
 order memory happens to be in, so the same steps with the same bodies give the
 same result every time the program runs.
 
+## Threads
+
+A world, with its bodies and joints, is used from one thread at a time.
+Several worlds can step on several threads at once. [Threads](../reference/threads.md) lists every type.
+
 ## Limitations
 
 - 2D only until stage 6.

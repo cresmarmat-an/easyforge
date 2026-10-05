@@ -41,7 +41,8 @@ cmake --build build --config Debug
 
 `GIT_TAG v0.0.1` builds that release, so your build does not change under you.
 `GIT_TAG main` follows the newest code instead, with whatever has changed since
-the last release; the [changelog](../reference/changelog.md) says what.
+the last release; the [changelog](../reference/changelog.md) says what, and
+[versioning](../reference/versioning.md) what each kind of release may change.
 
 ## Only what you link is built
 

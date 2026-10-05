@@ -59,3 +59,10 @@ easyforge::VersionText      // "0.0.1"
 All of these are `constexpr`, so they can be used in `static_assert` and other
 compile-time checks.
 
+## Threads
+
+Values such as vectors, matrices, and colors can be read from any thread.
+`Log` and `Jobs` can be used from any thread at once, and so can
+`PathFromText` and `TextFromPath`. A `Random`, `Clock`, or `FrameTimer` is used
+from one thread at a time. Views and listeners belong to their window's
+thread. [Threads](../reference/threads.md) lists every type.

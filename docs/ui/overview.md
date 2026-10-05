@@ -91,6 +91,13 @@ is a node whose type is its kind, such as `Button`, and each setting you chose
 is a property of the node. `root.Data()` is that table, so tools and scripts can
 read the whole interface and follow every change to it.
 
+## Threads
+
+An interface belongs to the thread of the window that shows it; a root
+without a window, to the thread that draws it. Work on another thread reaches
+the interface by keeping its result where the window's thread reads it, and
+asking for a frame with `window.RequestFrame()`. [Threads](../reference/threads.md) lists every type.
+
 ## Limitations
 
 - Drawing needs the `graphics` library, so `ui` runs where `graphics` does:

@@ -83,3 +83,11 @@ decoder thousands of files cut short or with random bytes changed.
 
 Images are limited to `ImageData::MaximumSide` (32768) pixels on a side and
 `ImageData::MaximumPixels` (268 million) pixels in total.
+
+## Threads
+
+Loading and decoding can run on any thread, and `Files` can be read from
+several threads at once, even while another mounts. What is loaded is a value,
+such as an `ImageData`: reading it from several threads is safe, and changing it
+while another thread uses it is not. A `Pending` is used from one thread at a
+time. [Threads](../reference/threads.md) lists every type.

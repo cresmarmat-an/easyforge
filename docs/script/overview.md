@@ -73,6 +73,12 @@ reaches outside itself is importing another script, which the program can turn
 off. With a memory limit and an instruction limit, a script from someone you do
 not trust cannot take the program over.
 
+## Threads
+
+An engine and its values are used from one thread at a time, and objects
+are called on the thread running the engine. Several engines can run on several
+threads at once. [Threads](../reference/threads.md) lists every type.
+
 ## Limitations
 
 - An engine is used from one thread at a time.

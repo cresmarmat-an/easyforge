@@ -208,6 +208,8 @@
       "pages": [
         "capabilities-and-limitations",
         "roadmap",
+    "versioning",
+    "threads",
         "changelog",
         "license"
       ]

@@ -59,6 +59,11 @@ cutting them. Streamed sounds are decoded by a separate thread about a second
 ahead of where they play. Everything from the mixing to the filters is written
 for easyforge.
 
+## Threads
+
+Every function of a mixer, a sound, and a playing sound can be called from
+any thread, at the same time as others. [Threads](../reference/threads.md) lists every type.
+
 ## Limitations
 
 - Playing to a device works on Windows, through WASAPI. ALSA and PulseAudio,

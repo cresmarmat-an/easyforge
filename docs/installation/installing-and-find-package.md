@@ -54,3 +54,5 @@ libraries an installation has.
 Before 1.0.0 any release can change the interface, so an installation only
 matches the exact version asked for: `find_package(easyforge 0.0.1)` accepts
 0.0.1 and nothing else. Leaving the version out accepts whatever is installed.
+[Versioning](../reference/versioning.md) says what each kind of release may
+change.

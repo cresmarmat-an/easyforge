@@ -123,6 +123,11 @@ Controls playerTwo = Controls::New(window, { .Gamepad = 1 });
 
 `Controls` is a handle: copies share their bindings and state.
 
+## Threads
+
+Controls belong to the thread of the window they follow, where their events
+arrive and their frames run. Bindings are values. [Threads](../reference/threads.md) lists every type.
+
 ## Limitations
 
 - Touches are not bound to actions yet; read them from the window's
