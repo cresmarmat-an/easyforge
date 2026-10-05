@@ -121,7 +121,8 @@ namespace easyforge::ui::internal
         // Where the last layout put it, in points: the box inside the margin.
         Rectangle Frame;
 
-        // The last measurement, kept for the rest of a layout.
+        // The last measurement: kept for the rest of a layout, and for later
+        // layouts of the same generation while the element has not changed.
         struct Measurement
         {
             Vector2 Available;
@@ -129,10 +130,20 @@ namespace easyforge::ui::internal
             bool FillHeight = false;
             Vector2 Result;
             std::uint64_t Pass = 0;
+            std::uint64_t Generation = 0;
         };
         Measurement LastMeasurement;
 
+        // The generation of the layout that last placed it.
+        std::uint64_t PlacedGeneration = 0;
+
         bool StyleStale = true;
+
+        // Something that can change its size or the place of what it holds
+        // changed since it was last laid out: its settings, or anything inside
+        // it. Marking an element marks everything that holds it.
+        bool LayoutStale = true;
+        void MarkLayoutStale();
         Style CachedStyle;
 
         bool Hovered = false;

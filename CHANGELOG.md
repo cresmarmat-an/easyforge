@@ -42,6 +42,9 @@
   path, which is the same as `Load`.
 - Interfaces skip drawing elements wholly outside what can show, such as rows
   scrolled out of view.
+- An interface measures again only the elements that changed and what holds
+  them, keeping every other measurement, so changing one label among 5,000
+  elements costs 3.2 milliseconds a frame instead of 18.
 - Drawing keeps its lists of shapes from frame to frame instead of growing new
   ones, and text keeps how it was laid out, so recording 20,000 rectangles
   went from 10.2 to 2.7 milliseconds and 2,000 lines of text from 21 to 11.

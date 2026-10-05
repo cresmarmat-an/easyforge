@@ -37,6 +37,11 @@ namespace easyforge::ui::internal
 
         // Counts layouts, so a measurement is kept only for the layout it was made in.
         std::uint64_t Pass = 0;
+
+        // Counts layouts that measure everything again. A measurement from an
+        // earlier layout of the same generation still holds for an element that
+        // has not changed since.
+        std::uint64_t LayoutGeneration = 0;
     };
 
     struct DrawContext : Context

@@ -260,8 +260,10 @@ namespace easyforge::ui::internal
             return {};
         }
         ElementState::Measurement& last = element.LastMeasurement;
-        if (last.Pass == context.Pass && last.Available == available && last.FillWidth == fillWidth &&
-            last.FillHeight == fillHeight)
+        bool sameQuestion = last.Available == available && last.FillWidth == fillWidth && last.FillHeight == fillHeight;
+        bool stillHolds = last.Pass == context.Pass ||
+                          (!element.LayoutStale && last.Generation == context.LayoutGeneration && last.Generation != 0);
+        if (sameQuestion && stillHolds)
         {
             return last.Result;
         }
@@ -319,17 +321,25 @@ namespace easyforge::ui::internal
         }
 
         Vector2 result { Max(width, 0.0f), Max(height, 0.0f) };
-        last = { available, fillWidth, fillHeight, result, context.Pass };
+        last = { available, fillWidth, fillHeight, result, context.Pass, context.LayoutGeneration };
         return result;
     }
 
     void Place(ElementState& element, Context& context, Rectangle box)
     {
+        // Nothing in it changed and it goes where it was: everything inside
+        // stays where it is.
+        if (!element.LayoutStale && element.PlacedGeneration == context.LayoutGeneration && element.Frame == box)
+        {
+            return;
+        }
         element.Frame = box;
         const Style& style = element.CurrentStyle();
         Rectangle content { box.X + style.Padding.Left, box.Y + style.Padding.Top,
             Max(box.Width - style.Padding.Horizontal(), 0.0f), Max(box.Height - style.Padding.Vertical(), 0.0f) };
         element.Kind->Arrange(element, context, content);
+        element.LayoutStale = false;
+        element.PlacedGeneration = context.LayoutGeneration;
     }
 
     Vector2 MeasureLine(ElementState& element, Context& context, const Constraint& constraint, bool horizontal)

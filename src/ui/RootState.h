@@ -176,6 +176,16 @@ namespace easyforge::ui::internal
 
         std::uint64_t SeenVersion = 0;
         bool LayoutDirty = true;
+
+        // Counts layouts that measure everything again, such as after the
+        // theme or the size changed. Between them, an element whose settings
+        // and contents did not change keeps its measurement.
+        std::uint64_t LayoutGeneration = 1;
+        void RelayOutEverything()
+        {
+            LayoutDirty = true;
+            ++LayoutGeneration;
+        }
         std::uint64_t LayoutPass = 0;
         Vector2 LastCanvasSize;
 

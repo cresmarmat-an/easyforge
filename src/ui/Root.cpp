@@ -285,7 +285,7 @@ namespace easyforge::ui::internal
         {
             MoveToTree(element, Interface, Node());
         }
-        LayoutDirty = true;
+        RelayOutEverything();
     }
 
     void RootState::AddSlot(SlotView& view, const std::shared_ptr<ElementState>& element)
@@ -313,7 +313,7 @@ namespace easyforge::ui::internal
                     TheRenderer.Error());
             }
         }
-        LayoutDirty = true;
+        RelayOutEverything();
     }
 
     void RootState::RemoveSlot(SlotView& view)
@@ -351,7 +351,7 @@ namespace easyforge::ui::internal
             }
             RendererFailed = false;
         }
-        LayoutDirty = true;
+        RelayOutEverything();
     }
 
     void RootState::PlaceSlot(SlotView& view, Rectangle area)
@@ -361,7 +361,7 @@ namespace easyforge::ui::internal
             if (slot.View == &view && !(slot.Area == area))
             {
                 slot.Area = area;
-                LayoutDirty = true;
+                RelayOutEverything();
             }
         }
     }
@@ -377,7 +377,7 @@ namespace easyforge::ui::internal
         bool modal = overlay.Modal;
         std::shared_ptr<ElementState> element = overlay.Element;
         Overlays.push_back(std::move(overlay));
-        LayoutDirty = true;
+        RelayOutEverything();
         if (modal)
         {
             // The keyboard moves into a dialog: to its first element that takes it.
@@ -420,7 +420,7 @@ namespace easyforge::ui::internal
         {
             MoveToTree(*overlay.Element, std::make_shared<ElementTree>(), Node());
         }
-        LayoutDirty = true;
+        RelayOutEverything();
         if (overlay.OnClosed)
         {
             overlay.OnClosed();
@@ -457,7 +457,7 @@ namespace easyforge::ui::internal
             Adopt(*element);
             Slots.insert(Slots.begin(), { element, { 0.0f, 0.0f, LastCanvasSize.X, LastCanvasSize.Y }, nullptr });
         }
-        LayoutDirty = true;
+        RelayOutEverything();
     }
 
     ElementState* RootState::ContentElement() const
@@ -474,6 +474,7 @@ namespace easyforge::ui::internal
 
     void RootState::Invalidate(bool layout)
     {
+        // The element that changed has marked itself and what holds it.
         if (layout)
         {
             LayoutDirty = true;
@@ -522,6 +523,7 @@ namespace easyforge::ui::internal
         context.DeltaSeconds = deltaSeconds;
         context.Time = static_cast<float>(SinceStart.Seconds());
         context.Pass = LayoutPass;
+        context.LayoutGeneration = LayoutGeneration;
         return context;
     }
 
@@ -532,7 +534,7 @@ namespace easyforge::ui::internal
         {
             FollowSystem = false;
         }
-        LayoutDirty = true;
+        RelayOutEverything();
     }
 
     namespace
@@ -673,7 +675,7 @@ namespace easyforge::ui::internal
             {
                 MarkAllStale(*overlay.Element);
             }
-            LayoutDirty = true;
+            RelayOutEverything();
         }
         else
         {
@@ -681,18 +683,28 @@ namespace easyforge::ui::internal
             {
                 if (change.Kind == ChangeKind::PropertySet)
                 {
-                    if (ElementState* element = ElementOf(*Interface, change.Target))
+                    ElementState* element = ElementOf(*Interface, change.Target);
+                    if (element)
                     {
                         element->StyleStale = true;
                     }
                     if (AffectsLayout(change.Property))
                     {
-                        LayoutDirty = true;
+                        // Only the element and what holds it are measured again.
+                        if (element)
+                        {
+                            element->MarkLayoutStale();
+                            LayoutDirty = true;
+                        }
+                        else
+                        {
+                            RelayOutEverything();
+                        }
                     }
                 }
                 else
                 {
-                    LayoutDirty = true;
+                    RelayOutEverything();
                 }
             }
         }
@@ -882,7 +894,7 @@ namespace easyforge::ui::internal
         {
             LastCanvasSize = size;
             Scale = canvas.Scale();
-            LayoutDirty = true;
+            RelayOutEverything();
         }
         for (Slot& slot : Slots)
         {
@@ -1532,7 +1544,7 @@ namespace easyforge::ui::internal
             {
                 Scale = TheHost->Scale();
             }
-            LayoutDirty = true;
+            RelayOutEverything();
             break;
         default: break;
         }
@@ -1587,7 +1599,7 @@ namespace easyforge::ui::internal
             Context context = MakeContext();
             ++LayoutPass;
             context.Pass = LayoutPass;
-            LayoutDirty = true;
+            RelayOutEverything();
             Vector2 size = Measure(*slot.Element, context, { available.X, Unlimited }, true, false);
             const Insets& margin = slot.Element->CurrentStyle().Margin;
             slot.WantedHeight = size.Y + margin.Vertical();

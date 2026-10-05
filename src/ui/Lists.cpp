@@ -201,6 +201,7 @@ namespace easyforge::ui::internal
                         }
                     }
                 }
+                std::size_t before = Lines.size();
                 Lines.clear();
                 if (table)
                 {
@@ -211,6 +212,11 @@ namespace easyforge::ui::internal
                     SeenVersion = table.Version();
                 }
                 Built = true;
+                // Its height follows its rows, so it is measured again.
+                if (Lines.size() != before)
+                {
+                    element.Changed(true);
+                }
             }
 
             void Collect(const Node& node, int depth)

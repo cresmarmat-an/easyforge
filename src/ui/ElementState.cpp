@@ -110,9 +110,21 @@ namespace easyforge::ui::internal
         Changed(false);
     }
 
+    void ElementState::MarkLayoutStale()
+    {
+        for (ElementState* element = this; element; element = element->Parent)
+        {
+            element->LayoutStale = true;
+        }
+    }
+
     void ElementState::Changed(bool affectsLayout)
     {
         StyleStale = true;
+        if (affectsLayout)
+        {
+            MarkLayoutStale();
+        }
         if (RootState* root = Root())
         {
             root->Invalidate(affectsLayout);
@@ -209,6 +221,7 @@ namespace easyforge::ui::internal
             // Each root counts its own layouts, so a measurement from another
             // root could look current.
             element.LastMeasurement = {};
+            element.LayoutStale = true;
             for (const std::shared_ptr<ElementState>& child : element.Children)
             {
                 CopyInto(*child, tree, row, false);
@@ -218,7 +231,7 @@ namespace easyforge::ui::internal
                 old.Remove();
                 if (oldTree && oldTree->Root)
                 {
-                    oldTree->Root->Invalidate(true);
+                    oldTree->Root->RelayOutEverything();
                 }
             }
         }

@@ -232,3 +232,44 @@ EASYFORGE_TEST(MeasuringMatchesPlacing)
     limitScreen.Frame();
     EASYFORGE_EXPECT_EQUAL(limited.Frame().Width, 720.0f);
 }
+
+EASYFORGE_TEST(OnlyWhatChangedIsMeasuredAgainAndTheRestFollows)
+{
+    ui::Label first("A");
+    ui::Label second("B");
+    ui::Label below("C");
+    ui::Row row({ .Gap = 10, .Alignment = ui::Alignment::Start, .Children = { first, second } });
+    Screen screen(600, 200, ui::Column({ .Alignment = ui::Alignment::Start, .Children = { row, below } }));
+    screen.Frame();
+    float secondAt = second.Frame().X;
+    float belowAt = below.Frame().Y;
+
+    // A longer text pushes what follows it in the row, and nothing else moves.
+    first.Text = "A much longer text than before";
+    screen.Frame();
+    EASYFORGE_EXPECT(second.Frame().X > secondAt + 100.0f);
+    EASYFORGE_EXPECT_EQUAL(below.Frame().Y, belowAt);
+
+    // Two lines make the row taller, which moves what is below it.
+    first.Text = "One\nTwo";
+    screen.Frame();
+    EASYFORGE_EXPECT(below.Frame().Y > belowAt);
+
+    first.Text = "A";
+    screen.Frame();
+    EASYFORGE_EXPECT_EQUAL(second.Frame().X, secondAt);
+    EASYFORGE_EXPECT_EQUAL(below.Frame().Y, belowAt);
+}
+
+EASYFORGE_TEST(AChangedThemeMeasuresEverythingAgain)
+{
+    ui::Label label("Some text");
+    Screen screen(600, 200, ui::Column({ .Alignment = ui::Alignment::Start, .Children = { label } }));
+    screen.Frame();
+    float width = label.Frame().Width;
+    ui::Theme theme = screen.Root.Theme;
+    theme.FontSize *= 2.0f;
+    screen.Root.Theme = theme;
+    screen.Frame();
+    EASYFORGE_EXPECT(label.Frame().Width > width * 1.5f);
+}
