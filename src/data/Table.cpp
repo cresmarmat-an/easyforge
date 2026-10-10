@@ -557,13 +557,6 @@ namespace easyforge
 
     Result<> Table::Save(std::string_view path) const
     {
-        std::string text = ToText();
-        std::ofstream file { PathFromText(path), std::ios::binary };
-        file << text;
-        if (!file)
-        {
-            return Failure(std::format("{}: the table could not be written", path));
-        }
-        return {};
+        return WriteWholeFile(path, ToText());
     }
 }

@@ -389,6 +389,13 @@ EASYFORGE_TEST(ACookieTheServerNoLongerTakesIsAskedForAgain)
     EASYFORGE_EXPECT(askedAgain);
 }
 
+EASYFORGE_TEST(AServerWhoseIdentityDidNotLoadDoesNotStart)
+{
+    Server server = LocalServer({ .Identity = NetworkIdentity::Load("no such file.identity") });
+    EASYFORGE_EXPECT(!server);
+    EASYFORGE_EXPECT(server.Error().find("no such file.identity") != std::string::npos);
+}
+
 EASYFORGE_TEST(IdentitiesAreKeptInFiles)
 {
     std::string path = std::string(EASYFORGE_TEST_OUTPUT) + "server.identity";

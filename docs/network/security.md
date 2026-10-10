@@ -37,8 +37,8 @@ which is fine on a local network.
 | Written | Result |
 |---|---|
 | `NetworkIdentity::New()` | A new, random identity |
-| `NetworkIdentity::Load(path)` | One saved before. Tests as false, with `Error()`, when the file is missing or damaged |
-| `identity.Save(path)` | Writes it, private half included. Keep that file on the server only |
+| `NetworkIdentity::Load(path)` | One saved before. Tests as false, with `Error()`, when the file is missing or damaged; a server given it does not start |
+| `identity.Save(path)` | Writes it whole, private half included. Keep that file on the server only |
 | `identity.PublicKey()` | The text to give clients as `ServerKey` |
 
 ## Servers on the open internet

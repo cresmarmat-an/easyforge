@@ -30,7 +30,7 @@ target_link_libraries(my_program PRIVATE easyforge::core)
 | [Logging](logging.md) | `Log`, `LogLevel`, `SetLogHandler` |
 | [Background jobs](background-jobs.md) | `Jobs`, `Job`, `ParallelFor` |
 | [Measuring time](measuring-time.md) | `Clock`, `FrameTimer` |
-| [File paths](file-paths.md) | `PathFromText`, `TextFromPath`, paths in any language |
+| [File paths](file-paths.md) | `PathFromText`, `TextFromPath`, paths in any language, and `WriteWholeFile` for saving files whole |
 | [Testing](testing.md) | `EASYFORGE_TEST`, `EASYFORGE_EXPECT`, `RunTests` |
 
 ## Including less

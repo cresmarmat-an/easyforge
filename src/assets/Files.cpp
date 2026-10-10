@@ -469,11 +469,19 @@ namespace easyforge
             offset += 2 + source.Name.size() + 8 + 8;
         }
 
-        std::ofstream output(ToPath(packPath), std::ios::binary | std::ios::trunc);
+        std::filesystem::path target = ToPath(packPath);
+        std::filesystem::path written = internal::WritingPath(target);
+        std::ofstream output(written, std::ios::binary | std::ios::trunc);
         if (!output)
         {
             return Failure(std::format("{} could not be created", packPath));
         }
+        auto giveUp = [&](std::string message) -> Result<> {
+            output.close();
+            std::error_code ignored;
+            std::filesystem::remove(written, ignored);
+            return Failure(std::move(message));
+        };
         output.write(PackMagic, sizeof(PackMagic));
         WriteLittle(output, PackVersion, 2);
         WriteLittle(output, sources.size(), 4);
@@ -492,7 +500,7 @@ namespace easyforge
             std::ifstream input(source.Location, std::ios::binary);
             if (!input)
             {
-                return Failure(std::format("{} could not be read", source.Name));
+                return giveUp(std::format("{} could not be read", source.Name));
             }
             std::uint64_t copied = 0;
             while (copied < source.Size)
@@ -501,18 +509,19 @@ namespace easyforge
                 std::streamsize count = input.gcount();
                 if (count <= 0)
                 {
-                    return Failure(std::format("{} changed size while the pack was being written", source.Name));
+                    return giveUp(std::format("{} changed size while the pack was being written", source.Name));
                 }
                 output.write(buffer.data(), count);
                 copied += static_cast<std::uint64_t>(count);
             }
         }
 
-        if (!output.flush())
+        output.close();
+        if (output.fail())
         {
-            return Failure(std::format("{} could not be written; the disk may be full", packPath));
+            return giveUp(std::format("{} could not be written; the disk may be full", packPath));
         }
-        return {};
+        return internal::MoveIntoPlace(written, target);
     }
 
     std::string Files::FolderOf(std::string_view path)

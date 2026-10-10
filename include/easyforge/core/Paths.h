@@ -4,6 +4,8 @@
 #include <string>
 #include <string_view>
 
+#include <easyforge/core/Result.h>
+
 namespace easyforge
 {
     // easyforge takes and gives file paths as UTF-8 text on every platform.
@@ -20,4 +22,23 @@ namespace easyforge
 
     // UTF-8 text with forward slashes between the parts, on every platform.
     std::string TextFromPath(const std::filesystem::path& path);
+
+    // Writes `bytes` to the file at `path`, whole or not at all. They go to a
+    // new file beside it, which is flushed to the disk and then takes the old
+    // file's place in one step, so a crash or power cut leaves the old file or
+    // the new one, never part of either. The folder must exist already.
+    //
+    //     Result<> saved = WriteWholeFile("saves/slot 1.txt", text);
+    Result<> WriteWholeFile(std::string_view path, std::string_view bytes);
+
+    namespace internal
+    {
+        // The file beside `target` that WriteWholeFile writes first.
+        std::filesystem::path WritingPath(const std::filesystem::path& target);
+
+        // WriteWholeFile's last step, for files written in pieces at
+        // WritingPath(target): flushes `written` to the disk and moves it into
+        // `target`'s place. On failure `written` is removed.
+        Result<> MoveIntoPlace(const std::filesystem::path& written, const std::filesystem::path& target);
+    }
 }

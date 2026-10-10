@@ -13,6 +13,8 @@ if (!loaded)
 }
 ```
 
+`Save` writes the whole file or nothing, so a crash while saving leaves the
+old file ([saving files whole](../core/file-paths.md#saving-files-whole)).
 `table.ToText()` gives the same text as a string, and
 `Table::FromText(text, name)` reads it, using `name` in error messages.
 

@@ -1,6 +1,9 @@
 #include <easyforge/core/Paths.h>
 
 #include <cstdint>
+#include <format>
+#include <fstream>
+#include <system_error>
 
 namespace easyforge
 {
@@ -132,4 +135,31 @@ namespace easyforge
         return path.generic_string();
     }
 #endif
+
+    Result<> WriteWholeFile(std::string_view path, std::string_view bytes)
+    {
+        std::filesystem::path target = PathFromText(path);
+        std::filesystem::path written = internal::WritingPath(target);
+        std::ofstream file(written, std::ios::binary | std::ios::trunc);
+        if (!file)
+        {
+            return Failure(std::format("{}: the file could not be created", path));
+        }
+        file.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+        file.close();
+        if (file.fail())
+        {
+            std::error_code ignored;
+            std::filesystem::remove(written, ignored);
+            return Failure(std::format("{}: the file could not be written; the disk may be full", path));
+        }
+        return internal::MoveIntoPlace(written, target);
+    }
+
+    std::filesystem::path internal::WritingPath(const std::filesystem::path& target)
+    {
+        std::filesystem::path written = target;
+        written += ".writing";
+        return written;
+    }
 }

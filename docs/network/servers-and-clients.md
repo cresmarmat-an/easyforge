@@ -40,8 +40,9 @@ are written:
 | `Timeout` | 5 | Seconds of silence before a client is dropped |
 | `Identity` | none | Proves to clients this is the server they expect; see [Security](security.md#proving-who-the-server-is) |
 
-When the port cannot be used, for example because another program has it, the
-server tests as false and `Error()` says why.
+When the port cannot be used, for example because another program has it, or
+`Identity` was loaded from a file that could not be read, the server tests as
+false and `Error()` says why.
 
 The first time a program listens for the network, Windows asks the person at
 the computer whether to allow it. A server with `ThisComputerOnly` listens only

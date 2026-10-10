@@ -333,13 +333,7 @@ namespace easyforge
     Result<> Recording::Save(std::string_view path) const
     {
         std::vector<std::uint8_t> bytes = Encode();
-        std::ofstream file(PathFromText(path), std::ios::binary);
-        file.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
-        if (!file)
-        {
-            return Failure(std::format("{}: the recording could not be written", path));
-        }
-        return {};
+        return WriteWholeFile(path, std::string_view(reinterpret_cast<const char*>(bytes.data()), bytes.size()));
     }
 
     Result<Recording> Recording::Load(std::string_view path)

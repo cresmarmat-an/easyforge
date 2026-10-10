@@ -900,13 +900,7 @@ namespace easyforge
 
     Result<> Controls::SaveBindings(std::string_view path) const
     {
-        std::ofstream file { PathFromText(path), std::ios::binary };
-        file << BindingsText();
-        if (!file)
-        {
-            return Failure(std::format("{}: the bindings could not be written", path));
-        }
-        return {};
+        return WriteWholeFile(path, BindingsText());
     }
 
     Result<> Controls::LoadBindings(std::string_view path) const

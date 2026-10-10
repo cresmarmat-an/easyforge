@@ -16,9 +16,9 @@ easyforge_add_library(core
         Transform.cpp)
 
 if(WIN32)
-    target_sources(easyforge_core PRIVATE windows/DebuggerOutput.cpp)
+    target_sources(easyforge_core PRIVATE windows/DebuggerOutput.cpp windows/FileWriting.cpp)
 else()
-    target_sources(easyforge_core PRIVATE standard/DebuggerOutput.cpp)
+    target_sources(easyforge_core PRIVATE standard/DebuggerOutput.cpp standard/FileWriting.cpp)
 endif()
 
 find_package(Threads REQUIRED)

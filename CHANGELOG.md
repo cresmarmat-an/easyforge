@@ -23,6 +23,8 @@
 - Renderers start again on a new device by themselves when the GPU is reset,
   and textures, fonts, models, and shaders follow.
 - `PathFromText` and `TextFromPath` in `core`, for UTF-8 file paths.
+- `WriteWholeFile` in `core` writes a file whole or not at all, through a file
+  beside it that is flushed to the disk and then takes the old one's place.
 - The `EASYFORGE_SANITIZE` build option, and tests that feed damaged input to
   every reader and run jobs, sounds, and network ends from many threads at once.
 - A `Font` or `Shader` can be named by the path of its file wherever one is
@@ -98,6 +100,10 @@
   congestion control after TCP's NewReno and QUIC, instead of at most 1 MB a
   second; packets found lost have their messages sent again at once, and a
   packet that arrives out of order is acknowledged at once.
+- Tables, themes, input bindings, recordings, network identities, and packs
+  are saved whole or not at all, so a crash or power cut while saving leaves
+  the old file instead of part of the new one.
+- A server given a `NetworkIdentity` that did not load does not start.
 - Servers keep nothing for a connect request until the client answers a
   cookie tied to its address, answer forged requests with less than they were
   sent, limit connect attempts from each address, and close a connection that

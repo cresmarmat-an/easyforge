@@ -140,17 +140,8 @@ namespace easyforge
         {
             return Failure("there is no identity to save");
         }
-        std::ofstream file(PathFromText(path), std::ios::binary | std::ios::trunc);
-        if (!file)
-        {
-            return Failure(std::format("{}: the file could not be written", path));
-        }
-        file << FirstLine << '\n' << internal::networking::HexText(Held->Private()) << '\n';
-        if (!file.good())
-        {
-            return Failure(std::format("{}: the file could not be written", path));
-        }
-        return {};
+        std::string text = std::format("{}\n{}\n", FirstLine, internal::networking::HexText(Held->Private()));
+        return WriteWholeFile(path, text);
     }
 
     std::string NetworkIdentity::PublicKey() const

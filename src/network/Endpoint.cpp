@@ -112,6 +112,13 @@ namespace easyforge::internal::networking
         endpoint->Instance = endpoint->NewSalt();
         endpoint->Slots.resize(static_cast<std::size_t>(std::clamp(settings.MaximumClients, 1, 4096)));
         endpoint->Identity = settings.Identity.Key();
+        if (!settings.Identity && !settings.Identity.Error().empty())
+        {
+            // Starting without it would turn away every client that pins it,
+            // with a reason that points at the server's identity, not its file.
+            endpoint->Problem = std::format("the identity could not be used: {}", settings.Identity.Error());
+            return endpoint;
+        }
         if (!RandomBytes(endpoint->CookieSecret))
         {
             endpoint->Problem = "this system has no cryptography for secure connections";
