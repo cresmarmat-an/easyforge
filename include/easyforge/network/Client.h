@@ -30,6 +30,12 @@ namespace easyforge
         // and to wait for the server to accept.
         float Timeout = 5.0f;
         float ConnectTimeout = 5.0f;
+
+        // The server's NetworkIdentity::PublicKey(). When given, the client
+        // connects only to a server that proves it holds that identity, so
+        // nobody can stand in for it. Empty connects to whichever server
+        // answers at the address.
+        std::string ServerKey {};
     };
 
     // Connects to a server and talks with it, the same ways it talks back.

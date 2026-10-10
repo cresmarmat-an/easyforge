@@ -11,6 +11,7 @@
 #include <easyforge/core/Property.h>
 #include <easyforge/core/Result.h>
 #include <easyforge/network/Connection.h>
+#include <easyforge/network/Identity.h>
 #include <easyforge/network/Message.h>
 
 namespace easyforge
@@ -37,6 +38,11 @@ namespace easyforge
 
         // Seconds without hearing from a client before it is dropped.
         float Timeout = 5.0f;
+
+        // Proves to clients that this is the server they expect, when they
+        // were given its PublicKey. Without one, connections are still
+        // encrypted, but a client cannot tell this server from another.
+        NetworkIdentity Identity {};
     };
 
     // Accepts clients, and talks with them: one-way messages, and requests that

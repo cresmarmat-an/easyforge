@@ -30,6 +30,9 @@
   in settings; everything that names the same file shares one.
 - Versioning and Threads pages in the reference: what each kind of release
   may change, and what every type allows when a program uses several threads.
+- Every network connection is encrypted and authenticated with the system's
+  cryptography (ECDH, HKDF, and AES-256-GCM through CNG), and servers can prove
+  who they are with a `NetworkIdentity` that clients pin as `ServerKey`.
 - `RollingResistance` on physics bodies and in every shape's settings, 0.01 by
   default, so round bodies slow down as they roll and piles of them come to
   rest.
@@ -95,6 +98,11 @@
   congestion control after TCP's NewReno and QUIC, instead of at most 1 MB a
   second; packets found lost have their messages sent again at once, and a
   packet that arrives out of order is acknowledged at once.
+- Servers keep nothing for a connect request until the client answers a
+  cookie tied to its address, answer forged requests with less than they were
+  sent, limit connect attempts from each address, and close a connection that
+  sends more unfinished messages than 16 MB. The wire format's marker is now
+  `EFN3`.
 - Packets carry the sender's clock. The wire format's revision marker is now
   `EFN2`, so programs built with 0.0.1 cannot talk to programs built with this
   change.

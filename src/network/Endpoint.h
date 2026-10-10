@@ -8,7 +8,9 @@
 // collected as events while the mutex is held, and run after it is released,
 // so a handler can call back into the server or client freely.
 
+#include <array>
 #include <atomic>
+#include <bitset>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -26,11 +28,30 @@
 #include <easyforge/network/Client.h>
 #include <easyforge/network/Server.h>
 
+#include "Crypto.h"
 #include "Peer.h"
 #include "Socket.h"
 
 namespace easyforge::internal::networking
 {
+    // Which packet counters have arrived on a connection, so each is taken
+    // once: the newest, and a window of the ones before it.
+    class ReplayWindow
+    {
+    public:
+        // Whether the counter could still be taken: not seen, not too old.
+        bool IsFresh(std::uint64_t counter) const;
+
+        // Takes the counter, once its packet has opened.
+        void Take(std::uint64_t counter);
+
+    private:
+        std::uint64_t Newest = 0;
+        std::bitset<ReplayWindowSize> Seen;
+    };
+
+    using Cookie = std::array<std::uint8_t, CookieSize>;
+
     using MessageHandler = std::function<void(Connection, const Message&)>;
     using RequestHandler = std::function<Result<Message>(Connection, const Message&)>;
 
@@ -98,7 +119,34 @@ namespace easyforge::internal::networking
             std::unique_ptr<Peer> Link;
             std::map<std::string, std::uint32_t, std::less<>> NewestUnreliable;
 
+            // The handshake: the client's key pair until the keys are agreed,
+            // and the server's cookie once it came.
+            std::unique_ptr<KeyExchange> Exchange;
+            Cookie Challenge {};
+            bool HasChallenge = false;
+            int ResponsesSent = 0;
+
+            // The server's half of the accept, kept to send again if it is lost.
+            PublicKey ClientPublic {};
+            PublicKey ServerPublic {};
+            Signature ServerSignature {};
+            bool Signed = false;
+
+            // One key each way. Packets sent are counted from 1, and the
+            // counters received are taken once each.
+            std::unique_ptr<Sealer> Outgoing;
+            std::unique_ptr<Sealer> Incoming;
+            std::uint64_t SentPackets = 0;
+            ReplayWindow Received;
+
             std::uint64_t Token() const { return ClientSalt ^ ServerSalt; }
+        };
+
+        // Connect attempts an address has left, refilled with time.
+        struct ConnectAllowance
+        {
+            double Attempts = ConnectAttemptBurst;
+            double Updated = 0.0;
         };
 
         struct PendingRequest
@@ -129,6 +177,29 @@ namespace easyforge::internal::networking
         void ReceivePackets(double now);
         void HandlePacket(double now, const SocketAddress& from, std::span<const std::uint8_t> bytes);
         void HandleConnectRequest(double now, const SocketAddress& from, std::uint64_t salt);
+        void HandleConnectResponse(double now, const SocketAddress& from, std::uint64_t salt, const Cookie& cookie,
+            const PublicKey& clientPublic);
+        void HandleConnectAccept(double now, ByteReader& reader);
+
+        // Cookies, made from the address and when they run out, so the server
+        // keeps nothing for an address until it proves it receives there.
+        Cookie MakeCookie(const SocketAddress& from, std::uint64_t salt, std::uint64_t expiry) const;
+        bool CheckCookie(double now, const SocketAddress& from, std::uint64_t salt, const Cookie& cookie) const;
+        bool AllowConnectAttempt(double now, const SocketAddress& from);
+
+        // Sets the slot's keys from the agreed secret. False when the system
+        // could not make them.
+        bool SetKeys(Slot& slot, const SecretKey& shared);
+
+        // Whatever the handshake signs: both salts and both public keys.
+        static std::vector<std::uint8_t> AcceptTranscript(const Slot& slot);
+
+        // A plain packet (magic, kind, token, then the rest) sealed for the
+        // slot, or opened from it. Unseal is false for a packet that was
+        // changed, sealed with another key, or seen before.
+        std::vector<std::uint8_t> Seal(Slot& slot, std::span<const std::uint8_t> plain);
+        bool Unseal(Slot& slot, std::span<const std::uint8_t> packet, std::vector<std::uint8_t>& body);
+        std::vector<std::uint8_t> DisconnectPacket(Slot& slot, DisconnectReason code);
         void HandleDelivered(int slot, DeliveredMessage delivered);
         void CheckTimes(double now);
         void SendPackets(double now);
@@ -185,6 +256,16 @@ namespace easyforge::internal::networking
         std::vector<Slot> Slots;
         std::map<SocketAddress, int> SlotsByAddress;
         SocketAddress ServerAddress;
+
+        // The server's: the secret its cookies are made with, its identity, and
+        // the connect attempts each address has left.
+        SecretKey CookieSecret {};
+        std::shared_ptr<SigningKey> Identity;
+        std::map<SocketAddress, ConnectAllowance> ConnectAllowances;
+
+        // The client's: the server key it insists on, when it has one.
+        bool PinsServer = false;
+        PublicKey PinnedServer {};
 
         std::map<std::string, std::shared_ptr<MessageHandler>, std::less<>> MessageHandlers;
         std::map<std::string, std::shared_ptr<RequestHandler>, std::less<>> RequestHandlers;

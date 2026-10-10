@@ -142,8 +142,8 @@ namespace
                     madeUp[0] = 'E';
                     madeUp[1] = 'F';
                     madeUp[2] = 'N';
-                    madeUp[3] = '2';
-                    madeUp[4] = static_cast<std::uint8_t>(Chance.IntegerBetween(0, 9));
+                    madeUp[3] = '3';
+                    madeUp[4] = static_cast<std::uint8_t>(Chance.IntegerBetween(0, 11));
                 }
                 Send(madeUp, Chance.Chance(0.5f) ? Server : ClientAddress);
             }

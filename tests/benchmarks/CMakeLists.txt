@@ -24,3 +24,8 @@ foreach(pair physics:PhysicsBenchmarks data:DataBenchmarks script:ScriptBenchmar
         target_link_libraries(easyforge-benchmarks PRIVATE easyforge::${library})
     endif()
 endforeach()
+
+# The network benchmarks also time the library's own sealing, which is not public.
+if(TARGET easyforge::network)
+    target_include_directories(easyforge-benchmarks PRIVATE ${PROJECT_SOURCE_DIR}/src/network)
+endif()

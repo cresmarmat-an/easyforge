@@ -178,7 +178,7 @@ namespace easyforge::internal::networking
             }
 
             std::vector<std::uint8_t> packet;
-            packet.reserve(PacketLimit);
+            packet.reserve(PlainPacketLimit);
             std::uint16_t sequence = NextSequence++;
             WriteHeader(packet, token, sequence, now);
             PacketRecord& record = Records[sequence % Window];
@@ -204,7 +204,7 @@ namespace easyforge::internal::networking
                 while (nextUnreliable < UnreliableQueue.size())
                 {
                     const UnreliableEntry& entry = UnreliableQueue[nextUnreliable];
-                    if (packet.size() + EntrySize(true, false, entry.Bytes.size()) > PacketLimit)
+                    if (packet.size() + EntrySize(true, false, entry.Bytes.size()) > PlainPacketLimit)
                     {
                         break;
                     }
@@ -218,7 +218,7 @@ namespace easyforge::internal::networking
                 {
                     auto [channel, piece] = due[nextDue];
                     bool fragment = piece->Count != 0;
-                    if (packet.size() + EntrySize(false, fragment, piece->Bytes.size()) > PacketLimit)
+                    if (packet.size() + EntrySize(false, fragment, piece->Bytes.size()) > PlainPacketLimit)
                     {
                         break;
                     }
@@ -585,11 +585,13 @@ namespace easyforge::internal::networking
         {
             assembly.Count = piece.Count;
             assembly.Parts.resize(piece.Count);
+            HeldBytes += piece.Count * sizeof(std::vector<std::uint8_t>);
         }
         if (assembly.Count != piece.Count || !assembly.Parts[piece.Index].empty())
         {
             return;
         }
+        HeldBytes += piece.Bytes.size();
         assembly.Parts[piece.Index] = std::move(piece.Bytes);
         if (++assembly.Arrived == assembly.Count)
         {
@@ -598,6 +600,7 @@ namespace easyforge::internal::networking
             {
                 whole.insert(whole.end(), part.begin(), part.end());
             }
+            HeldBytes -= std::min(HeldBytes, whole.size() + assembly.Count * sizeof(std::vector<std::uint8_t>));
             UnorderedAssemblies.erase(group);
             delivered.push_back({ Channel::ReliableUnordered, 0, std::move(whole) });
         }

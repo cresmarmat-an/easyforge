@@ -109,8 +109,8 @@ build/tests/benchmarks/Release/easyforge-benchmarks
 
 `easyforge-benchmarks` times heavy work in each library that was built: 2,000
 physics bodies, 10,000 table nodes, script loops and calls, 50,000 shapes on a
-canvas, an interface of 5,000 elements, and network messages through lost
-packets. It prints the median time of many runs, with the fastest and slowest.
+canvas, an interface of 5,000 elements, network messages through lost packets,
+and sealing network packets. It prints the median time of many runs, with the fastest and slowest.
 Give it a name, such as `Physics`, to run only the benchmarks whose name
 contains it. Times from a debug build say little, so build it in Release.
 

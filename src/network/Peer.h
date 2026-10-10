@@ -79,6 +79,10 @@ namespace easyforge::internal::networking
         // control has found the path can carry.
         double SendWindow() const { return CongestionWindow; }
 
+        // Whether the other end has sent more unfinished messages than a
+        // connection may hold, AssemblyLimit.
+        bool OverBudget() const { return HeldBytes > AssemblyLimit; }
+
         // The bytes of data sent and not yet acknowledged or found lost.
         double BytesInFlight() const { return InFlight; }
 
@@ -196,6 +200,9 @@ namespace easyforge::internal::networking
         std::uint16_t LowestUnordered = 0;
         std::bitset<Window> UnorderedArrived;
         std::map<std::uint16_t, Assembly> UnorderedAssemblies;
+
+        // Bytes held for unordered messages not complete yet.
+        std::size_t HeldBytes = 0;
 
         double SmoothedRoundTrip = 0.1;
         bool MeasuredRoundTrip = false;

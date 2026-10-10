@@ -93,8 +93,10 @@ clients in one window, with a switch that drops a tenth of the packets.
 
 ## How it works
 
-Everything travels over UDP. The parts that make it dependable are written for
-easyforge: a handshake, numbered packets that acknowledge each other,
+Everything travels over UDP, encrypted and authenticated with the operating
+system's own cryptography ([security](security.md)). The parts that make it
+dependable are written for easyforge: a handshake, numbered packets that
+acknowledge each other,
 resending what was lost, putting messages back in order, splitting large
 messages, keep-alives and timeouts, a limit on how fast each connection sends,
 request numbers so each reply finds its callback, and finding servers by asking
@@ -108,10 +110,6 @@ threaded end. `Smoothed` values are used from one thread at a time. [Threads](..
 
 ## Limitations
 
-- **No encryption.** Anything sent can be read and changed by whoever is on the
-  network between the two ends. Use `network` on local networks and with
-  servers you trust. Encryption will come through the TLS the operating system
-  provides.
 - Windows only for now. Linux, Apple platforms, and Android arrive with their
   stages. In a browser (stage 3) the connection will use WebSocket, since
   browsers cannot send UDP; there, unreliable messages will arrive reliably.

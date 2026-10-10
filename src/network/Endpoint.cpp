@@ -6,6 +6,7 @@
 #include <iterator>
 
 #include <easyforge/core/Log.h>
+#include <easyforge/network/Identity.h>
 
 namespace easyforge::internal::networking
 {
@@ -38,6 +39,62 @@ namespace easyforge::internal::networking
         {
             return std::format("the {} \"{}\" is larger than {} MB", what, name, MessageLimit >> 20);
         }
+
+        std::uint64_t Milliseconds(double seconds)
+        {
+            return static_cast<std::uint64_t>(std::max(seconds, 0.0) * 1000.0);
+        }
+
+        void WriteKey(ByteWriter& writer, std::span<const std::uint8_t> key)
+        {
+            writer.WriteBytes(key);
+        }
+
+        template <std::size_t Size>
+        bool ReadKey(ByteReader& reader, std::array<std::uint8_t, Size>& key)
+        {
+            std::span<const std::uint8_t> bytes = reader.ReadBytes(Size);
+            if (reader.Failed())
+            {
+                return false;
+            }
+            std::copy(bytes.begin(), bytes.end(), key.begin());
+            return true;
+        }
+    }
+
+    bool ReplayWindow::IsFresh(std::uint64_t counter) const
+    {
+        if (counter == 0)
+        {
+            return false;
+        }
+        if (counter > Newest)
+        {
+            return true;
+        }
+        std::uint64_t behind = Newest - counter;
+        return behind < ReplayWindowSize && !Seen.test(static_cast<std::size_t>(behind));
+    }
+
+    void ReplayWindow::Take(std::uint64_t counter)
+    {
+        if (counter > Newest)
+        {
+            std::uint64_t ahead = counter - Newest;
+            if (ahead >= ReplayWindowSize)
+            {
+                Seen.reset();
+            }
+            else
+            {
+                Seen <<= static_cast<std::size_t>(ahead);
+            }
+            Seen.set(0);
+            Newest = counter;
+            return;
+        }
+        Seen.set(static_cast<std::size_t>(Newest - counter));
     }
 
     Endpoint::Endpoint(Role role) : Kind(role)
@@ -54,6 +111,12 @@ namespace easyforge::internal::networking
         endpoint->Threaded = settings.Threaded;
         endpoint->Instance = endpoint->NewSalt();
         endpoint->Slots.resize(static_cast<std::size_t>(std::clamp(settings.MaximumClients, 1, 4096)));
+        endpoint->Identity = settings.Identity.Key();
+        if (!RandomBytes(endpoint->CookieSecret))
+        {
+            endpoint->Problem = "this system has no cryptography for secure connections";
+            return endpoint;
+        }
 
         std::string error;
         endpoint->Socket = OpenSocket({ .Port = settings.Port, .ThisComputerOnly = settings.ThisComputerOnly }, error);
@@ -80,6 +143,15 @@ namespace easyforge::internal::networking
         endpoint->Conditions = settings.Conditions;
         endpoint->Threaded = settings.Threaded;
         endpoint->Slots.resize(1);
+        if (!settings.ServerKey.empty())
+        {
+            if (!PublicKeyFromText(settings.ServerKey, endpoint->PinnedServer))
+            {
+                endpoint->Problem = "ServerKey is not a server's public key: it should be the 128 digits PublicKey gave";
+                return endpoint;
+            }
+            endpoint->PinsServer = true;
+        }
 
         std::string error;
         std::optional<SocketAddress> address = FindAddress(settings.Address, settings.Port, error);
@@ -107,6 +179,12 @@ namespace easyforge::internal::networking
         slot.ClientSalt = endpoint->NewSalt();
         slot.Started = now;
         slot.Link = std::make_unique<Peer>(now);
+        slot.Exchange = std::make_unique<KeyExchange>();
+        if (!*slot.Exchange)
+        {
+            endpoint->Problem = "this system has no cryptography for secure connections";
+            return endpoint;
+        }
         endpoint->Running = true;
         if (endpoint->Threaded)
         {
@@ -142,13 +220,9 @@ namespace easyforge::internal::networking
         {
             if (slot.Used && slot.Connected)
             {
-                std::vector<std::uint8_t> packet = StartPacket(PacketKind::Disconnect);
-                ByteWriter writer(packet);
-                writer.Write64(slot.Token());
-                writer.Write8(static_cast<std::uint8_t>(code));
                 for (int copy = 0; copy < 3; ++copy)
                 {
-                    SendNow(slot.Address, packet);
+                    SendNow(slot.Address, DisconnectPacket(slot, code));
                 }
             }
         }
@@ -192,10 +266,20 @@ namespace easyforge::internal::networking
 
     std::uint64_t Endpoint::NewSalt()
     {
+        // From the system's generator, so nobody can guess the next one.
         std::uint64_t salt = 0;
         while (salt == 0)
         {
-            salt = (static_cast<std::uint64_t>(Chance.Next()) << 32) | Chance.Next();
+            std::array<std::uint8_t, 8> bytes {};
+            if (!RandomBytes(bytes))
+            {
+                salt = (static_cast<std::uint64_t>(Chance.Next()) << 32) | Chance.Next();
+                continue;
+            }
+            for (std::uint8_t byte : bytes)
+            {
+                salt = (salt << 8) | byte;
+            }
         }
         return salt;
     }
@@ -390,36 +474,48 @@ namespace easyforge::internal::networking
         {
         case PacketKind::ConnectRequest:
         {
+            // Only a request as large as the answer is answered.
             std::uint64_t salt = reader.Read64();
-            if (Kind == Role::Server && Running && !reader.Failed() && salt != 0)
+            if (Kind == Role::Server && Running && !reader.Failed() && salt != 0 && bytes.size() >= ConnectRequestSize)
             {
                 HandleConnectRequest(now, from, salt);
             }
             return;
         }
-        case PacketKind::ConnectAccept:
+        case PacketKind::ConnectChallenge:
         {
-            std::uint64_t clientSalt = reader.Read64();
-            std::uint64_t serverSalt = reader.Read64();
-            reader.Read16();
-            if (Kind != Role::Client || reader.Failed() || from != ServerAddress)
+            std::uint64_t salt = reader.Read64();
+            Cookie cookie {};
+            if (Kind != Role::Client || !ReadKey(reader, cookie) || from != ServerAddress)
             {
                 return;
             }
             Slot& slot = Slots[0];
-            if (!slot.Used || slot.Connected || slot.ClientSalt != clientSalt)
+            if (slot.Used && !slot.Connected && slot.ClientSalt == salt)
             {
-                return;
+                slot.Challenge = cookie;
+                slot.HasChallenge = true;
+                slot.LastConnectRequest = -1.0;
             }
-            slot.ServerSalt = serverSalt;
-            slot.Connected = true;
-            slot.Link->Heard(now);
-            Events.push_back([handler = ClientConnected] {
-                if (handler)
-                {
-                    handler();
-                }
-            });
+            return;
+        }
+        case PacketKind::ConnectResponse:
+        {
+            std::uint64_t salt = reader.Read64();
+            Cookie cookie {};
+            PublicKey clientPublic {};
+            if (Kind == Role::Server && Running && salt != 0 && ReadKey(reader, cookie) && ReadKey(reader, clientPublic))
+            {
+                HandleConnectResponse(now, from, salt, cookie, clientPublic);
+            }
+            return;
+        }
+        case PacketKind::ConnectAccept:
+        {
+            if (Kind == Role::Client && from == ServerAddress)
+            {
+                HandleConnectAccept(now, reader);
+            }
             return;
         }
         case PacketKind::ConnectRefuse:
@@ -440,20 +536,25 @@ namespace easyforge::internal::networking
         case PacketKind::Data:
         case PacketKind::KeepAlive:
         {
-            std::uint64_t token = reader.Read64();
             int index = SlotFor(from);
-            if (index < 0 || reader.Failed())
+            if (index < 0)
             {
                 return;
             }
             Slot& slot = Slots[index];
-            if (!slot.Connected || slot.Token() != token)
+            std::vector<std::uint8_t> body;
+            if (!Unseal(slot, bytes, body))
             {
                 return;
             }
-            // A damaged packet still delivers what came before the damage.
+            ByteReader opened(body);
             std::vector<DeliveredMessage> delivered;
-            slot.Link->Receive(now, reader, kind == PacketKind::KeepAlive, delivered);
+            slot.Link->Receive(now, opened, kind == PacketKind::KeepAlive, delivered);
+            if (slot.Link->OverBudget())
+            {
+                Close(index, "it sent more unfinished messages than a connection may hold", true, DisconnectReason::Closed);
+                return;
+            }
             double sentAt = ToNetworkTime(slot.Link->LastPacketSentAt());
             for (DeliveredMessage& message : delivered)
             {
@@ -468,15 +569,20 @@ namespace easyforge::internal::networking
         }
         case PacketKind::Disconnect:
         {
-            std::uint64_t token = reader.Read64();
-            auto code = static_cast<DisconnectReason>(reader.Read8());
             int index = SlotFor(from);
-            if (index < 0 || reader.Failed())
+            if (index < 0)
             {
                 return;
             }
             Slot& slot = Slots[index];
-            if (!slot.Connected || slot.Token() != token)
+            std::vector<std::uint8_t> body;
+            if (!Unseal(slot, bytes, body))
+            {
+                return;
+            }
+            ByteReader opened(body);
+            auto code = static_cast<DisconnectReason>(opened.Read8());
+            if (opened.Failed())
             {
                 return;
             }
@@ -491,7 +597,7 @@ namespace easyforge::internal::networking
         case PacketKind::Discover:
         {
             std::uint64_t nonce = reader.Read64();
-            if (Kind != Role::Server || !Running || reader.Failed())
+            if (Kind != Role::Server || !Running || reader.Failed() || bytes.size() < DiscoverRequestSize)
             {
                 return;
             }
@@ -504,7 +610,11 @@ namespace easyforge::internal::networking
             writer.Write16(static_cast<std::uint16_t>(Slots.size()));
             writer.Write16(BoundPort);
             writer.WriteShortText(Name);
-            SendRaw(from, std::move(reply));
+            // Never more than was asked with.
+            if (reply.size() <= bytes.size())
+            {
+                SendRaw(from, std::move(reply));
+            }
             return;
         }
         default:
@@ -512,8 +622,115 @@ namespace easyforge::internal::networking
         }
     }
 
+    Cookie Endpoint::MakeCookie(const SocketAddress& from, std::uint64_t salt, std::uint64_t expiry) const
+    {
+        std::vector<std::uint8_t> said;
+        ByteWriter writer(said);
+        writer.Write32(from.Host);
+        writer.Write16(from.Port);
+        writer.Write64(salt);
+        writer.Write64(expiry);
+        Digest proof = Authenticate(CookieSecret, said);
+        Cookie cookie {};
+        for (std::size_t index = 0; index < 8; ++index)
+        {
+            cookie[index] = static_cast<std::uint8_t>(expiry >> (8 * index));
+        }
+        std::copy(proof.begin(), proof.begin() + (CookieSize - 8), cookie.begin() + 8);
+        return cookie;
+    }
+
+    bool Endpoint::CheckCookie(double now, const SocketAddress& from, std::uint64_t salt, const Cookie& cookie) const
+    {
+        std::uint64_t expiry = 0;
+        for (std::size_t index = 0; index < 8; ++index)
+        {
+            expiry |= static_cast<std::uint64_t>(cookie[index]) << (8 * index);
+        }
+        if (expiry < Milliseconds(now))
+        {
+            return false;
+        }
+        return SameBytes(MakeCookie(from, salt, expiry), cookie);
+    }
+
+    bool Endpoint::AllowConnectAttempt(double now, const SocketAddress& from)
+    {
+        // Too many addresses at once, as in a flood: start over, which every
+        // honest client survives by trying again.
+        if (ConnectAllowances.size() >= MostAddressesTracked && !ConnectAllowances.contains(from))
+        {
+            ConnectAllowances.clear();
+        }
+        auto [found, added] = ConnectAllowances.try_emplace(from);
+        ConnectAllowance& allowance = found->second;
+        if (added)
+        {
+            allowance.Updated = now;
+        }
+        allowance.Attempts = std::min(ConnectAttemptBurst, allowance.Attempts + (now - allowance.Updated) * ConnectAttemptsPerSecond);
+        allowance.Updated = now;
+        if (allowance.Attempts < 1.0)
+        {
+            return false;
+        }
+        allowance.Attempts -= 1.0;
+        return true;
+    }
+
     void Endpoint::HandleConnectRequest(double now, const SocketAddress& from, std::uint64_t salt)
     {
+        if (!AllowConnectAttempt(now, from))
+        {
+            return;
+        }
+        std::vector<std::uint8_t> challenge = StartPacket(PacketKind::ConnectChallenge);
+        ByteWriter writer(challenge);
+        writer.Write64(salt);
+        WriteKey(writer, MakeCookie(from, salt, Milliseconds(now + CookieSeconds)));
+        SendRaw(from, std::move(challenge));
+    }
+
+    std::vector<std::uint8_t> Endpoint::AcceptTranscript(const Slot& slot)
+    {
+        std::vector<std::uint8_t> transcript;
+        ByteWriter writer(transcript);
+        constexpr std::string_view Purpose = "easyforge network accept 3";
+        writer.WriteBytes(Purpose);
+        writer.Write64(slot.ClientSalt);
+        writer.Write64(slot.ServerSalt);
+        writer.WriteBytes(slot.ClientPublic);
+        writer.WriteBytes(slot.ServerPublic);
+        return transcript;
+    }
+
+    bool Endpoint::SetKeys(Slot& slot, const SecretKey& shared)
+    {
+        std::array<std::uint8_t, 16> salts {};
+        for (std::size_t index = 0; index < 8; ++index)
+        {
+            salts[index] = static_cast<std::uint8_t>(slot.ClientSalt >> (8 * index));
+            salts[8 + index] = static_cast<std::uint8_t>(slot.ServerSalt >> (8 * index));
+        }
+        std::array<std::uint8_t, 2 * KeySize> keys {};
+        DeriveKeys(shared, salts, "easyforge network keys 3", keys);
+        SecretKey toServer {};
+        SecretKey toClient {};
+        std::copy(keys.begin(), keys.begin() + KeySize, toServer.begin());
+        std::copy(keys.begin() + KeySize, keys.end(), toClient.begin());
+        slot.Outgoing = std::make_unique<Sealer>();
+        slot.Incoming = std::make_unique<Sealer>();
+        bool server = Kind == Role::Server;
+        return slot.Outgoing->SetKey(server ? toClient : toServer) && slot.Incoming->SetKey(server ? toServer : toClient);
+    }
+
+    void Endpoint::HandleConnectResponse(double now, const SocketAddress& from, std::uint64_t salt, const Cookie& cookie,
+        const PublicKey& clientPublic)
+    {
+        if (!CheckCookie(now, from, salt, cookie))
+        {
+            return;
+        }
         if (auto found = SlotsByAddress.find(from); found != SlotsByAddress.end())
         {
             Slot& existing = Slots[found->second];
@@ -525,6 +742,10 @@ namespace easyforge::internal::networking
             }
             // A new salt from the same address: the program there started over.
             Close(found->second, "disconnected", false, DisconnectReason::Closed);
+        }
+        if (!AllowConnectAttempt(now, from))
+        {
+            return;
         }
 
         auto free = std::ranges::find_if(Slots, [](const Slot& slot) { return !slot.Used; });
@@ -538,17 +759,36 @@ namespace easyforge::internal::networking
             return;
         }
 
+        // Agree on the keys before taking the slot; a public key that is not
+        // a point on the curve gets no answer.
+        KeyExchange exchange;
+        SecretKey shared {};
+        if (!exchange || !exchange.Agree(clientPublic, shared))
+        {
+            return;
+        }
         int index = static_cast<int>(free - Slots.begin());
         Slot& slot = *free;
+        slot.ClientSalt = salt;
+        slot.ServerSalt = NewSalt();
+        slot.ClientPublic = clientPublic;
+        slot.ServerPublic = exchange.Public();
+        if (!SetKeys(slot, shared))
+        {
+            slot.Outgoing.reset();
+            slot.Incoming.reset();
+            return;
+        }
+        slot.Signed = Identity && Identity->Sign(AcceptTranscript(slot), slot.ServerSignature);
         slot.Used = true;
         slot.Connected = true;
         ++slot.Generation;
         slot.Address = from;
-        slot.ClientSalt = salt;
-        slot.ServerSalt = NewSalt();
         slot.Started = now;
         slot.Link = std::make_unique<Peer>(now);
         slot.NewestUnreliable.clear();
+        slot.SentPackets = 0;
+        slot.Received = {};
         SlotsByAddress[from] = index;
         SendAccept(index);
         Events.push_back([handler = ServerConnected, connection = MakeConnection(index)] {
@@ -567,7 +807,109 @@ namespace easyforge::internal::networking
         writer.Write64(slot.ClientSalt);
         writer.Write64(slot.ServerSalt);
         writer.Write16(static_cast<std::uint16_t>(index));
+        WriteKey(writer, slot.ServerPublic);
+        writer.Write8(slot.Signed ? 1 : 0);
+        if (slot.Signed)
+        {
+            WriteKey(writer, slot.ServerSignature);
+        }
         SendRaw(slot.Address, std::move(packet));
+    }
+
+    void Endpoint::HandleConnectAccept(double now, ByteReader& reader)
+    {
+        std::uint64_t clientSalt = reader.Read64();
+        std::uint64_t serverSalt = reader.Read64();
+        reader.Read16();
+        PublicKey serverPublic {};
+        if (!ReadKey(reader, serverPublic))
+        {
+            return;
+        }
+        bool signedAccept = reader.Read8() != 0;
+        Signature signature {};
+        if (reader.Failed() || (signedAccept && !ReadKey(reader, signature)))
+        {
+            return;
+        }
+        Slot& slot = Slots[0];
+        if (!slot.Used || slot.Connected || slot.ClientSalt != clientSalt || !slot.Exchange)
+        {
+            return;
+        }
+        slot.ServerSalt = serverSalt;
+        slot.ClientPublic = slot.Exchange->Public();
+        slot.ServerPublic = serverPublic;
+        if (PinsServer && (!signedAccept || serverPublic == PublicKey {} ||
+                              !Verify(PinnedServer, AcceptTranscript(slot), signature)))
+        {
+            Close(0, "the server could not prove it is the one ServerKey names", false, DisconnectReason::Closed);
+            return;
+        }
+        SecretKey shared {};
+        if (!slot.Exchange->Agree(serverPublic, shared) || !SetKeys(slot, shared))
+        {
+            return;
+        }
+        slot.Exchange.reset();
+        slot.Connected = true;
+        slot.Link->Heard(now);
+        Events.push_back([handler = ClientConnected] {
+            if (handler)
+            {
+                handler();
+            }
+        });
+    }
+
+    std::vector<std::uint8_t> Endpoint::Seal(Slot& slot, std::span<const std::uint8_t> plain)
+    {
+        // The plain packet starts with magic, kind, and token; the rest is sealed.
+        constexpr std::size_t Open = 4 + 1 + 8;
+        std::vector<std::uint8_t> packet(plain.begin(), plain.begin() + static_cast<std::ptrdiff_t>(std::min(Open, plain.size())));
+        if (plain.size() < Open || !slot.Outgoing)
+        {
+            return {};
+        }
+        std::uint64_t counter = ++slot.SentPackets;
+        ByteWriter writer(packet);
+        writer.Write64(counter);
+        std::vector<std::uint8_t> header = packet;
+        if (!slot.Outgoing->Seal(counter, header, plain.subspan(Open), packet))
+        {
+            return {};
+        }
+        return packet;
+    }
+
+    bool Endpoint::Unseal(Slot& slot, std::span<const std::uint8_t> packet, std::vector<std::uint8_t>& body)
+    {
+        if (!slot.Connected || !slot.Incoming || packet.size() < SealedHeaderSize + TagSize)
+        {
+            return false;
+        }
+        ByteReader reader(packet.subspan(4 + 1));
+        std::uint64_t token = reader.Read64();
+        std::uint64_t counter = reader.Read64();
+        if (reader.Failed() || token != slot.Token() || !slot.Received.IsFresh(counter))
+        {
+            return false;
+        }
+        if (!slot.Incoming->Open(counter, packet.first(SealedHeaderSize), packet.subspan(SealedHeaderSize), body))
+        {
+            return false;
+        }
+        slot.Received.Take(counter);
+        return true;
+    }
+
+    std::vector<std::uint8_t> Endpoint::DisconnectPacket(Slot& slot, DisconnectReason code)
+    {
+        std::vector<std::uint8_t> plain = StartPacket(PacketKind::Disconnect);
+        ByteWriter writer(plain);
+        writer.Write64(slot.Token());
+        writer.Write8(static_cast<std::uint8_t>(code));
+        return Seal(slot, plain);
     }
 
     void Endpoint::HandleDelivered(int index, DeliveredMessage delivered)
@@ -785,11 +1127,35 @@ namespace easyforge::internal::networking
             }
             else if (Kind == Role::Client && (slot.LastConnectRequest < 0.0 || now - slot.LastConnectRequest >= ConnectRetrySeconds))
             {
-                std::vector<std::uint8_t> packet = StartPacket(PacketKind::ConnectRequest);
+                // First a request, padded so the answer is never larger; with
+                // the server's cookie, the response with this end's key.
+                std::vector<std::uint8_t> packet =
+                    StartPacket(slot.HasChallenge ? PacketKind::ConnectResponse : PacketKind::ConnectRequest);
                 ByteWriter writer(packet);
                 writer.Write64(slot.ClientSalt);
+                if (slot.HasChallenge && slot.Exchange)
+                {
+                    WriteKey(writer, slot.Challenge);
+                    WriteKey(writer, slot.Exchange->Public());
+                }
+                else
+                {
+                    packet.resize(ConnectRequestSize, 0);
+                }
                 SendRaw(slot.Address, std::move(packet));
                 slot.LastConnectRequest = now;
+
+                // Every fourth response goes with a new request, so a cookie the
+                // server no longer takes (it ran out, or the server started
+                // again) is replaced.
+                if (slot.HasChallenge && ++slot.ResponsesSent % 4 == 0)
+                {
+                    std::vector<std::uint8_t> request = StartPacket(PacketKind::ConnectRequest);
+                    ByteWriter requestWriter(request);
+                    requestWriter.Write64(slot.ClientSalt);
+                    request.resize(ConnectRequestSize, 0);
+                    SendRaw(slot.Address, std::move(request));
+                }
             }
         }
 
@@ -814,7 +1180,11 @@ namespace easyforge::internal::networking
         slot.Link->Flush(now, slot.Token(), packets);
         for (std::vector<std::uint8_t>& packet : packets)
         {
-            SendRaw(slot.Address, std::move(packet));
+            std::vector<std::uint8_t> sealed = Seal(slot, packet);
+            if (!sealed.empty())
+            {
+                SendRaw(slot.Address, std::move(sealed));
+            }
         }
     }
 
@@ -858,13 +1228,9 @@ namespace easyforge::internal::networking
         }
         if (tellOtherEnd && slot.Connected)
         {
-            std::vector<std::uint8_t> packet = StartPacket(PacketKind::Disconnect);
-            ByteWriter writer(packet);
-            writer.Write64(slot.Token());
-            writer.Write8(static_cast<std::uint8_t>(code));
             for (int copy = 0; copy < 3; ++copy)
             {
-                SendNow(slot.Address, packet);
+                SendNow(slot.Address, DisconnectPacket(slot, code));
             }
         }
 
@@ -895,6 +1261,13 @@ namespace easyforge::internal::networking
         slot.Connected = false;
         slot.Link.reset();
         slot.NewestUnreliable.clear();
+        slot.Exchange.reset();
+        slot.HasChallenge = false;
+        slot.ResponsesSent = 0;
+        slot.Outgoing.reset();
+        slot.Incoming.reset();
+        slot.SentPackets = 0;
+        slot.Received = {};
 
         if (Kind == Role::Server)
         {

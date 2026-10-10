@@ -35,6 +35,9 @@ namespace easyforge
         writer.WriteBytes(Magic);
         writer.Write8(static_cast<std::uint8_t>(PacketKind::Discover));
         writer.Write64(nonce);
+        // As large as any answer, which servers require, so a forged sender
+        // cannot make them send more than they got.
+        packet.resize(DiscoverRequestSize, 0);
         socket->Send({ LoopbackHost, settings.Port }, packet);
         if (!settings.ThisComputerOnly)
         {

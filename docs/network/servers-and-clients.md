@@ -38,6 +38,7 @@ are written:
 | `Threaded` | false | See [Threads](#threads) |
 | `Conditions` | none | Packet loss and delay on purpose, see [Delivery](delivery.md#testing-on-a-poor-network); also a property that can change while the server runs |
 | `Timeout` | 5 | Seconds of silence before a client is dropped |
+| `Identity` | none | Proves to clients this is the server they expect; see [Security](security.md#proving-who-the-server-is) |
 
 When the port cannot be used, for example because another program has it, the
 server tests as false and `Error()` says why.
@@ -55,8 +56,10 @@ listening. A server also stops when the last copy of its handle goes away.
 
 `Client::New` starts connecting to `Address` (a name such as "localhost", or a
 numeric address) and `Port`. Settings: `Address`, `Port`, `Threaded`,
-`Conditions`, `Timeout`, and `ConnectTimeout`, the seconds to wait for the
-server to answer, 5 by default.
+`Conditions`, `Timeout`, `ConnectTimeout`, the seconds to wait for the server
+to answer, 5 by default, and `ServerKey`, the identity the server must prove
+([security](security.md#proving-who-the-server-is)). A client also tests as
+false when `ServerKey` is not a key.
 
 A client tests as false when the address cannot be looked up or no socket can
 be opened, and `Error()` says which. Whether the
@@ -92,6 +95,7 @@ over an old handle.
 | "disconnected" | The client left, or the server closed the connection |
 | "timed out" | Nothing arrived for `Timeout` seconds |
 | "the server stopped" | `Stop()` was called |
+| "it sent more unfinished messages than a connection may hold" | The client sent the start of more large messages than fit in 16 MB |
 
 | On the client | |
 |---|---|
@@ -101,6 +105,7 @@ over an old handle.
 | "the server closed the connection" | The server called `Disconnect()` on this client |
 | "the server is full" | The server already had `MaximumClients` |
 | "the server did not answer" | Nothing answered within `ConnectTimeout` |
+| "the server could not prove it is the one ServerKey names" | The server has another identity, or none |
 
 An end's own `Stop()`, `Disconnect()`, and `connection.Disconnect()` run its
 `OnDisconnected` handler before they return. Everything else is reported during

@@ -2,12 +2,28 @@
 
 // The packet format both ends share.
 //
-// Every packet starts with "EFN2" and a kind. Data packets then carry the
-// connection's token (the client's salt and the server's salt combined), the
-// sender's clock in milliseconds since its connection began (wrapping after 49
-// days), the packet's sequence number, the newest sequence received from the
-// other end, and 32 bits for the packets received before that one. After the
-// header come message entries:
+// Every packet starts with "EFN3" and a kind.
+//
+// Connecting: the client sends ConnectRequest, padded to ConnectRequestSize, so
+// the server never answers with more than it was sent. The server answers with
+// ConnectChallenge, holding a cookie it can check later without keeping
+// anything: when it runs out, and an HMAC of that and the client's address.
+// The client sends ConnectResponse with the cookie and its ECDH public key; the
+// server checks the cookie, agrees on a secret, and sends ConnectAccept with
+// its own public key, signed when it has an identity. Both ends derive one
+// AES-256-GCM key for each direction from the secret with HKDF.
+//
+// Data, KeepAlive, and Disconnect packets carry the connection's token (the
+// client's salt and the server's salt combined) and a 64-bit counter, which
+// count from 1 in each direction and never repeat; the rest is sealed with the
+// direction's key, the counter as the nonce, and the token and counter as
+// associated data, followed by the tag. A packet that fails to open, or whose
+// counter was seen already or is too far behind the newest, is dropped.
+//
+// Sealed, a data packet holds the sender's clock in milliseconds since its
+// connection began (wrapping after 49 days), the packet's sequence number, the
+// newest sequence received from the other end, and 32 bits for the packets
+// received before that one. After that come message entries:
 //
 //     flags u8: channel in bits 0 and 1, bit 2 set for a fragment
 //     identifier: u16 on the reliable channels, u32 on the unreliable one
@@ -25,7 +41,7 @@ namespace easyforge::internal::networking
 {
     // The wire format's own revision, which changes when packets change shape.
     // It is not the library's version.
-    inline constexpr std::uint8_t Magic[4] = { 'E', 'F', 'N', '2' };
+    inline constexpr std::uint8_t Magic[4] = { 'E', 'F', 'N', '3' };
 
     enum class PacketKind : std::uint8_t
     {
@@ -41,6 +57,10 @@ namespace easyforge::internal::networking
         // packet with messages, and unlike an empty one, it asks for an
         // acknowledgement, which keeps the round trip measured.
         KeepAlive,
+
+        // The server's answer to ConnectRequest, and the client's answer to it.
+        ConnectChallenge,
+        ConnectResponse,
     };
 
     enum class Channel : std::uint8_t
@@ -75,7 +95,44 @@ namespace easyforge::internal::networking
     // The largest packet sent, which fits the smallest common path without
     // being split by the network.
     inline constexpr std::size_t PacketLimit = 1200;
+
+    // What sealing adds to a data packet: its counter and the tag.
+    inline constexpr std::size_t SealOverhead = 8 + 16;
+
+    // The most a data packet holds before it is sealed.
+    inline constexpr std::size_t PlainPacketLimit = PacketLimit - SealOverhead;
+
+    // A data packet's header before sealing: the magic and kind, the token, the
+    // clock, the sequence, and the acknowledgements.
     inline constexpr std::size_t DataHeaderSize = 25;
+
+    // The part of a sealed packet that stays readable: magic, kind, token, and
+    // counter. It is authenticated along with what is sealed.
+    inline constexpr std::size_t SealedHeaderSize = 4 + 1 + 8 + 8;
+
+    // Connect requests and requests for servers on the local network are at
+    // least this large, more than any answer to them, so a forged sender
+    // address cannot turn a server into an amplifier.
+    inline constexpr std::size_t ConnectRequestSize = PacketLimit;
+    inline constexpr std::size_t DiscoverRequestSize = 320;
+
+    // A cookie: when it runs out, in milliseconds of the server's clock, then
+    // the HMAC that proves the server made it for this address.
+    inline constexpr std::size_t CookieSize = 8 + 16;
+    inline constexpr double CookieSeconds = 10.0;
+
+    // Connect attempts each address may make a second, and how many at once,
+    // since agreeing on keys costs the server time.
+    inline constexpr double ConnectAttemptsPerSecond = 10.0;
+    inline constexpr double ConnectAttemptBurst = 20.0;
+    inline constexpr std::size_t MostAddressesTracked = 4096;
+
+    // Packet counters accepted behind the newest one seen.
+    inline constexpr std::size_t ReplayWindowSize = 1024;
+
+    // The most memory one connection may hold in messages arriving in pieces
+    // out of order. A connection that sends more is closed.
+    inline constexpr std::size_t AssemblyLimit = 16u << 20;
 
     // How long the lowest clock difference seen is remembered. Clocks of two
     // computers drift apart slowly and routes change, so old lows are let go.

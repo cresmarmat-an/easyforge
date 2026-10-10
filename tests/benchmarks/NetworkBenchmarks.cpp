@@ -8,7 +8,11 @@
 #include <easyforge/core/Clock.h>
 #include <easyforge/network.h>
 
+#include "Crypto.h"
+#include "Protocol.h"
+
 using namespace easyforge;
+using namespace easyforge::internal::networking;
 
 namespace
 {
@@ -81,4 +85,34 @@ EASYFORGE_BENCHMARK(Network)
 
     Pair pair = Connect({});
     benchmarks::Measure("send 1,000 small messages and deliver them", 20, [&] { (void)Deliver(pair, 1'000, 100); });
+}
+
+EASYFORGE_BENCHMARK(NetworkSealing)
+{
+    SecretKey key {};
+    (void)RandomBytes(key);
+    Sealer sealer;
+    if (!sealer.SetKey(key))
+    {
+        benchmarks::Note("this system has no cryptography");
+        return;
+    }
+    std::vector<std::uint8_t> header(SealedHeaderSize, 1);
+    std::vector<std::uint8_t> plain(PlainPacketLimit - SealedHeaderSize, 2);
+    std::vector<std::uint8_t> sealed;
+    std::vector<std::uint8_t> opened;
+    std::uint64_t counter = 0;
+    benchmarks::Measure("seal 10,000 full packets", 10, [&] {
+        for (int packet = 0; packet < 10'000; ++packet)
+        {
+            sealed.clear();
+            (void)sealer.Seal(++counter, header, plain, sealed);
+        }
+    });
+    benchmarks::Measure("open 10,000 full packets", 10, [&] {
+        for (int packet = 0; packet < 10'000; ++packet)
+        {
+            (void)sealer.Open(counter, header, sealed, opened);
+        }
+    });
 }
