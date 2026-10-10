@@ -1,6 +1,8 @@
 #include <easyforge/core/Testing.h>
 #include <easyforge/data.h>
 
+#include "CommaDecimals.h"
+
 using namespace easyforge;
 
 namespace
@@ -37,6 +39,17 @@ EASYFORGE_TEST(TablesWriteReadableText)
                            "Goblin : Enemy\n"
                            "    Health = 90\n";
     EASYFORGE_EXPECT_EQUAL(Sample().ToText(), expected);
+}
+
+EASYFORGE_TEST(NumbersAreWrittenAlikeInEveryCountry)
+{
+    testing::CommaDecimals german;
+    EASYFORGE_REQUIRE(german.Active());
+    std::string text = Sample().ToText();
+    EASYFORGE_EXPECT(text.find("Speed = 4.5") != std::string::npos);
+    Table read = Table::FromText(text, "sample.tree");
+    EASYFORGE_REQUIRE(read);
+    EASYFORGE_EXPECT_EQUAL(read.ToText(), text);
 }
 
 EASYFORGE_TEST(TablesAreSavedAndLoaded)

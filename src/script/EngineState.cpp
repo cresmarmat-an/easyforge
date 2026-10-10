@@ -30,8 +30,8 @@ namespace easyforge::internal::scripting
             {
                 return name;
             }
-            char first = name.empty() ? 'x' : static_cast<char>(std::tolower(static_cast<unsigned char>(name[0])));
-            bool vowel = first == 'a' || first == 'e' || first == 'i' || first == 'o' || first == 'u';
+            char first = name.empty() ? 'x' : name[0];
+            bool vowel = std::string_view("aeiouAEIOU").find(first) != std::string_view::npos;
             return (vowel ? "an " : "a ") + name;
         }
 

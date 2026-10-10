@@ -104,6 +104,10 @@
   are saved whole or not at all, so a crash or power cut while saving leaves
   the old file instead of part of the new one.
 - A server given a `NetworkIdentity` that did not load does not start.
+- File extensions are compared in lower case for ASCII letters only, so a
+  program that sets a locale cannot change how a UTF-8 name is matched. Tests
+  read and write tables and run scripts under a German locale, which writes
+  `1,5`, to show numbers stay `1.5` everywhere.
 - Servers keep nothing for a connect request until the client answers a
   cookie tied to its address, answer forged requests with less than they were
   sent, limit connect attempts from each address, and close a connection that

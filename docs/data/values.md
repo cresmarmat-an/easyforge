@@ -49,6 +49,8 @@ text that is not a value.
   and `3` is a whole number.
 - Numbers are written with the fewest digits that read back as exactly the same
   number.
+- The decimal mark is always a point, whatever language and region the
+  computer is set to, so a file saved in one country reads the same in another.
 - Text is written in double quotes, with `\"`, `\\`, `\n`, `\t`, and `\r` for
   the characters that need them.
 - A vector is two to four numbers separated by commas.

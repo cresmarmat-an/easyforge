@@ -1,7 +1,6 @@
 #include <easyforge/assets/Files.h>
 
 #include <algorithm>
-#include <cctype>
 #include <cstring>
 #include <filesystem>
 #include <format>
@@ -541,7 +540,10 @@ namespace easyforge
         std::string extension(path.substr(dot));
         for (char& character : extension)
         {
-            character = static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
+            if (character >= 'A' && character <= 'Z')
+            {
+                character = static_cast<char>(character - 'A' + 'a');
+            }
         }
         return extension;
     }

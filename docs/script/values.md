@@ -43,7 +43,8 @@ print(0.1 + 0.2)   -- 0.30000000000000004
 ```
 
 Every number is a 64-bit floating point number. Whole numbers print without a
-decimal point. `/` divides exactly, `^` raises to a power, and `%` gives the
+decimal point, and the decimal mark is a point in every country, in scripts,
+in what they print, and in what `ToNumber` reads. `/` divides exactly, `^` raises to a power, and `%` gives the
 remainder with the sign of the right side. Dividing by zero gives `infinity`
 or `-infinity`, and an impossible result such as `SquareRoot(-1)` prints as
 `not a number`.

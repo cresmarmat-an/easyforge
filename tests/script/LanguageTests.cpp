@@ -4,6 +4,8 @@
 #include <easyforge/core/Testing.h>
 #include <easyforge/script.h>
 
+#include "CommaDecimals.h"
+
 using namespace easyforge;
 
 namespace
@@ -82,6 +84,15 @@ print(#FF8000.Red, #FF8000.Green > 0.49 and #FF8000.Green < 0.51)
 )"),
         Expected({ "7 3.5 1 2 512 -4", "ab count: 2 {braces}", "false true false nothing", "true true true false",
             "[1, \"two\", [3]] { X = 1, Name = \"a\" }", "1 true" }));
+}
+
+EASYFORGE_TEST(NumbersAreReadAndPrintedAlikeInEveryCountry)
+{
+    testing::CommaDecimals german;
+    EASYFORGE_REQUIRE(german.Active());
+    Printing scripts;
+    EASYFORGE_EXPECT_EQUAL(scripts.Printed(R"(print(1.5 + 1, "{0.25}", ToNumber("2.5") * 2, ToNumber("2,5")))"),
+        Expected({ "2.5 0.25 5 nothing" }));
 }
 
 EASYFORGE_TEST(ControlFlow)

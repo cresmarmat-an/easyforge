@@ -48,8 +48,8 @@ namespace easyforge::internal::scripting
                 return "anything";
             }
             std::string spelling = type.Spelling();
-            char first = spelling.empty() ? 'x' : static_cast<char>(std::tolower(static_cast<unsigned char>(spelling[0])));
-            bool vowel = first == 'a' || first == 'e' || first == 'i' || first == 'o' || first == 'u';
+            char first = spelling.empty() ? 'x' : spelling[0];
+            bool vowel = std::string_view("aeiouAEIOU").find(first) != std::string_view::npos;
             return (vowel ? "an " : "a ") + spelling;
         }
 
