@@ -29,6 +29,10 @@
   folder, `bin/<configuration>`.
 - The test runner fails a Debug run built with Visual Studio that leaves memory
   allocated when it ends, and lists each block.
+- `Server::New(window, settings)` and `Client::New(window, settings)`: a thread
+  of their own sends and receives, the handlers run in the window's frames on
+  its thread, and a waiting window wakes when a message arrives, so a program
+  with a window never calls `Update`.
 - `MessageLimit` and `UnfinishedLimit` on servers and clients, and
   `ConnectAttemptsPerSecond` and `ConnectAttemptBurst` on servers, so every
   network limit is a setting; an end sent a message larger than its own limit

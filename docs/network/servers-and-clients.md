@@ -126,6 +126,21 @@ waiting, including what the handlers sent. Call it once a frame for each server
 and client. Handlers run inside `Update`, on the thread that called it, so they
 can change the program's state without locks.
 
+A program with a window can give the window to `New` instead, and never call
+`Update`:
+
+```cpp
+Window window = Window::New({ .Title = "Chat" });
+Server server = Server::New(window, { .Port = 7777 });
+Client client = Client::New(window, { .Address = "127.0.0.1", .Port = 7777 });
+```
+
+A thread of the server's or client's own then sends and receives, so answers
+and resends keep their timing whatever the frame rate, and the handlers run in
+the window's frames, on the window's thread, so they need no locks either. A
+window that waits while nothing changes wakes when a message arrives. Anything
+that is a `Host`, such as a window from another library, works the same way.
+
 ## Threads
 
 With `.Threaded = true`, a thread of the server's or client's own updates it
@@ -140,7 +155,8 @@ When the program lets go of a threaded server's or client's last copy, it
 waits for that thread to finish what it is running, then ends the server or
 client there and then: its port is free and the other ends are told before the
 handle's destructor returns. So the last copy should not go while holding a
-lock that its handlers take.
+lock that its handlers take. A server or client that follows a window ends on
+the thread that lets go of its last copy, which should be the window's.
 
 ## Handlers that hold their server
 

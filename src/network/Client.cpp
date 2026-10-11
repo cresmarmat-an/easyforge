@@ -51,6 +51,16 @@ namespace easyforge
         return Client(Endpoint::HandOut(Endpoint::StartClient(settings)));
     }
 
+    Client Client::New(std::shared_ptr<Host> host, const ClientSettings& settings)
+    {
+        std::shared_ptr<Endpoint> endpoint = Endpoint::StartClient(settings);
+        if (host && endpoint->Error().empty())
+        {
+            endpoint->Follow(std::move(host));
+        }
+        return Client(Endpoint::HandOut(std::move(endpoint)));
+    }
+
     Client::Client(const Client& other) : Client(other.State)
     {
     }

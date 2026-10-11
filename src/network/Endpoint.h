@@ -24,6 +24,7 @@
 #include <thread>
 #include <vector>
 
+#include <easyforge/core/Host.h>
 #include <easyforge/core/Random.h>
 #include <easyforge/network/Client.h>
 #include <easyforge/network/Export.h>
@@ -78,6 +79,11 @@ namespace easyforge::internal::networking
 
         // Stops the network thread and waits for it, unless called from it.
         void StopThread();
+
+        // Runs the handlers in the host's frames, on its thread, while a thread
+        // of the endpoint's own sends and receives. Called once, before the
+        // endpoint is handed out, on the host's thread.
+        void Follow(std::shared_ptr<Host> host);
 
         Endpoint(const Endpoint&) = delete;
         Endpoint& operator=(const Endpoint&) = delete;
@@ -179,6 +185,26 @@ namespace easyforge::internal::networking
         explicit Endpoint(Role role);
 
         static void Work(std::weak_ptr<Endpoint> endpoint);
+
+        // Following a host: its frames run what the network thread queued for
+        // them, then send what the handlers sent.
+        class FrameFollower : public HostListener
+        {
+        public:
+            explicit FrameFollower(Endpoint& owner) : Owner(owner) {}
+            void HandleEvent(const Event&) override {}
+            void FrameStarted(float) override { Owner.RunForFrame(); }
+            void FrameEnded() override { Owner.RunForFrame(); }
+            float SecondsUntilNextFrame() const override;
+
+        private:
+            Endpoint& Owner;
+        };
+
+        // Runs the handlers now when nothing is followed, or else queues them
+        // for the host's next frame and asks for one.
+        void Deliver(std::vector<std::function<void()>>& events);
+        void RunForFrame();
 
         double Now() const;
 
@@ -301,6 +327,11 @@ namespace easyforge::internal::networking
 
         std::atomic<bool> Stopping = false;
         std::thread Worker;
+
+        std::shared_ptr<Host> FollowedHost;
+        FrameFollower Follower { *this };
+        mutable std::mutex FrameLock;
+        std::vector<std::function<void()>> ForFrame;
 
         friend class easyforge::Server;
         friend class easyforge::Client;

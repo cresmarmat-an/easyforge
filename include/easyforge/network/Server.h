@@ -8,6 +8,7 @@
 #include <string_view>
 #include <vector>
 
+#include <easyforge/core/Host.h>
 #include <easyforge/core/Property.h>
 #include <easyforge/core/Result.h>
 #include <easyforge/network/Connection.h>
@@ -84,6 +85,12 @@ namespace easyforge
         // Starts listening. When the port cannot be used, the server tests as
         // false and Error() says why.
         [[nodiscard]] static Server New(const ServerSettings& settings = {});
+
+        // A server that follows a host, such as a window: a thread of its own
+        // sends and receives, and the handlers run in the host's frames, on its
+        // thread, so the program never calls Update and needs no locks. A
+        // window that waits while nothing changes wakes when messages arrive.
+        [[nodiscard]] static Server New(std::shared_ptr<Host> host, const ServerSettings& settings = {});
 
         Server(const Server& other);
         Server& operator=(const Server& other);

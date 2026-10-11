@@ -7,6 +7,7 @@
 #include <string>
 #include <string_view>
 
+#include <easyforge/core/Host.h>
 #include <easyforge/core/Property.h>
 #include <easyforge/core/Result.h>
 #include <easyforge/network/Connection.h>
@@ -73,6 +74,10 @@ namespace easyforge
         // tests as false and Error() says why; whether the server answers is
         // told by OnConnected or OnDisconnected.
         [[nodiscard]] static Client New(const ClientSettings& settings = {});
+
+        // A client that follows a host, such as a window, the same way a
+        // server can: handlers run in the host's frames, and Update is not needed.
+        [[nodiscard]] static Client New(std::shared_ptr<Host> host, const ClientSettings& settings = {});
 
         Client(const Client& other);
         Client& operator=(const Client& other);

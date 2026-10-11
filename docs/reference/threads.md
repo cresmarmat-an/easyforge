@@ -100,7 +100,7 @@ frame with `window.RequestFrame()`.
 | Type | Rule |
 |---|---|
 | `Server`, `Client`, `Connection` | Any thread |
-| Handlers | Run on the thread that calls `Update`, or on the network's own thread for a threaded end |
+| Handlers | Run on the thread that calls `Update`, on the window's thread for an end made with a window, or on the network's own thread for a threaded end |
 | `Message`, `Reply` | Values |
 | `Smoothed`, `SmoothedAngle` | One thread at a time |
 | Shared tables | One thread at a time, the table's; share them only with ends that are not threaded |

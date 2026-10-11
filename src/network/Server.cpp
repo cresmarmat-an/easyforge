@@ -52,6 +52,16 @@ namespace easyforge
         return Server(Endpoint::HandOut(Endpoint::StartServer(settings)));
     }
 
+    Server Server::New(std::shared_ptr<Host> host, const ServerSettings& settings)
+    {
+        std::shared_ptr<Endpoint> endpoint = Endpoint::StartServer(settings);
+        if (host && endpoint->Error().empty())
+        {
+            endpoint->Follow(std::move(host));
+        }
+        return Server(Endpoint::HandOut(std::move(endpoint)));
+    }
+
     Server::Server(const Server& other) : Server(other.State)
     {
     }

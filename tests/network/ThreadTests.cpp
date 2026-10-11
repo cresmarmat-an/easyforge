@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include <map>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -203,4 +205,113 @@ EASYFORGE_TEST(ManyThreadsSendAndAskAtOnce)
     {
         EASYFORGE_EXPECT(count <= 1);
     }
+}
+
+namespace
+{
+    // A host that runs frames only when something asks for one, as a window
+    // that waits while nothing changes does.
+    class WaitingHost final : public Host
+    {
+    public:
+        Surface NativeSurface() const override { return {}; }
+        Vector2 Size() const override { return { 800, 600 }; }
+        Vector2 PixelSize() const override { return { 800, 600 }; }
+        float Scale() const override { return 1.0f; }
+        bool IsOpen() const override { return true; }
+        bool IsFocused() const override { return true; }
+        WindowMode Mode() const override { return WindowMode::Normal; }
+        bool IsTransparent() const override { return false; }
+        bool VerticalSync() const override { return true; }
+        bool ClaimSurface() override { return true; }
+        void ReleaseSurface() override {}
+        void SetCursor(Cursor) override {}
+        void SetTextInput(bool, easyforge::Rectangle) override {}
+        ColorScheme SystemColorScheme() const override { return ColorScheme::Light; }
+        std::string ClipboardText() const override { return {}; }
+        void SetClipboardText(std::string_view) override {}
+        void AddListener(HostListener& listener) override { Listeners.push_back(&listener); }
+        void RemoveListener(HostListener& listener) override
+        {
+            Listeners.erase(std::remove(Listeners.begin(), Listeners.end(), &listener), Listeners.end());
+        }
+        std::shared_ptr<void>& Shared(std::string_view name) override { return SharedObjects[std::string(name)]; }
+        void RequestFrame() override
+        {
+            ++Requests;
+            Wanted = true;
+        }
+
+        // Runs a frame when one was asked for, or a listener wants one now.
+        void RunFrameIfWanted()
+        {
+            bool now = Wanted.exchange(false);
+            for (HostListener* listener : Listeners)
+            {
+                now = now || listener->SecondsUntilNextFrame() <= 0.0f;
+            }
+            if (!now)
+            {
+                return;
+            }
+            std::vector<HostListener*> listeners = Listeners;
+            for (HostListener* listener : listeners)
+            {
+                listener->FrameStarted(1.0f / 60.0f);
+            }
+            for (HostListener* listener : listeners)
+            {
+                listener->FrameEnded();
+            }
+        }
+
+        std::vector<HostListener*> Listeners;
+        std::map<std::string, std::shared_ptr<void>> SharedObjects;
+        std::atomic<bool> Wanted = false;
+        std::atomic<int> Requests = 0;
+    };
+}
+
+EASYFORGE_TEST(ServersAndClientsCanFollowAHost)
+{
+    // The handlers run in the host's frames, on its thread, and the program
+    // calls no Update. Messages wake a host that is waiting.
+    auto host = std::make_shared<WaitingHost>();
+    std::thread::id frameThread = std::this_thread::get_id();
+    std::atomic<bool> elsewhere = false;
+    int pongs = 0;
+    {
+        Server server = Server::New(host, { .Port = 0, .ThisComputerOnly = true });
+        EASYFORGE_REQUIRE(server);
+        server.OnMessage("Ping", [&](Connection from, const Message& message) {
+            elsewhere = elsewhere || std::this_thread::get_id() != frameThread;
+            from.Send("Pong", message);
+        });
+        Client client = Client::New(host, { .Address = "127.0.0.1", .Port = server.Port() });
+        client.OnMessage("Pong", [&](const Message&) {
+            elsewhere = elsewhere || std::this_thread::get_id() != frameThread;
+            ++pongs;
+        });
+        EASYFORGE_EXPECT_EQUAL(host->Listeners.size(), std::size_t { 2 });
+
+        EASYFORGE_REQUIRE(WaitUntil([&] {
+            host->RunFrameIfWanted();
+            return client.IsConnected();
+        }));
+        client.Send("Ping", { { "Count", 1 } });
+        EASYFORGE_EXPECT(WaitUntil([&] {
+            host->RunFrameIfWanted();
+            return pongs == 1;
+        }));
+        EASYFORGE_EXPECT(!elsewhere.load());
+
+        // A quiet connection keeps itself alive without asking for frames.
+        int before = host->Requests;
+        WaitUntil([&] {
+            host->RunFrameIfWanted();
+            return false;
+        }, 0.6);
+        EASYFORGE_EXPECT(host->Requests - before <= 1);
+    }
+    EASYFORGE_EXPECT(host->Listeners.empty());
 }

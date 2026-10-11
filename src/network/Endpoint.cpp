@@ -4,6 +4,7 @@
 #include <array>
 #include <format>
 #include <iterator>
+#include <limits>
 #include <tuple>
 #include <utility>
 
@@ -245,6 +246,10 @@ namespace easyforge::internal::networking
                 Worker.join();
             }
         }
+        if (FollowedHost)
+        {
+            FollowedHost->RemoveListener(Follower);
+        }
 
         // The other ends are told, but no handler runs.
         std::scoped_lock lock(Lock);
@@ -450,12 +455,15 @@ namespace easyforge::internal::networking
             }
         }
 
-        RunEvents(events);
-        for (const std::shared_ptr<std::function<void()>>& handler : afterUpdate)
+        Deliver(events);
+        if (!FollowedHost)
         {
-            if (*handler)
+            for (const std::shared_ptr<std::function<void()>>& handler : afterUpdate)
             {
-                (*handler)();
+                if (*handler)
+                {
+                    (*handler)();
+                }
             }
         }
 
@@ -466,7 +474,85 @@ namespace easyforge::internal::networking
             events.swap(Events);
             Updating = false;
         }
+        Deliver(events);
+    }
+
+    void Endpoint::Deliver(std::vector<std::function<void()>>& events)
+    {
+        if (!FollowedHost)
+        {
+            RunEvents(events);
+            return;
+        }
+        if (events.empty())
+        {
+            return;
+        }
+        {
+            std::scoped_lock lock(FrameLock);
+            ForFrame.insert(ForFrame.end(), std::make_move_iterator(events.begin()), std::make_move_iterator(events.end()));
+        }
+        events.clear();
+        FollowedHost->RequestFrame();
+    }
+
+    void Endpoint::RunForFrame()
+    {
+        // Held to the end, since a handler may let go of the last copy.
+        std::shared_ptr<Endpoint> kept = Self.lock();
+        if (!kept)
+        {
+            return;
+        }
+        std::vector<std::function<void()>> events;
+        {
+            std::scoped_lock lock(FrameLock);
+            events.swap(ForFrame);
+        }
         RunEvents(events);
+
+        // Shared tables and the like follow the program's changes, which are
+        // made on this thread.
+        std::vector<std::shared_ptr<std::function<void()>>> afterUpdate;
+        {
+            std::scoped_lock lock(Lock);
+            for (const auto& [identifier, handler] : AfterUpdateHandlers)
+            {
+                afterUpdate.push_back(handler);
+            }
+        }
+        for (const std::shared_ptr<std::function<void()>>& handler : afterUpdate)
+        {
+            if (*handler)
+            {
+                (*handler)();
+            }
+        }
+
+        // What the handlers sent goes out now, not at the network thread's turn.
+        {
+            std::scoped_lock lock(Lock);
+            SendPackets(Now());
+            events.swap(Events);
+        }
+        RunEvents(events);
+    }
+
+    float Endpoint::FrameFollower::SecondsUntilNextFrame() const
+    {
+        std::scoped_lock lock(Owner.FrameLock);
+        return Owner.ForFrame.empty() ? std::numeric_limits<float>::infinity() : 0.0f;
+    }
+
+    void Endpoint::Follow(std::shared_ptr<Host> host)
+    {
+        FollowedHost = std::move(host);
+        FollowedHost->AddListener(Follower);
+        if (!Threaded)
+        {
+            Threaded = true;
+            Worker = std::thread(&Endpoint::Work, Self);
+        }
     }
 
     void Endpoint::Stop()
