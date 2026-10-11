@@ -53,6 +53,29 @@ tests as false; the change still says where it was.
 Adding a node with starting values records the add and then one `PropertySet`
 for each value. Removing a node records one change for the whole tree under it.
 
+## Being told of each change
+
+`OnChange` is called with each change as it happens, for programs that react to
+changes rather than look for them each frame:
+
+```cpp
+game.OnChange = [&](const Change& change) {
+    if (change.Kind == ChangeKind::PropertySet && change.Property == "Health")
+    {
+        healthBar.Value.AnimateTo(change.New.As<float>(), { .Duration = 0.35f });
+    }
+};
+```
+
+The handler runs once the change that made it is complete, so the table is
+whole when the handler reads it, and it hears of every change in order: edits,
+`Undo` and `Redo`, and changes that arrive from another program through a
+[shared table](../network/sharing-tables.md). Changes the handler makes itself
+are reported after the ones before them, not in the middle. It is a property
+of every copy of the table's handle, and setting it to `nullptr` stops it.
+
+`OnChange` and `ChangesSince` see the same changes; a table may use both.
+
 ## How far back
 
 The list keeps the last `ChangeLimit` changes (100000 unless set in

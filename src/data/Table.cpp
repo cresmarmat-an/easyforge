@@ -289,12 +289,42 @@ namespace easyforge
         return Table(state);
     }
 
-    Table::Table() : State(std::make_shared<TableState>(TableSettings {}))
+    Table::Table() : Table(std::make_shared<TableState>(TableSettings {}))
     {
     }
 
-    Table::Table(std::shared_ptr<internal::TableState> state) : State(std::move(state))
+    Table::Table(std::shared_ptr<internal::TableState> state)
+        : OnChange(state.get(),
+              [](const void* owner) {
+                  return owner ? static_cast<const TableState*>(owner)->ChangeHandler : std::function<void(const Change&)>();
+              },
+              [](void* owner, const std::function<void(const Change&)>& value) {
+                  if (owner)
+                  {
+                      static_cast<TableState*>(owner)->ChangeHandler = value;
+                  }
+              }),
+          State(std::move(state))
     {
+    }
+
+    Table::Table(const Table& other) : Table(other.State)
+    {
+    }
+
+    Table& Table::operator=(const Table& other)
+    {
+        if (this != &other)
+        {
+            State = other.State;
+            RebindProperties();
+        }
+        return *this;
+    }
+
+    void Table::RebindProperties()
+    {
+        OnChange.Rebind(State.get());
     }
 
     Table::operator bool() const

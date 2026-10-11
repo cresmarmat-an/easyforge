@@ -1,3 +1,6 @@
+#include <string>
+#include <vector>
+
 #include <easyforge/core/Testing.h>
 #include <easyforge/data.h>
 
@@ -272,4 +275,59 @@ EASYFORGE_TEST(RowsHeldByUndoAreNotReused)
     EASYFORGE_EXPECT(axe);
     EASYFORGE_EXPECT(!sword);
     EASYFORGE_EXPECT_EQUAL(game.NodeCount(), std::size_t { 3 });
+}
+
+namespace
+{
+    std::string Joined(const std::vector<std::string>& lines)
+    {
+        std::string text;
+        for (const std::string& line : lines)
+        {
+            text += (text.empty() ? "" : ", ") + line;
+        }
+        return text;
+    }
+}
+
+EASYFORGE_TEST(TablesTellOfEachChangeWhenItIsComplete)
+{
+    Table game = Table::New();
+    std::vector<std::string> heard;
+    bool whole = true;
+    game.OnChange = [&](const Change& change) {
+        heard.push_back(change.Kind == ChangeKind::Added ? "added " + change.Target.Name() : "set " + change.Property);
+        if (change.Kind == ChangeKind::PropertySet)
+        {
+            // The table is whole: the node already has the new value.
+            whole = whole && change.Target[change.Property].Get() == change.New;
+        }
+        // A change the handler makes is told of after this one.
+        if (change.Property == "Health")
+        {
+            change.Target["Hurt"] = change.New.As<int>() < 100;
+        }
+    };
+
+    Node player = game.Add("Player");
+    player["Health"] = 80;
+    EASYFORGE_EXPECT_EQUAL(Joined(heard), std::string("added Player, set Health, set Hurt"));
+    EASYFORGE_EXPECT(whole);
+
+    // Edits and Undo are told of the same way.
+    heard.clear();
+    game.BeginEdit("Heal");
+    player["Health"] = 100;
+    game.EndEdit();
+    EASYFORGE_REQUIRE(game.Undo());
+    // Undo reverses the edit last change first, and Hurt is then already true.
+    EASYFORGE_EXPECT_EQUAL(Joined(heard), std::string("set Health, set Hurt, set Hurt, set Health"));
+    EASYFORGE_EXPECT_EQUAL(player["Health"].As<int>(), 80);
+
+    // Copies of the handle share the handler; clearing it stops the reports.
+    Table copy = game;
+    copy.OnChange = nullptr;
+    heard.clear();
+    player["Health"] = 50;
+    EASYFORGE_EXPECT(heard.empty());
 }

@@ -147,6 +147,10 @@ namespace easyforge::internal
     void TableState::Record(ChangeRecord record)
     {
         record.Version = ++CurrentVersion;
+        if (ChangeHandler)
+        {
+            Unnoticed.push_back(record);
+        }
         if (Settings.ChangeLimit == 0)
         {
             return;
@@ -156,6 +160,42 @@ namespace easyforge::internal
         {
             Changes.pop_front();
         }
+    }
+
+    void TableState::Notify()
+    {
+        if (Notifying)
+        {
+            return;
+        }
+        // Kept to the end, since the handler may let go of the last handle.
+        std::shared_ptr<TableState> kept = shared_from_this();
+        Notifying = true;
+        struct Finished
+        {
+            bool& Flag;
+            ~Finished() { Flag = false; }
+        } finished { Notifying };
+        for (std::size_t next = 0; next < Unnoticed.size(); ++next)
+        {
+            std::function<void(const Change&)> handler = ChangeHandler;
+            if (!handler)
+            {
+                break;
+            }
+            const ChangeRecord& record = Unnoticed[next];
+            Change change;
+            change.Version = record.Version;
+            change.Kind = record.Kind;
+            change.Target = Handle(record.Target, record.TargetGeneration);
+            change.Parent = Handle(record.Parent, record.ParentGeneration);
+            change.OldParent = Handle(record.OldParent, record.OldParentGeneration);
+            change.Property = record.Property;
+            change.Old = record.Old;
+            change.New = record.New;
+            handler(change);
+        }
+        Unnoticed.clear();
     }
 
     void TableState::Remember(Operation operation)
@@ -168,6 +208,7 @@ namespace easyforge::internal
 
     std::uint32_t TableState::AddNode(std::uint32_t parent, std::string_view name, std::string_view type)
     {
+        Changing changing(*this);
         std::uint32_t slot = NewRow();
         Row& row = Rows[slot];
         row.Name = std::string(name);
@@ -195,6 +236,7 @@ namespace easyforge::internal
 
     void TableState::RemoveNode(std::uint32_t slot)
     {
+        Changing changing(*this);
         Row& row = Rows[slot];
         std::uint32_t parent = row.Parent;
         std::uint32_t next = row.Next;
@@ -272,6 +314,7 @@ namespace easyforge::internal
 
     void TableState::SetProperty(std::uint32_t slot, const std::string& property, std::optional<DataValue> value)
     {
+        Changing changing(*this);
         std::optional<DataValue> old = OwnValue(slot, property);
         if (old == value)
         {
@@ -321,6 +364,7 @@ namespace easyforge::internal
 
     void TableState::RenameNode(std::uint32_t slot, std::string_view name)
     {
+        Changing changing(*this);
         Row& row = Rows[slot];
         if (row.Name == name)
         {
@@ -348,6 +392,7 @@ namespace easyforge::internal
 
     void TableState::MoveNode(std::uint32_t slot, std::uint32_t parent)
     {
+        Changing changing(*this);
         // A node cannot go inside itself.
         for (std::uint32_t above = parent; above != NoSlot; above = Rows[above].Parent)
         {
@@ -385,6 +430,7 @@ namespace easyforge::internal
 
     void TableState::DefineType(const std::string& name, std::vector<std::pair<std::string, DataValue>> values)
     {
+        Changing changing(*this);
         std::optional<std::vector<std::pair<std::string, DataValue>>> old;
         if (auto found = Types.find(name); found != Types.end())
         {
@@ -623,6 +669,7 @@ namespace easyforge::internal
 
     bool TableState::Undo()
     {
+        Changing changing(*this);
         if (UndoStack.empty() || EditDepth > 0)
         {
             return false;
@@ -641,6 +688,7 @@ namespace easyforge::internal
 
     bool TableState::Redo()
     {
+        Changing changing(*this);
         if (RedoStack.empty() || EditDepth > 0)
         {
             return false;

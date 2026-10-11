@@ -2,12 +2,14 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 
+#include <easyforge/core/Property.h>
 #include <easyforge/core/Result.h>
 #include <easyforge/data/DataValue.h>
 #include <easyforge/data/Export.h>
@@ -224,6 +226,8 @@ namespace easyforge
 
         // No table. Tests as false.
         Table();
+        Table(const Table& other);
+        Table& operator=(const Table& other);
 
         explicit operator bool() const;
         const std::string& Error() const;
@@ -291,8 +295,19 @@ namespace easyforge
 
         bool operator==(const Table& other) const { return State == other.State; }
 
+        // Called with each change once the change that made it is complete, so
+        // the table is whole when the handler reads it: in order, and for edits,
+        // Undo, Redo, and changes from another program alike. Changes the
+        // handler makes are reported after the ones before them.
+        //
+        //     game.OnChange = [](const Change& change) {
+        //         if (change.Property == "Health") { ... }
+        //     };
+        Property<std::function<void(const Change&)>> OnChange;
+
     private:
         explicit Table(std::shared_ptr<internal::TableState> state);
+        void RebindProperties();
 
         std::shared_ptr<internal::TableState> State;
     };

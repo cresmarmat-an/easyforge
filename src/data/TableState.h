@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deque>
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -139,6 +140,29 @@ namespace easyforge::internal
         bool Undo();
         bool Redo();
 
+        // Held by every change from outside. When the outermost one is done and
+        // the table is whole again, the program's handler hears of the changes,
+        // one at a time; changes the handler makes are heard of after them.
+        class Changing
+        {
+        public:
+            explicit Changing(TableState& table) : Table(table) { ++Table.ChangeDepth; }
+            ~Changing()
+            {
+                if (--Table.ChangeDepth == 0)
+                {
+                    Table.Notify();
+                }
+            }
+            Changing(const Changing&) = delete;
+            Changing& operator=(const Changing&) = delete;
+
+        private:
+            TableState& Table;
+        };
+
+        std::function<void(const Change&)> ChangeHandler;
+
         TableSettings Settings;
         std::string ErrorText;
         bool Made = false;
@@ -165,6 +189,11 @@ namespace easyforge::internal
         void Unlink(std::uint32_t slot);
         void SetAlive(std::uint32_t slot, bool alive);
         void Record(ChangeRecord record);
+        void Notify();
+
+        std::vector<ChangeRecord> Unnoticed;
+        int ChangeDepth = 0;
+        bool Notifying = false;
         void Remember(Operation operation);
         void Apply(const Operation& operation, bool reverse);
         void Hold(const Edit& edit, int amount);
