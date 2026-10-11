@@ -157,7 +157,7 @@ namespace easyforge::internal::networking
         // Connect attempts an address has left, refilled with time.
         struct ConnectAllowance
         {
-            double Attempts = ConnectAttemptBurst;
+            double Attempts = 0.0;
             double Updated = 0.0;
         };
 
@@ -260,6 +260,10 @@ namespace easyforge::internal::networking
         std::string Name;
         float Timeout = 5.0f;
         float ConnectTimeout = 5.0f;
+        std::size_t MostMessageBytes = MessageLimit;
+        std::size_t MostUnfinishedBytes = AssemblyLimit;
+        double AttemptsPerSecond = ConnectAttemptsPerSecond;
+        double AttemptBurst = ConnectAttemptBurst;
         NetworkConditions Conditions;
         Random Chance;
         std::uint64_t Instance = 0;

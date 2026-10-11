@@ -98,6 +98,7 @@ again.
   two threads at once.
 - When two ends add children to the same node at the same moment, the children
   can end up in a different order at each end.
-- All the changes of one update travel in one message, so at most 4 MB of them.
+- All the changes of one update travel in one message, so at most `MessageLimit`
+  of them, 4 MB unless the server and client set more.
 - Edits a client undoes are sent as ordinary changes; undo history is not
   shared.

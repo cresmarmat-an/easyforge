@@ -38,6 +38,10 @@ are written:
 | `Threaded` | false | See [Threads](#threads) |
 | `Conditions` | none | Packet loss and delay on purpose, see [Delivery](delivery.md#testing-on-a-poor-network); also a property that can change while the server runs |
 | `Timeout` | 5 | Seconds of silence before a client is dropped |
+| `MessageLimit` | 4 MB | The largest message, request, or answer in bytes, from 1 KB to 60 MB. A client that sends a larger one is dropped, so clients should use the same limit |
+| `UnfinishedLimit` | 16 MB | The most each connection may hold in large messages still arriving, at least twice `MessageLimit`. A client that sends more is dropped |
+| `ConnectAttemptsPerSecond` | 10 | Connect attempts each address may make a second; raise it when many players share one address, as behind one router |
+| `ConnectAttemptBurst` | 20 | Connect attempts each address may make at once |
 | `Identity` | none | Proves to clients this is the server they expect; see [Security](security.md#proving-who-the-server-is) |
 
 When the port cannot be used, for example because another program has it, or
@@ -58,7 +62,8 @@ listening. A server also stops when the last copy of its handle goes away.
 `Client::New` starts connecting to `Address` (a name such as "localhost", or a
 numeric address) and `Port`. Settings: `Address`, `Port`, `Threaded`,
 `Conditions`, `Timeout`, `ConnectTimeout`, the seconds to wait for the server
-to answer, 5 by default, and `ServerKey`, the identity the server must prove
+to answer, 5 by default, `MessageLimit` and `UnfinishedLimit`, the same as a
+server's, and `ServerKey`, the identity the server must prove
 ([security](security.md#proving-who-the-server-is)). A client also tests as
 false when `ServerKey` is not a key.
 
@@ -96,7 +101,8 @@ over an old handle.
 | "disconnected" | The client left, or the server closed the connection |
 | "timed out" | Nothing arrived for `Timeout` seconds |
 | "the server stopped" | `Stop()` was called |
-| "it sent more unfinished messages than a connection may hold" | The client sent the start of more large messages than fit in 16 MB |
+| "it sent a message larger than MessageLimit" | The client's `MessageLimit` is larger than the server's |
+| "it sent more unfinished messages than a connection may hold" | The client sent the start of more large messages than `UnfinishedLimit` allows |
 
 | On the client | |
 |---|---|
@@ -107,6 +113,7 @@ over an old handle.
 | "the server is full" | The server already had `MaximumClients` |
 | "the server did not answer" | Nothing answered within `ConnectTimeout` |
 | "the server could not prove it is the one ServerKey names" | The server has another identity, or none |
+| "the server sent a message larger than MessageLimit" | The server's `MessageLimit` is larger than the client's |
 
 An end's own `Stop()`, `Disconnect()`, and `connection.Disconnect()` run its
 `OnDisconnected` handler before they return. Everything else is reported during

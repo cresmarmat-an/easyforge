@@ -166,7 +166,43 @@ EASYFORGE_TEST(OversizedMessagesAreNotSent)
 
     EASYFORGE_EXPECT_EQUAL(arrived, 0);
     EASYFORGE_REQUIRE(warnings.size() == 1);
-    EASYFORGE_EXPECT(warnings[0].find("\"Huge\" is larger than 4 MB") != std::string::npos);
+    EASYFORGE_EXPECT(warnings[0].find("\"Huge\" is larger than MessageLimit, 4 MB") != std::string::npos);
+}
+
+EASYFORGE_TEST(TheMessageLimitIsASetting)
+{
+    // Both ends take 8 MB, so a 5 MB message arrives.
+    Server server = LocalServer({ .MessageLimit = 8u << 20 });
+    Client client = LocalClient(server, { .MessageLimit = 8u << 20 });
+    auto update = [&] {
+        server.Update();
+        client.Update();
+    };
+    EASYFORGE_REQUIRE(UpdateUntil(update, [&] { return client.IsConnected(); }));
+    std::size_t received = 0;
+    server.OnMessage("Big", [&](Connection, const Message& message) { received = message["Bytes"].AsBytes().size(); });
+    client.Send("Big", { { "Bytes", std::vector<std::uint8_t>(5u << 20) } });
+    EASYFORGE_EXPECT(UpdateUntil(update, [&] { return received > 0; }, 30.0));
+    EASYFORGE_EXPECT_EQUAL(received, std::size_t { 5u << 20 });
+}
+
+EASYFORGE_TEST(AMessageLargerThanTheOtherEndTakesClosesTheConnection)
+{
+    // The client may send 8 MB and the server takes 4 MB: the server closes
+    // the connection, rather than the message being sent again for good.
+    Server server = LocalServer();
+    Client client = LocalClient(server, { .MessageLimit = 8u << 20 });
+    std::string reason;
+    server.OnDisconnected = [&](Connection, std::string why) { reason = why; };
+    auto update = [&] {
+        server.Update();
+        client.Update();
+    };
+    EASYFORGE_REQUIRE(UpdateUntil(update, [&] { return client.IsConnected(); }));
+    client.Send("Big", { { "Bytes", std::vector<std::uint8_t>(5u << 20) } });
+    EASYFORGE_EXPECT(UpdateUntil(update, [&] { return !reason.empty(); }, 30.0));
+    EASYFORGE_EXPECT_EQUAL(reason, std::string("it sent a message larger than MessageLimit"));
+    EASYFORGE_EXPECT(UpdateUntil(update, [&] { return !client.IsConnected(); }));
 }
 
 EASYFORGE_TEST(MessagesWithoutHandlersAreDropped)

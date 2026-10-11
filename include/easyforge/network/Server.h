@@ -40,6 +40,20 @@ namespace easyforge
         // Seconds without hearing from a client before it is dropped.
         float Timeout = 5.0f;
 
+        // The largest message, request, or answer this end sends or takes, in
+        // bytes, from 1 KB to 60 MB. A connection that sends a larger one is
+        // closed, so a server and its clients should agree on it.
+        std::size_t MessageLimit = 4u << 20;
+
+        // The most each connection may hold in large messages still arriving,
+        // at least twice MessageLimit. A connection that sends more is closed.
+        std::size_t UnfinishedLimit = 16u << 20;
+
+        // Connect attempts each address may make a second, and at once. Raise
+        // them when many players share one address, as behind one router.
+        float ConnectAttemptsPerSecond = 10.0f;
+        float ConnectAttemptBurst = 20.0f;
+
         // Proves to clients that this is the server they expect, when they
         // were given its PublicKey. Without one, connections are still
         // encrypted, but a client cannot tell this server from another.

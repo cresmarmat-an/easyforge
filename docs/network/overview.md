@@ -114,6 +114,6 @@ threaded end. `Smoothed` values are used from one thread at a time. [Threads](..
   stages. In a browser (stage 3) the connection will use WebSocket, since
   browsers cannot send UDP; there, unreliable messages will arrive reliably.
 - IPv4 only.
-- A message is at most 4 MB.
+- A message is at most 60 MB, and 4 MB unless `MessageLimit` allows more.
 - Nothing finds a way through routers (no NAT traversal): a server on the
   internet needs its port forwarded.

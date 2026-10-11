@@ -93,12 +93,17 @@ namespace
             while (clock.Seconds() < seconds)
             {
                 update();
-                char buffer[2048];
-                sockaddr_in from {};
-                int fromSize = sizeof(from);
-                int size = recvfrom(Socket, buffer, sizeof(buffer), 0, reinterpret_cast<sockaddr*>(&from), &fromSize);
-                if (size > 0)
+                // Everything waiting, since a sleep on Windows can last 15 ms.
+                while (true)
                 {
+                    char buffer[2048];
+                    sockaddr_in from {};
+                    int fromSize = sizeof(from);
+                    int size = recvfrom(Socket, buffer, sizeof(buffer), 0, reinterpret_cast<sockaddr*>(&from), &fromSize);
+                    if (size <= 0)
+                    {
+                        break;
+                    }
                     arrived.emplace_back(buffer, buffer + size);
                     LastSender = ntohs(from.sin_port);
                 }
@@ -318,6 +323,20 @@ EASYFORGE_TEST(FindingServersNeverAnswersWithMore)
     std::vector<std::vector<std::uint8_t>> answers = raw.Gather([&] { server.Update(); }, 0.3);
     EASYFORGE_REQUIRE(answers.size() == 1);
     EASYFORGE_EXPECT(answers[0].size() <= DiscoverRequestSize);
+}
+
+EASYFORGE_TEST(ConnectAttemptLimitsAreSettings)
+{
+    // Many players behind one router share an address.
+    Server server = LocalServer({ .ConnectAttemptsPerSecond = 200.0f, .ConnectAttemptBurst = 100.0f });
+    EASYFORGE_REQUIRE(server);
+    RawSocket raw;
+    for (int attempt = 0; attempt < 100; ++attempt)
+    {
+        raw.Send(server.Port(), Packet(PacketKind::ConnectRequest, 2000 + attempt, ConnectRequestSize));
+    }
+    std::vector<std::vector<std::uint8_t>> answers = raw.Gather([&] { server.Update(); }, 0.3);
+    EASYFORGE_EXPECT(answers.size() >= 90);
 }
 
 EASYFORGE_TEST(ConnectAttemptsFromOneAddressAreLimited)

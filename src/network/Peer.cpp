@@ -19,8 +19,11 @@ namespace easyforge::internal::networking
         }
     }
 
-    Peer::Peer(double now) : BudgetTime(now), LastHeard(now), Began(now), WindowStarted(now)
+    Peer::Peer(double now, std::size_t messageLimit, std::size_t unfinishedLimit)
+        : BudgetTime(now), LastHeard(now), Began(now), WindowStarted(now)
     {
+        MostFragments = FragmentsFor(messageLimit);
+        UnfinishedLimit = unfinishedLimit;
     }
 
     double Peer::StampedTime(double now, std::uint32_t stamp)
@@ -494,7 +497,12 @@ namespace easyforge::internal::networking
             {
                 return false;
             }
-            if (fragment && (piece.Count < 2 || piece.Count > FragmentLimit || piece.Index >= piece.Count || bytes.empty()))
+            if (fragment && piece.Count > MostFragments)
+            {
+                TooLarge = true;
+                return false;
+            }
+            if (fragment && (piece.Count < 2 || piece.Index >= piece.Count || bytes.empty()))
             {
                 return false;
             }

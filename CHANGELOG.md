@@ -29,6 +29,10 @@
   folder, `bin/<configuration>`.
 - The test runner fails a Debug run built with Visual Studio that leaves memory
   allocated when it ends, and lists each block.
+- `MessageLimit` and `UnfinishedLimit` on servers and clients, and
+  `ConnectAttemptsPerSecond` and `ConnectAttemptBurst` on servers, so every
+  network limit is a setting; an end sent a message larger than its own limit
+  closes the connection instead of the message being sent again for good.
 - `Result::LogIfFailed()` logs a failed result's error and gives whether it
   succeeded, for results where logging is all a program would do.
 - `WriteWholeFile` in `core` writes a file whole or not at all, through a file

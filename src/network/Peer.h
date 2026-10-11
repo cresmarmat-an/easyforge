@@ -41,7 +41,8 @@ namespace easyforge::internal::networking
     class EASYFORGE_NETWORK_EXPORT Peer
     {
     public:
-        explicit Peer(double now);
+        explicit Peer(double now, std::size_t messageLimit = MessageLimit,
+            std::size_t unfinishedLimit = AssemblyLimit);
 
         // Queues a message. A message larger than a fragment is split; an
         // unreliable one that large goes on the unordered reliable channel.
@@ -84,8 +85,11 @@ namespace easyforge::internal::networking
         double SendWindow() const { return CongestionWindow; }
 
         // Whether the other end has sent more unfinished messages than a
-        // connection may hold, AssemblyLimit.
-        bool OverBudget() const { return HeldBytes > AssemblyLimit; }
+        // connection may hold.
+        bool OverBudget() const { return HeldBytes > UnfinishedLimit; }
+
+        // Whether the other end has sent a message larger than this end takes.
+        bool SentTooLarge() const { return TooLarge; }
 
         // The bytes of data sent and not yet acknowledged or found lost.
         double BytesInFlight() const { return InFlight; }
@@ -207,6 +211,10 @@ namespace easyforge::internal::networking
 
         // Bytes held for unordered messages not complete yet.
         std::size_t HeldBytes = 0;
+
+        std::size_t MostFragments = FragmentLimit;
+        std::size_t UnfinishedLimit = AssemblyLimit;
+        bool TooLarge = false;
 
         double SmoothedRoundTrip = 0.1;
         bool MeasuredRoundTrip = false;

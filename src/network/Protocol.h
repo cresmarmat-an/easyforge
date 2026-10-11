@@ -131,7 +131,8 @@ namespace easyforge::internal::networking
     inline constexpr std::size_t ReplayWindowSize = 1024;
 
     // The most memory one connection may hold in messages arriving in pieces
-    // out of order. A connection that sends more is closed.
+    // out of order, unless the settings say otherwise. A connection that sends
+    // more is closed.
     inline constexpr std::size_t AssemblyLimit = 16u << 20;
 
     // How long the lowest clock difference seen is remembered. Clocks of two
@@ -140,8 +141,20 @@ namespace easyforge::internal::networking
 
     // Messages larger than this go in fragments.
     inline constexpr std::size_t FragmentSize = 1000;
+
+    // The largest message unless the settings say otherwise, and the range the
+    // settings may choose from: a message's fragments are counted in 16 bits.
     inline constexpr std::size_t MessageLimit = 4u << 20;
-    inline constexpr std::size_t FragmentLimit = (MessageLimit + FragmentSize - 1) / FragmentSize;
+    inline constexpr std::size_t SmallestMessageLimit = 1u << 10;
+    inline constexpr std::size_t LargestMessageLimit = 60u << 20;
+
+    constexpr std::size_t FragmentsFor(std::size_t bytes)
+    {
+        return (bytes + FragmentSize - 1) / FragmentSize;
+    }
+
+    inline constexpr std::size_t FragmentLimit = FragmentsFor(MessageLimit);
+    static_assert(FragmentsFor(LargestMessageLimit) <= 65535);
 
     // Reliable entries in flight on one channel, counted from the oldest not
     // yet acknowledged.

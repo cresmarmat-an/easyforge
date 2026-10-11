@@ -32,6 +32,15 @@ namespace easyforge
         float Timeout = 5.0f;
         float ConnectTimeout = 5.0f;
 
+        // The largest message, request, or answer this end sends or takes, in
+        // bytes, from 1 KB to 60 MB. The server closes the connection when it
+        // is sent a larger one than its own limit, so they should agree.
+        std::size_t MessageLimit = 4u << 20;
+
+        // The most the connection may hold in large messages still arriving,
+        // at least twice MessageLimit. A server that sends more is left.
+        std::size_t UnfinishedLimit = 16u << 20;
+
         // The server's NetworkIdentity::PublicKey(). When given, the client
         // connects only to a server that proves it holds that identity, so
         // nobody can stand in for it. Empty connects to whichever server

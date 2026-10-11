@@ -27,8 +27,10 @@ nothing, which is why state sent every frame should be unreliable.
 
 A message larger than about 1000 bytes is split into pieces that travel
 reliably and are put together at the other end. An unreliable message that
-large is sent as `ReliableUnordered`. A message is at most 4 MB; a larger one
-is not sent, and a warning is logged.
+large is sent as `ReliableUnordered`. A message is at most the sending end's
+`MessageLimit`, 4 MB unless its settings say otherwise; a larger one is not
+sent, and a warning is logged. An end that is sent a message larger than its
+own limit closes the connection, so both ends should use the same one.
 
 ## How fast a connection sends
 

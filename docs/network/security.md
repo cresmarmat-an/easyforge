@@ -54,10 +54,12 @@ with a forged sender. The handshake keeps them from doing harm:
   only it can make, tied to the address the request came from, and only a
   client that sends the cookie back gets a place. Forged addresses never get
   that far, so they cannot fill the server's places.
-- Each address may try to connect about ten times a second, with bursts of
-  twenty, since agreeing on keys costs the server time.
-- A connection that sends more unfinished messages than it may hold, 16 MB, is
-  closed.
+- Each address may try to connect ten times a second, with bursts of twenty,
+  since agreeing on keys costs the server time. `ConnectAttemptsPerSecond` and
+  `ConnectAttemptBurst` change that, for places where many players share one
+  address.
+- A connection that sends a message larger than `MessageLimit`, or more
+  unfinished messages than `UnfinishedLimit` (16 MB unless set), is closed.
 
 ## How it works
 

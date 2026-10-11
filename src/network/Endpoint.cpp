@@ -4,6 +4,8 @@
 #include <array>
 #include <format>
 #include <iterator>
+#include <tuple>
+#include <utility>
 
 #include <easyforge/core/Log.h>
 #include <easyforge/network/Identity.h>
@@ -35,9 +37,31 @@ namespace easyforge::internal::networking
             return packet;
         }
 
-        std::string TooLarge(std::string_view what, std::string_view name)
+        std::string SizeText(std::size_t bytes)
         {
-            return std::format("the {} \"{}\" is larger than {} MB", what, name, MessageLimit >> 20);
+            if (bytes % (1u << 20) == 0)
+            {
+                return std::format("{} MB", bytes >> 20);
+            }
+            if (bytes % (1u << 10) == 0)
+            {
+                return std::format("{} KB", bytes >> 10);
+            }
+            return std::format("{} bytes", bytes);
+        }
+
+        std::string TooLarge(std::string_view what, std::string_view name, std::size_t limit)
+        {
+            return std::format("the {} \"{}\" is larger than MessageLimit, {}", what, name, SizeText(limit));
+        }
+
+        // The limits in the settings, kept within what the protocol can carry.
+        // Large messages travel out of order, so a connection may always hold
+        // at least two of them unfinished.
+        std::pair<std::size_t, std::size_t> Limits(std::size_t messageLimit, std::size_t unfinishedLimit)
+        {
+            std::size_t message = std::clamp(messageLimit, SmallestMessageLimit, LargestMessageLimit);
+            return { message, std::max(unfinishedLimit, 2 * message) };
         }
 
         std::uint64_t Milliseconds(double seconds)
@@ -107,6 +131,10 @@ namespace easyforge::internal::networking
         endpoint->Self = endpoint;
         endpoint->Name = settings.Name;
         endpoint->Timeout = std::max(settings.Timeout, 0.1f);
+        std::tie(endpoint->MostMessageBytes, endpoint->MostUnfinishedBytes) =
+            Limits(settings.MessageLimit, settings.UnfinishedLimit);
+        endpoint->AttemptsPerSecond = std::max(static_cast<double>(settings.ConnectAttemptsPerSecond), 0.1);
+        endpoint->AttemptBurst = std::max(static_cast<double>(settings.ConnectAttemptBurst), 1.0);
         endpoint->Conditions = settings.Conditions;
         endpoint->Threaded = settings.Threaded;
         endpoint->Instance = endpoint->NewSalt();
@@ -147,6 +175,8 @@ namespace easyforge::internal::networking
         endpoint->Self = endpoint;
         endpoint->Timeout = std::max(settings.Timeout, 0.1f);
         endpoint->ConnectTimeout = std::max(settings.ConnectTimeout, 0.1f);
+        std::tie(endpoint->MostMessageBytes, endpoint->MostUnfinishedBytes) =
+            Limits(settings.MessageLimit, settings.UnfinishedLimit);
         endpoint->Conditions = settings.Conditions;
         endpoint->Threaded = settings.Threaded;
         endpoint->Slots.resize(1);
@@ -185,7 +215,7 @@ namespace easyforge::internal::networking
         slot.Address = *address;
         slot.ClientSalt = endpoint->NewSalt();
         slot.Started = now;
-        slot.Link = std::make_unique<Peer>(now);
+        slot.Link = std::make_unique<Peer>(now, endpoint->MostMessageBytes, endpoint->MostUnfinishedBytes);
         slot.Exchange = std::make_unique<KeyExchange>();
         if (!*slot.Exchange)
         {
@@ -596,6 +626,14 @@ namespace easyforge::internal::networking
             ByteReader opened(body);
             std::vector<DeliveredMessage> delivered;
             slot.Link->Receive(now, opened, kind == PacketKind::KeepAlive, delivered);
+            if (slot.Link->SentTooLarge())
+            {
+                Close(index,
+                    Kind == Role::Server ? "it sent a message larger than MessageLimit"
+                                         : "the server sent a message larger than MessageLimit",
+                    true, DisconnectReason::Closed);
+                return;
+            }
             if (slot.Link->OverBudget())
             {
                 Close(index, "it sent more unfinished messages than a connection may hold", true, DisconnectReason::Closed);
@@ -712,9 +750,10 @@ namespace easyforge::internal::networking
         ConnectAllowance& allowance = found->second;
         if (added)
         {
+            allowance.Attempts = AttemptBurst;
             allowance.Updated = now;
         }
-        allowance.Attempts = std::min(ConnectAttemptBurst, allowance.Attempts + (now - allowance.Updated) * ConnectAttemptsPerSecond);
+        allowance.Attempts = std::min(AttemptBurst, allowance.Attempts + (now - allowance.Updated) * AttemptsPerSecond);
         allowance.Updated = now;
         if (allowance.Attempts < 1.0)
         {
@@ -831,7 +870,7 @@ namespace easyforge::internal::networking
         ++slot.Generation;
         slot.Address = from;
         slot.Started = now;
-        slot.Link = std::make_unique<Peer>(now);
+        slot.Link = std::make_unique<Peer>(now, MostMessageBytes, MostUnfinishedBytes);
         slot.NewestUnreliable.clear();
         slot.SentPackets = 0;
         slot.Received = {};
@@ -1105,12 +1144,13 @@ namespace easyforge::internal::networking
             writer.Write32(request);
             writer.WriteBytes(answer->Encode());
         }
-        if (!answer || bytes.size() > MessageLimit)
+        if (!answer || bytes.size() > MostMessageBytes)
         {
             bytes.clear();
             writer.Write8(static_cast<std::uint8_t>(MessageKind::ReplyError));
             writer.Write32(request);
-            writer.WriteBytes(answer ? std::format("the answer is larger than {} MB", MessageLimit >> 20) : answer.Error());
+            writer.WriteBytes(answer ? "the answer is larger than MessageLimit, " + SizeText(MostMessageBytes)
+                                     : answer.Error());
         }
         slot->Link->Queue(Channel::Reliable, std::move(bytes));
     }
@@ -1386,9 +1426,10 @@ namespace easyforge::internal::networking
         writer.Write8(static_cast<std::uint8_t>(MessageKind::Message));
         writer.WriteShortText(name);
         writer.WriteBytes(message.Encode());
-        if (bytes.size() > MessageLimit)
+        if (bytes.size() > MostMessageBytes)
         {
-            Log(LogLevel::Warning, "easyforge network: {}, so it was not sent", TooLarge("message", name));
+            Log(LogLevel::Warning, "easyforge network: {}, so it was not sent",
+                TooLarge("message", name, MostMessageBytes));
             return;
         }
         std::scoped_lock lock(Lock);
@@ -1406,9 +1447,10 @@ namespace easyforge::internal::networking
         writer.Write8(static_cast<std::uint8_t>(MessageKind::Message));
         writer.WriteShortText(name);
         writer.WriteBytes(message.Encode());
-        if (bytes.size() > MessageLimit)
+        if (bytes.size() > MostMessageBytes)
         {
-            Log(LogLevel::Warning, "easyforge network: {}, so it was not sent", TooLarge("message", name));
+            Log(LogLevel::Warning, "easyforge network: {}, so it was not sent",
+                TooLarge("message", name, MostMessageBytes));
             return;
         }
         std::scoped_lock lock(Lock);
@@ -1432,9 +1474,9 @@ namespace easyforge::internal::networking
         {
             problem = "not connected";
         }
-        else if (body.size() + name.size() + 6 > MessageLimit)
+        else if (body.size() + name.size() + 6 > MostMessageBytes)
         {
-            problem = TooLarge("request", name);
+            problem = TooLarge("request", name, MostMessageBytes);
         }
         if (!problem.empty())
         {
