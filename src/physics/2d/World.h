@@ -270,6 +270,9 @@ namespace easyforge::internal
         // Whether bodies may fall asleep at all.
         bool AllowSleep = true;
 
+        std::function<void(float)> BeforeStep;
+        std::function<void(float)> AfterStep;
+
         std::vector<physics2d::BodyData> Bodies;
         std::vector<physics2d::JointData> Joints;
 

@@ -22,6 +22,45 @@ EASYFORGE_TEST(UpdateRunsWholeStepsAndKeepsTheRest)
     EASYFORGE_EXPECT_EQUAL(physics.Update(0.012f), 1);
 }
 
+EASYFORGE_TEST(RulesRunWithEachStep)
+{
+    // A push before each step, counted, so the rules keep to the steps however
+    // the frames fall; and a body a touch marked goes after the step.
+    int before = 0;
+    int after = 0;
+    bool touched = false;
+    Physics2D physics = Physics2D::New({ .Gravity = { 0.0f, 0.0f }, .StepSeconds = 0.01f });
+    Body2D ball = physics.AddCircle({ .Position = { 0.0f, 0.0f }, .Radius = 0.5f });
+    Body2D wall = physics.AddBox({ .Position = { 2.0f, 0.0f }, .Size = { 0.5f, 4.0f }, .Type = BodyType::Static });
+    ball.OnTouch = [&](const Contact2D&) { touched = true; };
+    physics.BeforeStep = [&](float seconds) {
+        EASYFORGE_EXPECT_NEAR(seconds, 0.01f, 1e-9f);
+        ++before;
+        if (ball)
+        {
+            ball.ApplyForce({ 50.0f, 0.0f });
+        }
+    };
+    physics.AfterStep = [&](float) {
+        ++after;
+        if (touched && ball)
+        {
+            ball.Remove();
+        }
+    };
+
+    EASYFORGE_EXPECT_EQUAL(physics.Update(0.035f), 3);
+    EASYFORGE_EXPECT_EQUAL(before, 3);
+    EASYFORGE_EXPECT_EQUAL(after, 3);
+    for (int frame = 0; frame < 120 && physics.BodyCount() == 2; ++frame)
+    {
+        physics.Update(1.0f / 60.0f);
+    }
+    EASYFORGE_EXPECT(touched);
+    EASYFORGE_EXPECT_EQUAL(physics.BodyCount(), std::size_t { 1 });
+    EASYFORGE_EXPECT_EQUAL(before, after);
+}
+
 EASYFORGE_TEST(UpdateCatchesUpOnlySoFar)
 {
     Physics2D physics = Physics2D::New({ .MaximumStepsPerUpdate = 5 });

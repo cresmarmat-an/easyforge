@@ -682,6 +682,26 @@ namespace easyforge
                       }
                   }
               }),
+          BeforeStep(state.get(),
+              [](const void* owner) {
+                  return owner ? static_cast<const WorldState2D*>(owner)->BeforeStep : std::function<void(float)>();
+              },
+              [](void* owner, const std::function<void(float)>& value) {
+                  if (owner)
+                  {
+                      static_cast<WorldState2D*>(owner)->BeforeStep = value;
+                  }
+              }),
+          AfterStep(state.get(),
+              [](const void* owner) {
+                  return owner ? static_cast<const WorldState2D*>(owner)->AfterStep : std::function<void(float)>();
+              },
+              [](void* owner, const std::function<void(float)>& value) {
+                  if (owner)
+                  {
+                      static_cast<WorldState2D*>(owner)->AfterStep = value;
+                  }
+              }),
           State(std::move(state))
     {
     }
@@ -716,6 +736,8 @@ namespace easyforge
         StepSeconds.Rebind(State.get());
         MaximumStepsPerUpdate.Rebind(State.get());
         AllowSleep.Rebind(State.get());
+        BeforeStep.Rebind(State.get());
+        AfterStep.Rebind(State.get());
     }
 
     Physics2D::operator bool() const

@@ -79,7 +79,9 @@ namespace easyforge::internal
           Substeps(std::clamp(settings.Substeps, 1, 64)),
           StepSeconds(std::isfinite(settings.StepSeconds) && settings.StepSeconds > 0.0f ? settings.StepSeconds : 1.0f / 60.0f),
           MaximumStepsPerUpdate(std::max(settings.MaximumStepsPerUpdate, 1)),
-          AllowSleep(settings.AllowSleep)
+          AllowSleep(settings.AllowSleep),
+          BeforeStep(settings.BeforeStep),
+          AfterStep(settings.AfterStep)
     {
     }
 
@@ -559,6 +561,11 @@ namespace easyforge::internal
         {
             return;
         }
+        // Copied first, so a rule may replace itself.
+        if (std::function<void(float)> before = BeforeStep)
+        {
+            before(seconds);
+        }
         for (BodyData& body : Bodies)
         {
             body.PreviousOrigin = body.Origin;
@@ -579,13 +586,19 @@ namespace easyforge::internal
             std::vector<TouchEvent> events = std::move(StepEvents);
             StepEvents.clear();
             Report(events);
-            return;
         }
-        std::swap(StepEvents, ReportedEvents);
-        Reporting = true;
-        Report(ReportedEvents);
-        Reporting = false;
-        ReportedEvents.clear();
+        else
+        {
+            std::swap(StepEvents, ReportedEvents);
+            Reporting = true;
+            Report(ReportedEvents);
+            Reporting = false;
+            ReportedEvents.clear();
+        }
+        if (std::function<void(float)> after = AfterStep)
+        {
+            after(seconds);
+        }
     }
 
     void WorldState2D::SweepFastBodies()

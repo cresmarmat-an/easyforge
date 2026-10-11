@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -40,6 +41,12 @@ namespace easyforge
         // Lets bodies that have been still for half a second sleep until
         // something wakes them.
         bool AllowSleep = true;
+
+        // Called before and after each step with its length in seconds, for
+        // game rules that go with the steps: pushing bodies before each one, or
+        // removing what a step's touches decided after it, where that is safe.
+        std::function<void(float)> BeforeStep {};
+        std::function<void(float)> AfterStep {};
     };
 
     // A world of 2D bodies that collide, rest on each other, and are joined
@@ -115,6 +122,8 @@ namespace easyforge
         Property<float> StepSeconds;
         Property<int> MaximumStepsPerUpdate;
         Property<bool> AllowSleep;
+        Property<std::function<void(float)>> BeforeStep;
+        Property<std::function<void(float)>> AfterStep;
 
     private:
         explicit Physics2D(std::shared_ptr<internal::WorldState2D> state);

@@ -36,6 +36,8 @@
 - `ScriptEngine::New(window, settings)`: functions started with `spawn` carry
   on in the window's frames, their errors are logged, and a waiting window
   wakes only when a task's wait is over, so the program never calls `Update`.
+- `BeforeStep` and `AfterStep` on `Physics2D`, called around every step, so
+  rules that go with the steps need no time kept by the program.
 - `MessageLimit` and `UnfinishedLimit` on servers and clients, and
   `ConnectAttemptsPerSecond` and `ConnectAttemptBurst` on servers, so every
   network limit is a setting; an end sent a message larger than its own limit

@@ -41,6 +41,25 @@ settings in braces and properties, like every other setting.
 of the screen, so `Update` gets the same number of steps on frames that look
 the same.
 
+## Rules that go with each step
+
+`BeforeStep` and `AfterStep` are called before and after every step, from
+`Update` and `Step` alike, with the step's length in seconds. Rules that belong
+to the steps rather than the frames go there, so they run the same however the
+frames fall, with no time kept by the program: a force that pushes each step,
+a timer counted in steps, or what a step's touches decided, such as removing a
+coin that was picked up.
+
+```cpp
+Physics2D physics = Physics2D::New({
+    .BeforeStep = [&](float seconds) { player.ApplyForce(steering * push); },
+    .AfterStep = [&](float) { RemovePickedUpCoins(); },
+});
+```
+
+`AfterStep` comes after the step's touches are reported. Both are settings and
+properties like the others, so `physics.BeforeStep = ...` works too.
+
 ## Single steps
 
 `Step(seconds)` moves the world on by exactly one step, for programs that keep
