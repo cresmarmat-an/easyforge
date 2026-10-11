@@ -66,7 +66,7 @@ namespace easyforge::internal
                         sum += cells[column];
                         float value = Min(std::abs(sum), 1.0f);
                         coverage[static_cast<std::size_t>(row) * static_cast<std::size_t>(Width) + static_cast<std::size_t>(column)] =
-                            static_cast<std::uint8_t>(value * 255.0f + 0.5f);
+                            static_cast<std::uint8_t>(std::lround(value * 255.0f));
                     }
                 }
                 return coverage;

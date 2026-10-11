@@ -153,7 +153,8 @@ namespace easyforge::ui::internal
         // Opens a popup list below `owner`. `chosen` is called with the row picked,
         // after the popup has closed.
         std::shared_ptr<ElementState> OpenPopup(ElementState& owner, std::vector<PopupRow> rows,
-            std::optional<std::size_t> highlight, std::function<void(std::size_t)> chosen, std::function<void()> closed)
+            std::optional<std::size_t> highlight, const std::function<void(std::size_t)>& chosen,
+            std::function<void()> closed)
         {
             RootState* root = owner.Root();
             if (!root)
@@ -486,6 +487,7 @@ namespace easyforge::ui::internal
             {
                 std::vector<MenuItem> items = element.Object<std::vector<MenuItem>>("Items");
                 std::vector<PopupRow> rows;
+                rows.reserve(items.size());
                 std::optional<std::size_t> first;
                 for (const MenuItem& item : items)
                 {

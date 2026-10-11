@@ -335,7 +335,7 @@ namespace easyforge::ui
 {
     using namespace internal;
 
-    Display::Display(std::string name, const ContainerSettings& settings)
+    Display::Display(std::string_view name, const ContainerSettings& settings)
         : Display(MakeElement(std::make_unique<DisplayBehavior>()))
     {
         ApplyContainerSettings(*State, settings);

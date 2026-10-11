@@ -45,7 +45,10 @@ namespace easyforge
 
         // Copying a cell copies which cell it is; assigning one copies its value.
         Cell(const Cell&) = default;
+        // NOLINTNEXTLINE(misc-unconventional-assign-operator): writes through to the owner, also through a const handle
         const Cell& operator=(const DataValue& value) const;
+        // Assigned to itself, it writes back the value it holds.
+        // NOLINTNEXTLINE(misc-unconventional-assign-operator, bugprone-unhandled-self-assignment): copies the value
         const Cell& operator=(const Cell& other) const { return *this = other.Get(); }
 
         // Adds to a whole number, number, or vector, keeping its type.

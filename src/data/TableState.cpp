@@ -12,7 +12,7 @@ namespace easyforge::internal
         {
             return {};
         }
-        return Node(shared_from_this(), slot, Rows[slot].Generation);
+        return Node(weak_from_this().lock(), slot, Rows[slot].Generation);
     }
 
     Node TableState::Handle(std::uint32_t slot, std::uint32_t generation)
@@ -21,7 +21,7 @@ namespace easyforge::internal
         {
             return {};
         }
-        return Node(shared_from_this(), slot, generation);
+        return Node(weak_from_this().lock(), slot, generation);
     }
 
     std::uint32_t TableState::NewRow()
@@ -169,7 +169,8 @@ namespace easyforge::internal
             return;
         }
         // Kept to the end, since the handler may let go of the last handle.
-        std::shared_ptr<TableState> kept = shared_from_this();
+        // Runs from a destructor, so it must not throw as shared_from_this can.
+        std::shared_ptr<TableState> kept = weak_from_this().lock();
         Notifying = true;
         struct Finished
         {
@@ -466,7 +467,7 @@ namespace easyforge::internal
             Log(LogLevel::Warning, "Table::EndEdit was called more times than BeginEdit");
             return;
         }
-        if (--EditDepth > 0)
+        if (--EditDepth > 0 || !OpenEdit)
         {
             return;
         }
@@ -619,11 +620,14 @@ namespace easyforge::internal
             }
             return;
         case Operation::Kind::Rename:
-            if (Rows[slot].Alive)
+        {
+            const std::optional<DataValue>& name = reverse ? operation.Old : operation.New;
+            if (Rows[slot].Alive && name)
             {
-                RenameNode(slot, (reverse ? operation.Old : operation.New)->AsText());
+                RenameNode(slot, name->AsText());
             }
             return;
+        }
         case Operation::Kind::Move:
         {
             if (!Rows[slot].Alive)

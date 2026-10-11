@@ -113,7 +113,7 @@ namespace easyforge
         internal::networking::MessageHandler wrapped;
         if (handler)
         {
-            wrapped = [handler = std::move(handler)](Connection, const Message& message) { handler(message); };
+            wrapped = [handler = std::move(handler)](const Connection&, const Message& message) { handler(message); };
         }
         State->SetMessageHandler(name, std::move(wrapped));
     }
@@ -127,7 +127,9 @@ namespace easyforge
         internal::networking::RequestHandler wrapped;
         if (handler)
         {
-            wrapped = [handler = std::move(handler)](Connection, const Message& message) { return handler(message); };
+            wrapped = [handler = std::move(handler)](const Connection&, const Message& message) {
+                return handler(message);
+            };
         }
         State->SetRequestHandler(name, std::move(wrapped));
     }

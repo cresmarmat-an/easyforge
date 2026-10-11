@@ -1,0 +1,4 @@
+# Direct3D's structures start as zeros and are filled field by field, as its
+# documentation does, so an enumeration is zero only until it is set.
+InheritParentConfig: true
+Checks: '-bugprone-invalid-enum-default-initialization'

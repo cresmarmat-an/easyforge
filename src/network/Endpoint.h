@@ -184,7 +184,7 @@ namespace easyforge::internal::networking
 
         explicit Endpoint(Role role);
 
-        static void Work(std::weak_ptr<Endpoint> endpoint);
+        static void Work(const std::weak_ptr<Endpoint>& endpoint);
 
         // Following a host: its frames run what the network thread queued for
         // them, then send what the handlers sent.

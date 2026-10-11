@@ -70,7 +70,7 @@ namespace easyforge::ui
     class EASYFORGE_UI_EXPORT Display : public Container
     {
     public:
-        explicit Display(std::string name = {}, const ContainerSettings& settings = {});
+        explicit Display(std::string_view name = {}, const ContainerSettings& settings = {});
 
         Display(const Display& other);
         Display& operator=(const Display& other);

@@ -77,7 +77,7 @@ namespace easyforge::internal
         virtual void Destroy() = 0;
 
     protected:
-        virtual ~PlatformWindow() = default;
+        ~PlatformWindow() = default;
     };
 
     struct DestroyPlatformWindow

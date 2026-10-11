@@ -307,7 +307,7 @@ namespace easyforge
                 std::filesystem::path beside = internal::ExecutableFolder() / location;
                 if (std::filesystem::exists(beside, error))
                 {
-                    location = beside;
+                    location = std::move(beside);
                 }
             }
         }
@@ -318,7 +318,7 @@ namespace easyforge
         {
             mounted = std::make_shared<Mounted>();
             mounted->Name = std::string(folderOrPack);
-            mounted->Location = location;
+            mounted->Location = std::move(location);
         }
         else if (std::filesystem::is_regular_file(location, error))
         {

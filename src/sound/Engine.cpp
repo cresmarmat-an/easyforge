@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <limits>
 
 #include <easyforge/core/Scalar.h>
 
@@ -227,7 +228,9 @@ namespace easyforge::internal
 
     std::uint32_t Engine::Frames(float seconds) const
     {
-        return static_cast<std::uint32_t>(std::max(seconds, 0.0f) * static_cast<float>(Rate) + 0.5f);
+        // Rounded in 64 bits, so hours of sound do not overflow before the clamp.
+        long long frames = std::llround(static_cast<double>(std::max(seconds, 0.0f)) * Rate);
+        return static_cast<std::uint32_t>(std::min<long long>(frames, std::numeric_limits<std::uint32_t>::max()));
     }
 
     Voice* Engine::FindVoice(std::uint64_t id) const

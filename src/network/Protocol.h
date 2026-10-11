@@ -174,8 +174,8 @@ namespace easyforge::internal::networking
     // many as the packet records can follow.
     inline constexpr double InitialWindow = 10.0 * PacketLimit;
     inline constexpr double MinimumWindow = 2.0 * PacketLimit;
-    inline constexpr double MaximumWindow = (Window / 2) * static_cast<double>(PacketLimit);
     inline constexpr std::size_t MostPacketsInFlight = Window / 2;
+    inline constexpr double MaximumWindow = static_cast<double>(MostPacketsInFlight) * PacketLimit;
 
     // Packets go out at this many windows per round trip, spread over it
     // rather than all at once, with room for the window to grow.

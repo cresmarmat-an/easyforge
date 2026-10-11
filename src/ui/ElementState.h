@@ -172,7 +172,7 @@ namespace easyforge::ui::internal
     std::shared_ptr<ElementState> MakeElement(std::unique_ptr<Behavior> kind);
 
     // Children. A child from another table moves into the parent's.
-    void AddChild(ElementState& parent, const std::shared_ptr<ElementState>& child,
+    void AddChild(ElementState& parent, std::shared_ptr<ElementState> child,
         std::size_t index = static_cast<std::size_t>(-1));
     void RemoveFromParent(ElementState& child);
 

@@ -429,7 +429,6 @@ namespace easyforge
                 {
                     // Every point is off the curve: start halfway between the last and the first.
                     start = { (raw[count - 1].Position + raw[0].Position) * 0.5f, true };
-                    first = 0;
                     contour.push_back(start);
                     for (std::size_t step = 0; step < count; ++step)
                     {

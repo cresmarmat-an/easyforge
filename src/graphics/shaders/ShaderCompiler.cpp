@@ -33,11 +33,11 @@ namespace easyforge::internal
     {
         switch (type)
         {
-        case ShaderType::Number: return 1;
+        case ShaderType::Number:
         case ShaderType::Boolean: return 1;
         case ShaderType::Vector2: return 2;
         case ShaderType::Vector3: return 3;
-        case ShaderType::Vector4: return 4;
+        case ShaderType::Vector4:
         case ShaderType::Color: return 4;
         default: return 0;
         }
@@ -66,7 +66,7 @@ namespace easyforge::internal
             case ShaderType::Boolean: return "bool";
             case ShaderType::Vector2: return "float2";
             case ShaderType::Vector3: return "float3";
-            case ShaderType::Vector4: return "float4";
+            case ShaderType::Vector4:
             case ShaderType::Color: return "float4";
             case ShaderType::PixelInput: return "PixelInput";
             default: return "void";
@@ -442,12 +442,14 @@ namespace easyforge::internal
                 else
                 {
                     const Expression& start = *statement.Expressions[0];
-                    type = start.Kind == ExpressionKind::ColorCode   ? ShaderType::Color
-                           : start.Kind == ExpressionKind::Boolean   ? ShaderType::Boolean
-                           : start.Kind == ExpressionKind::Call && start.Parts[0]->Kind == ExpressionKind::Name &&
-                                   TypeFromName(start.Parts[0]->Name)
-                               ? *TypeFromName(start.Parts[0]->Name)
-                               : ShaderType::Number;
+                    std::optional<ShaderType> named;
+                    if (start.Kind == ExpressionKind::Call && start.Parts[0]->Kind == ExpressionKind::Name)
+                    {
+                        named = TypeFromName(start.Parts[0]->Name);
+                    }
+                    type = start.Kind == ExpressionKind::ColorCode ? ShaderType::Color
+                           : start.Kind == ExpressionKind::Boolean ? ShaderType::Boolean
+                                                                   : named.value_or(ShaderType::Number);
                 }
                 if (type == ShaderType::PixelInput)
                 {
@@ -849,7 +851,11 @@ float4 PixelMain(Interpolated input) : SV_Target
                         {
                             code += indent + "else\n";
                         }
-                        code += indent + "{\n" + EmitBlock(statement.Blocks[index], depth + 1) + indent + "}\n";
+                        code += indent;
+                        code += "{\n";
+                        code += EmitBlock(statement.Blocks[index], depth + 1);
+                        code += indent;
+                        code += "}\n";
                     }
                     return code;
                 }

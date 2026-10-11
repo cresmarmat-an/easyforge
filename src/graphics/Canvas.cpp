@@ -524,7 +524,8 @@ namespace easyforge
         blur.BlurTargets[2] = targets[2];
     }
 
-    void Canvas::Shaded(const easyforge::Shader& shader, easyforge::Rectangle area, std::vector<ShaderValue> values) const
+    void Canvas::Shaded(
+        const easyforge::Shader& shader, easyforge::Rectangle area, const std::vector<ShaderValue>& values) const
     {
         if (!Recorder || !Recorder->Active || !shader || area.IsEmpty())
         {

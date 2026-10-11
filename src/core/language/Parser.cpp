@@ -2,6 +2,7 @@
 
 #include <charconv>
 #include <cstdlib>
+#include <exception>
 #include <format>
 
 namespace easyforge::language
@@ -30,7 +31,7 @@ namespace easyforge::language
     {
         // Thrown inside the parser to abandon a statement that cannot be read; the
         // parser catches it, skips to the next line, and carries on.
-        struct Abandon
+        struct Abandon : std::exception
         {
         };
 

@@ -1,5 +1,7 @@
 #include <easyforge/ui/Displays.h>
 
+#include <optional>
+
 #include <easyforge/core/Log.h>
 
 #include "Behavior.h"
@@ -230,16 +232,21 @@ namespace easyforge::ui::internal
                         current = index;
                     }
                 }
-                std::size_t next = current;
-                switch (event.Key)
+                std::optional<std::size_t> next = [&]() -> std::optional<std::size_t> {
+                    switch (event.Key)
+                    {
+                    case Key::Left: return current > 0 ? current - 1 : 0;
+                    case Key::Right: return Min(current + 1, pages.size() - 1);
+                    case Key::Home: return std::size_t { 0 };
+                    case Key::End: return pages.size() - 1;
+                    default: return std::nullopt;
+                    }
+                }();
+                if (!next)
                 {
-                case Key::Left: next = current > 0 ? current - 1 : 0; break;
-                case Key::Right: next = Min(current + 1, pages.size() - 1); break;
-                case Key::Home: next = 0; break;
-                case Key::End: next = pages.size() - 1; break;
-                default: return false;
+                    return false;
                 }
-                Show(element, pages[next]->Row.Name());
+                Show(element, pages[*next]->Row.Name());
                 return true;
             }
 

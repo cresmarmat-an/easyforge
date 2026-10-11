@@ -39,6 +39,7 @@ namespace easyforge
         bool ParseFloat(std::string_view text, float& value)
         {
             const char* end = text.data() + text.size();
+            // NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage): bounded by end
             auto [position, error] = std::from_chars(text.data(), end, value);
             return error == std::errc() && position == end;
         }
@@ -46,6 +47,7 @@ namespace easyforge
         bool ParseInt(std::string_view text, int& value)
         {
             const char* end = text.data() + text.size();
+            // NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage): bounded by end
             auto [position, error] = std::from_chars(text.data(), end, value);
             return error == std::errc() && position == end;
         }

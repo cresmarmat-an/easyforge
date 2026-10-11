@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <atomic>
 #include <map>
+#include <thread>
 
 #include "../Platform.h"
 #include "../WindowState.h"
@@ -176,6 +177,7 @@ namespace easyforge::internal
         EnumDisplayMonitors(nullptr, nullptr, AddMonitor, reinterpret_cast<LPARAM>(&handles));
         std::map<std::wstring, std::string> names = ScreenNames();
         std::vector<Monitor> monitors;
+        monitors.reserve(handles.size());
         for (HMONITOR handle : handles)
         {
             monitors.push_back(Describe(handle, names));
@@ -205,9 +207,86 @@ namespace easyforge::internal
         }
     }
 
+    namespace
+    {
+        // DwmFlush waits for the compositor's next pass, which does not come while
+        // the screen sleeps, a remote session is cut off, or nothing is composed;
+        // it would hold the window thread until then. It runs on a thread of its
+        // own instead, and the window thread waits for it only so long.
+        class BlankWaiter
+        {
+        public:
+            BlankWaiter()
+                : Wanted(CreateEventW(nullptr, FALSE, FALSE, nullptr)),
+                  Passed(CreateEventW(nullptr, FALSE, FALSE, nullptr)),
+                  Finished(CreateEventW(nullptr, TRUE, FALSE, nullptr)),
+                  Worker([this] { Work(); })
+            {
+            }
+
+            ~BlankWaiter()
+            {
+                Stopping = true;
+                SetEvent(Wanted);
+                // A thread still inside DwmFlush is let go rather than waited for.
+                if (WaitForSingleObject(Finished, 100) == WAIT_OBJECT_0)
+                {
+                    Worker.join();
+                    CloseHandle(Wanted);
+                    CloseHandle(Passed);
+                    CloseHandle(Finished);
+                }
+                else
+                {
+                    Worker.detach();
+                }
+            }
+
+            BlankWaiter(const BlankWaiter&) = delete;
+            BlankWaiter& operator=(const BlankWaiter&) = delete;
+
+            // Whether the compositor's pass came within the time.
+            bool Wait(DWORD milliseconds)
+            {
+                // A pass that came after an earlier wait gave up is not this one.
+                ResetEvent(Passed);
+                SetEvent(Wanted);
+                return WaitForSingleObject(Passed, milliseconds) == WAIT_OBJECT_0;
+            }
+
+        private:
+            void Work()
+            {
+                while (true)
+                {
+                    WaitForSingleObject(Wanted, INFINITE);
+                    if (Stopping)
+                    {
+                        SetEvent(Finished);
+                        return;
+                    }
+                    if (FAILED(DwmFlush()))
+                    {
+                        Sleep(1);
+                    }
+                    SetEvent(Passed);
+                }
+            }
+
+            HANDLE Wanted;
+            HANDLE Passed;
+            HANDLE Finished;
+            std::atomic<bool> Stopping = false;
+            std::thread Worker;
+        };
+    }
+
     void WaitForVerticalBlank()
     {
-        if (FAILED(DwmFlush()))
+        static BlankWaiter waiter;
+        // A tenth of a second covers a screen refreshing ten times a second; past
+        // that the compositor has stopped, and frames go on without it.
+        if (!waiter.Wait(100))
         {
             WaitForMessages(1.0f / 60.0f);
         }

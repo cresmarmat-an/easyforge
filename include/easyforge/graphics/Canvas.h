@@ -173,7 +173,8 @@ namespace easyforge
 
         // Runs a shader over an area. Its input.Content is empty; to shade what
         // was drawn, use a layer.
-        void Shaded(const easyforge::Shader& shader, easyforge::Rectangle area, std::vector<ShaderValue> values = {}) const;
+        void Shaded(const easyforge::Shader& shader, easyforge::Rectangle area,
+            const std::vector<ShaderValue>& values = {}) const;
 
         // Draws everything until the matching EndLayer into a picture of the area,
         // then puts the picture on the canvas: through a shader, or faded, or as

@@ -197,7 +197,7 @@ namespace easyforge::internal
     class DeviceResources
     {
     public:
-        explicit DeviceResources(std::shared_ptr<gpu::Device> device) : Device(device), Atlas(device) {}
+        explicit DeviceResources(const std::shared_ptr<gpu::Device>& device) : Device(device), Atlas(device) {}
 
         static std::shared_ptr<DeviceResources> For(const std::shared_ptr<gpu::Device>& device);
 

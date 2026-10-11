@@ -309,7 +309,7 @@ namespace easyforge::internal::networking
         }
     }
 
-    void Endpoint::Work(std::weak_ptr<Endpoint> weak)
+    void Endpoint::Work(const std::weak_ptr<Endpoint>& weak)
     {
         while (true)
         {

@@ -958,6 +958,7 @@ namespace easyforge::ui::internal
             UpdateElements(*slot.Element, context);
         }
         std::vector<std::shared_ptr<ElementState>> overlays;
+        overlays.reserve(Overlays.size());
         for (const Overlay& overlay : Overlays)
         {
             overlays.push_back(overlay.Element);
@@ -1742,6 +1743,7 @@ namespace easyforge::ui::internal
             return nullptr;
         }
         std::vector<std::shared_ptr<ElementState>> tops;
+        tops.reserve(root->Slots.size());
         for (const RootState::Slot& slot : root->Slots)
         {
             tops.push_back(slot.Element);
@@ -1817,7 +1819,10 @@ namespace easyforge::ui
 
     Root& Root::operator=(const Root& other)
     {
-        State = other.State;
+        if (this != &other)
+        {
+            State = other.State;
+        }
         return *this;
     }
 

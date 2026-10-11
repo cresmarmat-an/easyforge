@@ -305,7 +305,7 @@ namespace easyforge::internal::networking
             return ahead > 1;
         }
         std::uint16_t behind = Ahead(sequence, NewestReceived);
-        if (behind <= 32)
+        if (behind > 0 && behind <= 32)
         {
             ReceivedBits |= 1u << (behind - 1);
         }
@@ -534,10 +534,15 @@ namespace easyforge::internal::networking
         }
         slot = std::move(piece);
 
-        while (Early[NextOrdered % Window])
+        while (true)
         {
-            Piece next = std::move(*Early[NextOrdered % Window]);
-            Early[NextOrdered % Window].reset();
+            std::optional<Piece>& waiting = Early[NextOrdered % Window];
+            if (!waiting)
+            {
+                break;
+            }
+            Piece next = std::move(*waiting);
+            waiting.reset();
             ++NextOrdered;
             if (next.Count == 0)
             {

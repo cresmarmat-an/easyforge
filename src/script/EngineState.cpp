@@ -253,6 +253,7 @@ namespace easyforge::internal::scripting
         settings.ReportUnknownNames = unknownNames;
         Compiled compiled = Compile(tree, TheHeap, settings);
         std::vector<std::string> problems;
+        problems.reserve(compiled.Problems.size());
         for (const language::Problem& problem : compiled.Problems)
         {
             problems.push_back(language::Describe(problem, name));
@@ -311,6 +312,7 @@ namespace easyforge::internal::scripting
                     return result;
                 }
                 std::vector<ScriptValue> values;
+                values.reserve(given.size());
                 for (const Value& argument : given)
                 {
                     values.push_back(ToScript(argument));
@@ -380,6 +382,7 @@ namespace easyforge::internal::scripting
     {
         Entry entry(*this);
         std::vector<Task*> waiting;
+        waiting.reserve(Spawned.size());
         for (const std::unique_ptr<Task>& task : Spawned)
         {
             waiting.push_back(task.get());

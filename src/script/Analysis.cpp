@@ -188,7 +188,7 @@ namespace easyforge::internal::scripting
                 declaration.Type = Named("function");
                 declaration.Constant = true;
                 declaration.Global = topLevel;
-                declaration.Record = record;
+                declaration.Record = std::move(record);
                 AddDeclaration(statement.Name, declaration);
             }
 
@@ -670,6 +670,7 @@ namespace easyforge::internal::scripting
                 case ExpressionKind::List:
                 {
                     std::vector<TypeInfo> items;
+                    items.reserve(expression.Parts.size());
                     for (const std::unique_ptr<Expression>& item : expression.Parts)
                     {
                         items.push_back(TypeOf(*item));

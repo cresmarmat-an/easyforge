@@ -34,6 +34,7 @@ namespace easyforge
         Property(const Property&) = delete;
         Property(Property&&) = delete;
 
+        // NOLINTNEXTLINE(misc-unconventional-assign-operator): writes through to the owner, also through a const handle
         const Property& operator=(const Value& value) const
         {
             Writing(Owner, value);
@@ -41,6 +42,8 @@ namespace easyforge
         }
 
         // Copies the other property's value, not which object it belongs to.
+        // Assigned to itself, it writes back the value it holds.
+        // NOLINTNEXTLINE(misc-unconventional-assign-operator, bugprone-unhandled-self-assignment): copies the value
         const Property& operator=(const Property& other) const
         {
             return *this = other.Get();

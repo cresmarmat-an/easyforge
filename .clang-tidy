@@ -1,9 +1,14 @@
 # Checks for easyforge's own code: mistakes that compile but are wrong, work
 # that is slower than it needs to be, and misuse of threads. Style is left to
 # the code itself. The repository's checks run these on every change.
+#
+# Bit operations on signed integers are defined since C++20, which easyforge
+# is written in, so bugprone-signed-bitwise is off; a shift by a negative
+# amount or by too much is still found by clang-analyzer-core.BitwiseShift.
 Checks: >
   -*,
   bugprone-*,
+  -bugprone-signed-bitwise,
   -bugprone-easily-swappable-parameters,
   -bugprone-narrowing-conversions,
   -bugprone-implicit-widening-of-multiplication-result,
@@ -21,6 +26,13 @@ Checks: >
 
 # Findings are reported; they do not yet fail the build.
 WarningsAsErrors: ''
+
+CheckOptions:
+  # Iterators are taken by value, as the standard library takes them.
+  performance-unnecessary-value-param.AllowedTypes: '.*iterator.*'
+  # easyforge throws nothing of its own. Running out of memory ends the
+  # program, so only the exceptions that come from that are let through.
+  bugprone-exception-escape.IgnoredExceptions: 'bad_alloc,length_error,bad_array_new_length'
 
 # Only easyforge's own headers, not the system's or the platform SDKs'.
 HeaderFilterRegex: '.*[/\\](include|src)[/\\]easyforge.*|.*[/\\]src[/\\].*'

@@ -241,14 +241,7 @@ end
     void DrawBox(const Canvas& canvas, const Box& box, Rectangle area)
     {
         bool border = box.BorderWidth > 0.0f && box.BorderColor.Alpha > 0.0f;
-        const std::optional<ui::Background>& background = box.Background;
-        Background::Kind kind = background ? background->Type : Background::Kind::None;
-        switch (kind)
-        {
-        case Background::Kind::None:
-        case Background::Kind::Color:
-        {
-            Color fill = kind == Background::Kind::Color ? background->First : Color::Transparent;
+        auto plain = [&](Color fill) {
             if (fill.Alpha <= 0.0f && !border)
             {
                 return;
@@ -256,17 +249,32 @@ end
             canvas.Rectangle({ .Position = area.Position(), .Size = area.Size(), .Color = fill,
                 .CornerRadius = box.CornerRadius, .BorderWidth = border ? box.BorderWidth : 0.0f,
                 .BorderColor = box.BorderColor });
+        };
+        if (!box.Background)
+        {
+            plain(Color::Transparent);
             return;
         }
+        const ui::Background& background = *box.Background;
+        switch (background.Type)
+        {
+        case Background::Kind::None:
+            plain(Color::Transparent);
+            return;
+        case Background::Kind::Color:
+            plain(background.First);
+            return;
         case Background::Kind::Gradient:
             canvas.Rectangle({ .Position = area.Position(), .Size = area.Size(), .CornerRadius = box.CornerRadius,
                 .BorderWidth = border ? box.BorderWidth : 0.0f, .BorderColor = box.BorderColor,
-                .Gradient = LinearGradient { .From = background->First, .To = background->Last, .Angle = background->Angle } });
+                .Gradient = LinearGradient {
+                    .From = background.First, .To = background.Last, .Angle = background.Angle } });
             return;
         case Background::Kind::Image:
         {
-            const ImageBackgroundSettings& settings = background->PictureSettings;
-            DrawPicture(canvas, background->Picture, area, settings.Fit, settings.Slice, settings.Tint, box.CornerRadius);
+            const ImageBackgroundSettings& settings = background.PictureSettings;
+            DrawPicture(
+                canvas, background.Picture, area, settings.Fit, settings.Slice, settings.Tint, box.CornerRadius);
             if (border)
             {
                 canvas.Rectangle({ .Position = area.Position(), .Size = area.Size(), .Color = Color::Transparent,

@@ -9,7 +9,7 @@ namespace easyforge
     {
         int ToByte(float component)
         {
-            return static_cast<int>(Clamp(component, 0.0f, 1.0f) * 255.0f + 0.5f);
+            return static_cast<int>(std::lround(Clamp(component, 0.0f, 1.0f) * 255.0f));
         }
 
         float ToLinearComponent(float value)

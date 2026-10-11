@@ -24,6 +24,7 @@ namespace easyforge::internal
         }
 
         int byteCount = static_cast<int>(text.size());
+        // NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage): byteCount is its length
         int wideCount = MultiByteToWideChar(CP_UTF8, 0, text.data(), byteCount, nullptr, 0);
         if (wideCount <= 0)
         {
@@ -31,6 +32,7 @@ namespace easyforge::internal
         }
 
         std::wstring wide(static_cast<std::size_t>(wideCount), L'\0');
+        // NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage): byteCount is its length
         MultiByteToWideChar(CP_UTF8, 0, text.data(), byteCount, wide.data(), wideCount);
         OutputDebugStringW(wide.c_str());
     }

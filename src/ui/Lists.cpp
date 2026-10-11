@@ -363,17 +363,14 @@ namespace easyforge::ui::internal
                 {
                     const Line& line = Lines[*current];
                     bool open = Open.contains(line.Target.Identifier());
-                    if (event.Key == Key::Right && line.HasChildren && !open)
+                    // Right opens a closed row and Left closes an open one.
+                    if (line.HasChildren && ((event.Key == Key::Right && !open) || (event.Key == Key::Left && open)))
                     {
                         Toggle(element, *current);
                     }
                     else if (event.Key == Key::Right && line.HasChildren && *current + 1 < Lines.size())
                     {
                         MoveTo(element, context, *current + 1);
-                    }
-                    else if (event.Key == Key::Left && line.HasChildren && open)
-                    {
-                        Toggle(element, *current);
                     }
                     else if (event.Key == Key::Left && line.Target.Parent())
                     {

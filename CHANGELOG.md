@@ -130,6 +130,13 @@
   are saved whole or not at all, so a crash or power cut while saving leaves
   the old file instead of part of the new one.
 - A server given a `NetworkIdentity` that did not load does not start.
+- A window waiting for the screen waits a tenth of a second at most, so it no
+  longer stops answering while the compositor is paused, as when the screen
+  sleeps or a remote session is cut off.
+- What clang-tidy found is worked through: values that could be missing are
+  checked before use, rounding rounds, a sound's frame count cannot overflow,
+  and needless copies are gone. Its configuration says why the few checks
+  left out do not fit.
 - A threaded server or client ends with the program's last copy of it, waiting
   for its thread, instead of sometimes later on that thread, which left its
   port taken and its memory in use for a while after.

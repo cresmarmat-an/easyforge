@@ -17,6 +17,7 @@ namespace easyforge
 
     // ---- Cell --------------------------------------------------------------
 
+    // NOLINTNEXTLINE(misc-unconventional-assign-operator): writes through to the table
     const Cell& Cell::operator=(const DataValue& value) const
     {
         if (Owner && Owner->Valid(Slot, Generation))
@@ -245,7 +246,11 @@ namespace easyforge
         std::string path;
         for (std::uint32_t slot = Slot; slot != NoSlot; slot = Owner->Rows[slot].Parent)
         {
-            path = path.empty() ? Owner->Rows[slot].Name : Owner->Rows[slot].Name + "/" + path;
+            if (!path.empty())
+            {
+                path.insert(0, 1, '/');
+            }
+            path.insert(0, Owner->Rows[slot].Name);
         }
         return path;
     }

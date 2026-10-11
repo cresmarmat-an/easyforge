@@ -291,7 +291,7 @@ namespace easyforge::ui::internal
         }
     }
 
-    void AddChild(ElementState& parent, const std::shared_ptr<ElementState>& child, std::size_t index)
+    void AddChild(ElementState& parent, std::shared_ptr<ElementState> child, std::size_t index)
     {
         if (!child)
         {
@@ -309,7 +309,6 @@ namespace easyforge::ui::internal
             return;
         }
         WarnIfReleased(*child);
-        std::shared_ptr<ElementState> kept = child;
         if (ElementState* old = child->Parent)
         {
             std::erase(old->Children, child);
@@ -326,7 +325,7 @@ namespace easyforge::ui::internal
         }
         child->Parent = &parent;
         index = std::min(index, parent.Children.size());
-        parent.Children.insert(parent.Children.begin() + static_cast<std::ptrdiff_t>(index), kept);
+        parent.Children.insert(parent.Children.begin() + static_cast<std::ptrdiff_t>(index), std::move(child));
         parent.Changed(true);
     }
 

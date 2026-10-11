@@ -56,7 +56,10 @@ namespace easyforge::ui
 
     Element& Element::operator=(const Element& other)
     {
-        State = other.State;
+        if (this != &other)
+        {
+            State = other.State;
+        }
         return *this;
     }
 

@@ -139,7 +139,7 @@ namespace easyforge::internal
                 continue;
             }
             int packet = reader.U8();
-            std::size_t count = static_cast<std::size_t>((packet & 0x7F) + 1);
+            std::size_t count = static_cast<std::size_t>(packet & 0x7F) + 1;
             if (count > pixelCount - filled)
             {
                 return Failure("a run-length packet goes past the end of the image");

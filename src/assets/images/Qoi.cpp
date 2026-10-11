@@ -87,7 +87,7 @@ namespace easyforge::internal
                     break;
                 }
                 default:
-                    run = static_cast<std::size_t>((tag & 0x3F) + 1);
+                    run = static_cast<std::size_t>(tag & 0x3F) + 1;
                     break;
                 }
             }

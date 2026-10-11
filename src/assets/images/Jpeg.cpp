@@ -235,7 +235,7 @@ namespace easyforge::internal
         {
             const auto& cosine = CosineTable();
             std::array<float, 64> rows {};
-            for (int row = 0; row < 8; ++row)
+            for (std::size_t row = 0; row < 8; ++row)
             {
                 const float* input = coefficients.data() + row * 8;
                 // Most rows of a block are zero after their first coefficient, which
@@ -244,35 +244,35 @@ namespace easyforge::internal
                     input[5] == 0.0f && input[6] == 0.0f && input[7] == 0.0f)
                 {
                     float value = input[0] * cosine[0][0];
-                    for (int x = 0; x < 8; ++x)
+                    for (std::size_t x = 0; x < 8; ++x)
                     {
-                        rows[static_cast<std::size_t>(row * 8 + x)] = value;
+                        rows[row * 8 + x] = value;
                     }
                     continue;
                 }
-                for (int x = 0; x < 8; ++x)
+                for (std::size_t x = 0; x < 8; ++x)
                 {
-                    const auto& weights = cosine[static_cast<std::size_t>(x)];
+                    const auto& weights = cosine[x];
                     float sum = 0.0f;
-                    for (int frequency = 0; frequency < 8; ++frequency)
+                    for (std::size_t frequency = 0; frequency < 8; ++frequency)
                     {
-                        sum += weights[static_cast<std::size_t>(frequency)] * input[frequency];
+                        sum += weights[frequency] * input[frequency];
                     }
-                    rows[static_cast<std::size_t>(row * 8 + x)] = sum;
+                    rows[row * 8 + x] = sum;
                 }
             }
-            for (int x = 0; x < 8; ++x)
+            for (std::size_t x = 0; x < 8; ++x)
             {
-                for (int y = 0; y < 8; ++y)
+                for (std::size_t y = 0; y < 8; ++y)
                 {
-                    const auto& weights = cosine[static_cast<std::size_t>(y)];
+                    const auto& weights = cosine[y];
                     float sum = 0.0f;
-                    for (int frequency = 0; frequency < 8; ++frequency)
+                    for (std::size_t frequency = 0; frequency < 8; ++frequency)
                     {
-                        sum += weights[static_cast<std::size_t>(frequency)] * rows[static_cast<std::size_t>(frequency * 8 + x)];
+                        sum += weights[frequency] * rows[frequency * 8 + x];
                     }
                     float shifted = sum + 128.5f;
-                    output[static_cast<std::size_t>(y) * stride + static_cast<std::size_t>(x)] = static_cast<std::uint8_t>(
+                    output[y * stride + x] = static_cast<std::uint8_t>(
                         shifted <= 0.0f ? 0 : shifted >= 255.0f ? 255 : static_cast<int>(shifted));
                 }
             }
