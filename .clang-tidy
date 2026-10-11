@@ -24,8 +24,8 @@ Checks: >
   cppcoreguidelines-slicing,
   cppcoreguidelines-virtual-class-destructor
 
-# Findings are reported; they do not yet fail the build.
-WarningsAsErrors: ''
+# Every finding fails the build, as a compiler warning does.
+WarningsAsErrors: '*'
 
 CheckOptions:
   # Iterators are taken by value, as the standard library takes them.

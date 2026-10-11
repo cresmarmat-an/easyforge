@@ -105,9 +105,9 @@ Besides each library's tests, three checks run:
 | Static analysis | clang-tidy over every source file, with the checks in `.clang-tidy`: mistakes that compile but are wrong, slow code, and misuse of threads |
 | Test coverage | Which lines the tests run, as a report each run keeps for download |
 
-Warnings are errors in every build of easyforge's own code. The analysis
-reports what it finds without failing the build, until its first findings
-are worked through.
+Warnings are errors in every build of easyforge's own code, and so is anything
+the analysis finds. Where one of its checks does not fit, `.clang-tidy` turns
+it off and says why.
 
 ## Checking memory
 
