@@ -30,6 +30,18 @@ client's table and fills it with the server's, as soon as the server sends it;
 server's table reaches every client during `Update`: added, removed, renamed,
 and moved nodes, property values, and type definitions.
 
+`OnReady` is called whenever the server's table arrives, so work that needs it,
+such as a client adding a node of its own, goes there instead of being checked
+for each frame:
+
+```cpp
+TableShare shared = Share(copy, client);
+shared.OnReady = [&] { copy.Find("Players").Add(myName, { { "Score", 0 } }); };
+```
+
+It is called again if the server sends the table anew, which replaces the
+client's nodes, and at once when the table is there already, as on a server.
+
 The two ends may start in any order: a server that starts sharing later asks
 the clients already connected to send for the table again.
 

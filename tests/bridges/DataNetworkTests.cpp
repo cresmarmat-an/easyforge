@@ -256,3 +256,33 @@ EASYFORGE_TEST(SentChangesArriveBeforeLaterMessages)
     EASYFORGE_REQUIRE(UpdateUntil(update, [&] { return answered; }));
     EASYFORGE_EXPECT(seen == (Vector2 { 5.0f, 6.0f }));
 }
+
+EASYFORGE_TEST(SharesSayWhenTheTableArrives)
+{
+    Table game = MakeGame();
+    Server server = LocalServer();
+    TableShare shared = Share(game, server, Sharing::TwoWay);
+    int serverReady = 0;
+    shared.OnReady = [&] { ++serverReady; };
+    EASYFORGE_EXPECT_EQUAL(serverReady, 1);
+
+    Table copy = Table::New();
+    Client client = LocalClient(server);
+    TableShare received = Share(copy, client);
+    int ready = 0;
+    received.OnReady = [&] {
+        ++ready;
+        // The server's table is there, and the client may add to it.
+        EASYFORGE_EXPECT(static_cast<bool>(copy.Find("World/Goblin")));
+        copy.Find("Players").Add("Ari");
+    };
+    EASYFORGE_EXPECT_EQUAL(ready, 0);
+
+    auto update = [&] {
+        server.Update();
+        client.Update();
+    };
+    EASYFORGE_REQUIRE(UpdateUntil(update, [&] { return ready == 1; }));
+    EASYFORGE_EXPECT(UpdateUntil(update, [&] { return static_cast<bool>(game.Find("Players/Ari")); }));
+    EASYFORGE_EXPECT_EQUAL(ready, 1);
+}

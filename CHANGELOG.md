@@ -41,6 +41,8 @@
 - `Table::OnChange`, called with each change once the change that made it is
   complete, for programs that react to changes instead of asking for them each
   frame.
+- `TableShare::OnReady`, called whenever the server's shared table arrives, so a
+  client adds its own nodes there instead of checking `IsReady` each frame.
 - `MessageLimit` and `UnfinishedLimit` on servers and clients, and
   `ConnectAttemptsPerSecond` and `ConnectAttemptBurst` on servers, so every
   network limit is a setting; an end sent a message larger than its own limit

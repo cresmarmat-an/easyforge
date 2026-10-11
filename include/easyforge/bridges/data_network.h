@@ -26,6 +26,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -205,6 +206,7 @@ namespace easyforge
             bool TwoWay = false;
             bool Stopped = false;
             bool Ready = false;
+            std::function<void()> ReadyHandler;
             std::uint64_t LastVersion = 0;
             std::map<std::int64_t, Entry> Nodes;
             std::map<std::uint64_t, std::int64_t> ShareNumbers;
@@ -783,6 +785,10 @@ namespace easyforge
                 ApplyFromServer(UnpackRecords(message["Records"]));
                 LastVersion = Data.Version();
                 Ready = true;
+                if (std::function<void()> handler = ReadyHandler)
+                {
+                    handler();
+                }
             }
 
             void ChangesFromServer(const Message& message)
@@ -825,9 +831,42 @@ namespace easyforge
     {
     public:
         // Shares nothing. Tests as false.
-        TableShare() = default;
+        TableShare() : TableShare(nullptr) {}
 
-        explicit TableShare(std::shared_ptr<internal::bridges::ShareState> state) : State(std::move(state)) {}
+        explicit TableShare(std::shared_ptr<internal::bridges::ShareState> state)
+            : OnReady(state.get(),
+                  [](const void* owner) {
+                      return owner ? static_cast<const internal::bridges::ShareState*>(owner)->ReadyHandler
+                                   : std::function<void()>();
+                  },
+                  [](void* owner, const std::function<void()>& value) {
+                      auto* share = static_cast<internal::bridges::ShareState*>(owner);
+                      if (!share)
+                      {
+                          return;
+                      }
+                      share->ReadyHandler = value;
+                      // Already there, as on a server: at once.
+                      if (value && !share->Stopped && (share->IsServer || share->Ready))
+                      {
+                          value();
+                      }
+                  }),
+              State(std::move(state))
+        {
+        }
+
+        TableShare(const TableShare& other) : TableShare(other.State) {}
+
+        TableShare& operator=(const TableShare& other)
+        {
+            if (this != &other)
+            {
+                State = other.State;
+                OnReady.Rebind(State.get());
+            }
+            return *this;
+        }
 
         explicit operator bool() const { return State && !State->Stopped; }
 
@@ -865,6 +904,14 @@ namespace easyforge
 
         // On a client, true once the server's table has arrived. On a server, true.
         bool IsReady() const { return State && !State->Stopped && (State->IsServer || State->Ready); }
+
+        // Called whenever the server's table arrives, again if the server sends
+        // it anew, which replaces the client's nodes; at once when it is there
+        // already, as on a server. Work that needs the table, such as adding
+        // the client's own nodes, goes here.
+        //
+        //     shared.OnReady = [&] { copy.Find("Players").Add(myName); };
+        Property<std::function<void()>> OnReady;
 
         Sharing Mode() const { return State && State->TwoWay ? Sharing::TwoWay : Sharing::OneWay; }
 
