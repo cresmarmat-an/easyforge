@@ -8,6 +8,7 @@
 #include <easyforge/core/Property.h>
 #include <easyforge/core/Rectangle.h>
 #include <easyforge/core/Vector.h>
+#include <easyforge/physics/Export.h>
 
 namespace easyforge
 {
@@ -187,7 +188,7 @@ namespace easyforge
     //
     // Body2D is a handle: copies refer to the same body. Once the body is
     // removed, or its world is gone, the handle tests as false and does nothing.
-    class Body2D
+    class EASYFORGE_PHYSICS_EXPORT Body2D
     {
     public:
         // A handle that refers to no body.

@@ -23,6 +23,12 @@
 - Renderers start again on a new device by themselves when the GPU is reset,
   and textures, fonts, models, and shaders follow.
 - `PathFromText` and `TextFromPath` in `core`, for UTF-8 file paths.
+- `BUILD_SHARED_LIBS` builds each library as a DLL that exports exactly its
+  public types and functions, marked `EASYFORGE_<LIBRARY>_EXPORT` through a
+  generated `<easyforge/<library>/Export.h>`; programs and DLLs then share one
+  folder, `bin/<configuration>`.
+- `Result::LogIfFailed()` logs a failed result's error and gives whether it
+  succeeded, for results where logging is all a program would do.
 - `WriteWholeFile` in `core` writes a file whole or not at all, through a file
   beside it that is flushed to the disk and then takes the old one's place.
 - The `EASYFORGE_SANITIZE` build option, and tests that feed damaged input to
@@ -104,6 +110,13 @@
   are saved whole or not at all, so a crash or power cut while saving leaves
   the old file instead of part of the new one.
 - A server given a `NetworkIdentity` that did not load does not start.
+- `Result` is `[[nodiscard]]`, and so is every function that makes a new
+  object (`New`, `Load`, `FromText`, `Open`), so a failure or a new object
+  cannot be dropped by accident. The script tool now prints errors from
+  functions started with `spawn`, which it used to drop.
+- The inline math of `Vector2` to `Vector4`, `Color`, `Rectangle`,
+  `Quaternion`, `Matrix3`, `Matrix4`, `Transform`, and the number helpers is
+  `noexcept`, and so are `Result`'s `Succeeded`, `Error`, and `operator bool`.
 - File extensions are compared in lower case for ASCII letters only, so a
   program that sets a locale cannot change how a UTF-8 name is matched. Tests
   read and write tables and run scripts under a German locale, which writes

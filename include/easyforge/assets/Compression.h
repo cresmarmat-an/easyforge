@@ -5,6 +5,7 @@
 #include <span>
 #include <vector>
 
+#include <easyforge/assets/Export.h>
 #include <easyforge/core/Result.h>
 
 namespace easyforge
@@ -24,13 +25,13 @@ namespace easyforge
     // would pass `maximumSize`, which protects against small files that expand to
     // huge amounts of data. Damaged data gives a failure that says what was wrong;
     // a zlib checksum that does not match is reported as damage too.
-    Result<std::vector<std::uint8_t>> Decompress(std::span<const std::uint8_t> data, CompressedFormat format,
-        std::size_t expectedSize = 0, std::size_t maximumSize = SIZE_MAX);
+    EASYFORGE_ASSETS_EXPORT Result<std::vector<std::uint8_t>> Decompress(std::span<const std::uint8_t> data,
+        CompressedFormat format, std::size_t expectedSize = 0, std::size_t maximumSize = SIZE_MAX);
 
     // The CRC-32 checksum used by PNG, ZIP, and gzip. Pass the previous result to
     // continue a checksum across several blocks.
-    std::uint32_t Crc32(std::span<const std::uint8_t> data, std::uint32_t previous = 0);
+    EASYFORGE_ASSETS_EXPORT std::uint32_t Crc32(std::span<const std::uint8_t> data, std::uint32_t previous = 0);
 
     // The Adler-32 checksum used by zlib.
-    std::uint32_t Adler32(std::span<const std::uint8_t> data, std::uint32_t previous = 1);
+    EASYFORGE_ASSETS_EXPORT std::uint32_t Adler32(std::span<const std::uint8_t> data, std::uint32_t previous = 1);
 }

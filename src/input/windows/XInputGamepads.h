@@ -1,7 +1,10 @@
 #pragma once
 
+#include <easyforge/input/Export.h>
 #include <easyforge/input/Gamepad.h>
 
+// The library's own tests use what is marked for export here, so it stays
+// reachable when the library is a DLL.
 namespace easyforge::internal
 {
     // The parts of XINPUT_GAMEPAD that easyforge reads, so the conversion can be
@@ -17,5 +20,5 @@ namespace easyforge::internal
         short RightStickY = 0;
     };
 
-    GamepadState GamepadFromXInput(const XInputReading& reading);
+    EASYFORGE_INPUT_EXPORT GamepadState GamepadFromXInput(const XInputReading& reading);
 }

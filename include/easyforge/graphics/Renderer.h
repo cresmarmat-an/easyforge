@@ -8,6 +8,7 @@
 #include <easyforge/core/Host.h>
 #include <easyforge/core/Vector.h>
 #include <easyforge/graphics/Canvas.h>
+#include <easyforge/graphics/Export.h>
 
 namespace easyforge
 {
@@ -56,14 +57,14 @@ namespace easyforge
     // windows draw them.
     //
     // Renderer is a handle: copies refer to the same renderer.
-    class Renderer
+    class EASYFORGE_GRAPHICS_EXPORT Renderer
     {
     public:
         // A renderer that draws into the host, such as a window.
-        static Renderer New(std::shared_ptr<Host> host, const RendererSettings& settings = {});
+        [[nodiscard]] static Renderer New(std::shared_ptr<Host> host, const RendererSettings& settings = {});
 
         // A renderer that draws into an image of Width by Height pixels, read with Capture.
-        static Renderer New(const RendererSettings& settings);
+        [[nodiscard]] static Renderer New(const RendererSettings& settings);
 
         // Not a renderer. Tests as false.
         Renderer();

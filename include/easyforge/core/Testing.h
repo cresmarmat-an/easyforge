@@ -4,6 +4,7 @@
 #include <string>
 #include <type_traits>
 
+#include <easyforge/core/Export.h>
 #include <easyforge/core/Scalar.h>
 
 namespace easyforge
@@ -11,18 +12,18 @@ namespace easyforge
     // Runs every test written with EASYFORGE_TEST and returns 0 when all pass,
     // so it can be returned from main. Arguments that do not start with "--" keep
     // only the tests whose names contain one of them; "--list" prints the names.
-    int RunTests(int argumentCount, char** arguments);
+    EASYFORGE_CORE_EXPORT int RunTests(int argumentCount, char** arguments);
 
     namespace testing
     {
         using TestFunction = void (*)();
 
-        struct Registration
+        struct EASYFORGE_CORE_EXPORT Registration
         {
             Registration(const char* name, const char* file, int line, TestFunction function);
         };
 
-        void ReportFailure(const char* file, int line, const std::string& message);
+        EASYFORGE_CORE_EXPORT void ReportFailure(const char* file, int line, const std::string& message);
 
         // The value as text for a failure message, when std::format knows the type.
         template <typename Type>

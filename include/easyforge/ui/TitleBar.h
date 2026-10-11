@@ -6,6 +6,7 @@
 #include <string_view>
 #include <vector>
 
+#include <easyforge/ui/Export.h>
 #include <easyforge/ui/Layout.h>
 
 namespace easyforge::ui
@@ -69,7 +70,7 @@ namespace easyforge::ui
     // with its children centered from top to bottom and 8 points apart. Dragging
     // anywhere that is not a control moves the window, and double-clicking there
     // maximizes it.
-    class TitleBar : public Container
+    class EASYFORGE_UI_EXPORT TitleBar : public Container
     {
     public:
         explicit TitleBar(const TitleBarSettings& settings = {});
@@ -99,7 +100,7 @@ namespace easyforge::ui
     // The minimize, maximize, and close buttons, drawn in the theme's colors.
     // The window acts on them as on its own buttons; on Windows 11, resting on
     // maximize shows the snap layouts. Put them last in a TitleBar.
-    class WindowButtons : public Element
+    class EASYFORGE_UI_EXPORT WindowButtons : public Element
     {
     public:
         explicit WindowButtons(const WindowButtonsSettings& settings = {});

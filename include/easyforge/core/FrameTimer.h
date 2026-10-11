@@ -1,5 +1,8 @@
 #pragma once
 
+#include <easyforge/core/Export.h>
+
+
 namespace easyforge
 {
     // Turns the measured time between frames into steady steps.
@@ -19,7 +22,7 @@ namespace easyforge
     //
     // Window does this for every frame it runs, so OnFrame already gets steady
     // times. Use it in your own loop when you run frames yourself.
-    class FrameTimer
+    class EASYFORGE_CORE_EXPORT FrameTimer
     {
     public:
         // The rate the screen refreshes at, in hertz, or 0 when frames are not

@@ -316,6 +316,7 @@ namespace easyforge::internal::networking
         return made;
     }
 
+    SigningKey::SigningKey() = default;
     SigningKey::~SigningKey() = default;
 
     std::vector<std::uint8_t> SigningKey::Private() const

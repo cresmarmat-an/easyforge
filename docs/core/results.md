@@ -36,6 +36,7 @@ if (!digit)
 | `result->Member` | A member of the value |
 | `result.GetOr(fallback)` | The value, or `fallback` when it failed |
 | `std::move(result).Get()` | Moves the value out, for types that can only be moved |
+| `result.LogIfFailed()` | Logs the error when it failed; gives whether it succeeded |
 
 Reading the value of a failed result is a mistake in the program, not a
 situation to handle. It logs the error and stops the program, so the mistake is
@@ -61,7 +62,31 @@ if (Result<> saved = SaveSettings(settings); !saved)
 }
 ```
 
-It has `if (result)`, `Succeeded()`, and `Error()`, and no value.
+It has `if (result)`, `Succeeded()`, `Error()`, and `LogIfFailed()`, and no
+value.
+
+## Every result is looked at
+
+A result nobody looks at hides a failure, so `Result` is `[[nodiscard]]`: the
+compiler warns when one is left unused. Where logging the error is all the
+program would do, `LogIfFailed` does it in one call:
+
+```cpp
+controls.SaveBindings("bindings.txt").LogIfFailed();
+
+if (!scripts.Run(source).LogIfFailed())
+{
+    return;
+}
+```
+
+`LogIfFailed` logs at `LogLevel::Error` and gives whether the result succeeded.
+A result that truly does not matter can be thrown away on purpose with
+`(void)`, which also tells the next reader that it was not forgotten.
+
+The functions that make a new object, such as `Window::New`, `Table::Load`, and
+`Texture::Load`, are `[[nodiscard]]` too, since making one only to drop it is
+always a mistake.
 
 ## Writing good messages
 

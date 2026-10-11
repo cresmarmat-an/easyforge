@@ -1,5 +1,6 @@
 #pragma once
 
+#include <easyforge/core/Export.h>
 #include <easyforge/core/Quaternion.h>
 #include <easyforge/core/Vector.h>
 
@@ -8,7 +9,7 @@ namespace easyforge
     struct Matrix4;
 
     // A 3 by 3 matrix stored as three columns. The default value is the identity matrix.
-    struct Matrix3
+    struct EASYFORGE_CORE_EXPORT Matrix3
     {
         Vector3 Columns[3] = {
             { 1.0f, 0.0f, 0.0f },
@@ -16,9 +17,9 @@ namespace easyforge
             { 0.0f, 0.0f, 1.0f },
         };
 
-        static constexpr Matrix3 Identity() { return {}; }
+        static constexpr Matrix3 Identity() noexcept { return {}; }
 
-        static constexpr Matrix3 Scale(Vector3 scale)
+        static constexpr Matrix3 Scale(Vector3 scale) noexcept
         {
             return { {
                 { scale.X, 0.0f, 0.0f },
@@ -32,12 +33,12 @@ namespace easyforge
         // The top-left 3 by 3 part: the rotation and scale without the position.
         static Matrix3 FromMatrix4(const Matrix4& matrix);
 
-        constexpr Vector3 operator*(Vector3 vector) const
+        constexpr Vector3 operator*(Vector3 vector) const noexcept
         {
             return Columns[0] * vector.X + Columns[1] * vector.Y + Columns[2] * vector.Z;
         }
 
-        constexpr Matrix3 operator*(const Matrix3& other) const
+        constexpr Matrix3 operator*(const Matrix3& other) const noexcept
         {
             return { {
                 *this * other.Columns[0],
@@ -56,7 +57,7 @@ namespace easyforge
     // Projections follow the convention of Direct3D 12, Vulkan, Metal, and WebGPU:
     // the camera looks down -Z, and depth goes from 0 at the near plane to 1 at the
     // far plane.
-    struct Matrix4
+    struct EASYFORGE_CORE_EXPORT Matrix4
     {
         Vector4 Columns[4] = {
             { 1.0f, 0.0f, 0.0f, 0.0f },
@@ -65,16 +66,16 @@ namespace easyforge
             { 0.0f, 0.0f, 0.0f, 1.0f },
         };
 
-        static constexpr Matrix4 Identity() { return {}; }
+        static constexpr Matrix4 Identity() noexcept { return {}; }
 
-        static constexpr Matrix4 Translation(Vector3 offset)
+        static constexpr Matrix4 Translation(Vector3 offset) noexcept
         {
             Matrix4 result;
             result.Columns[3] = { offset.X, offset.Y, offset.Z, 1.0f };
             return result;
         }
 
-        static constexpr Matrix4 Scale(Vector3 scale)
+        static constexpr Matrix4 Scale(Vector3 scale) noexcept
         {
             Matrix4 result;
             result.Columns[0].X = scale.X;
@@ -94,12 +95,12 @@ namespace easyforge
         // A view matrix: moves the world so that `eye` is at the origin looking down -Z toward `target`.
         static Matrix4 LookAt(Vector3 eye, Vector3 target, Vector3 up = { 0.0f, 1.0f, 0.0f });
 
-        constexpr Vector4 operator*(Vector4 vector) const
+        constexpr Vector4 operator*(Vector4 vector) const noexcept
         {
             return Columns[0] * vector.X + Columns[1] * vector.Y + Columns[2] * vector.Z + Columns[3] * vector.W;
         }
 
-        constexpr Matrix4 operator*(const Matrix4& other) const
+        constexpr Matrix4 operator*(const Matrix4& other) const noexcept
         {
             return { {
                 *this * other.Columns[0],
@@ -111,7 +112,7 @@ namespace easyforge
 
         // Applies the matrix to a point, including its position. After a
         // projection the result is divided by W, giving normalized coordinates.
-        constexpr Vector3 TransformPoint(Vector3 point) const
+        constexpr Vector3 TransformPoint(Vector3 point) const noexcept
         {
             Vector4 result = *this * Vector4 { point.X, point.Y, point.Z, 1.0f };
             if (result.W != 0.0f && result.W != 1.0f)
@@ -122,7 +123,7 @@ namespace easyforge
         }
 
         // Applies the matrix to a direction, which is not moved by the position part.
-        constexpr Vector3 TransformDirection(Vector3 direction) const
+        constexpr Vector3 TransformDirection(Vector3 direction) const noexcept
         {
             return (*this * Vector4 { direction.X, direction.Y, direction.Z, 0.0f }).XYZ();
         }
@@ -130,7 +131,7 @@ namespace easyforge
         constexpr bool operator==(const Matrix4&) const = default;
     };
 
-    constexpr Matrix3 Transpose(const Matrix3& matrix)
+    constexpr Matrix3 Transpose(const Matrix3& matrix) noexcept
     {
         const Vector3* columns = matrix.Columns;
         return { {
@@ -140,7 +141,7 @@ namespace easyforge
         } };
     }
 
-    constexpr Matrix4 Transpose(const Matrix4& matrix)
+    constexpr Matrix4 Transpose(const Matrix4& matrix) noexcept
     {
         const Vector4* columns = matrix.Columns;
         return { {
@@ -151,16 +152,16 @@ namespace easyforge
         } };
     }
 
-    float Determinant(const Matrix3& matrix);
-    float Determinant(const Matrix4& matrix);
+    EASYFORGE_CORE_EXPORT float Determinant(const Matrix3& matrix);
+    EASYFORGE_CORE_EXPORT float Determinant(const Matrix4& matrix);
 
     // The matrix that undoes this one. A matrix whose determinant is zero has no
     // inverse; for one of those the result is the identity matrix, so check
     // Determinant first when that can happen.
-    Matrix3 Inverse(const Matrix3& matrix);
-    Matrix4 Inverse(const Matrix4& matrix);
+    EASYFORGE_CORE_EXPORT Matrix3 Inverse(const Matrix3& matrix);
+    EASYFORGE_CORE_EXPORT Matrix4 Inverse(const Matrix4& matrix);
 
-    inline bool NearlyEqual(const Matrix3& first, const Matrix3& second, float tolerance = 0.00001f)
+    inline bool NearlyEqual(const Matrix3& first, const Matrix3& second, float tolerance = 0.00001f) noexcept
     {
         for (int column = 0; column < 3; ++column)
         {
@@ -172,7 +173,7 @@ namespace easyforge
         return true;
     }
 
-    inline bool NearlyEqual(const Matrix4& first, const Matrix4& second, float tolerance = 0.00001f)
+    inline bool NearlyEqual(const Matrix4& first, const Matrix4& second, float tolerance = 0.00001f) noexcept
     {
         for (int column = 0; column < 4; ++column)
         {

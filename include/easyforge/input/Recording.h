@@ -8,6 +8,7 @@
 
 #include <easyforge/core/Event.h>
 #include <easyforge/core/Result.h>
+#include <easyforge/input/Export.h>
 #include <easyforge/input/Gamepad.h>
 
 namespace easyforge
@@ -23,7 +24,7 @@ namespace easyforge
 
     // A session of input, frame by frame, made by Controls::StopRecording and
     // repeated by Controls::Play.
-    class Recording
+    class EASYFORGE_INPUT_EXPORT Recording
     {
     public:
         std::vector<RecordedFrame> Frames;

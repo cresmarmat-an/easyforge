@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include <easyforge/assets/ImageData.h>
+#include <easyforge/graphics/Export.h>
 
 namespace easyforge
 {
@@ -30,10 +31,10 @@ namespace easyforge
     //     canvas.Image(logo, { .Position = { 20, 20 } });
     //
     // Texture is a handle: copies refer to the same texture.
-    class Texture
+    class EASYFORGE_GRAPHICS_EXPORT Texture
     {
     public:
-        static Texture Load(std::string_view path, const TextureSettings& settings = {});
+        [[nodiscard]] static Texture Load(std::string_view path, const TextureSettings& settings = {});
         static Texture FromImage(ImageData image, const TextureSettings& settings = {});
 
         // No texture. Tests as false.

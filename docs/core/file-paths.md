@@ -5,7 +5,7 @@ every platform, so files and folders named in any language work:
 
 ```cpp
 Table save = Table::Load("Spielstände/Café.tree");
-scripts.RunFile("脚本/main.script");
+Result<ScriptValue> ran = scripts.RunFile("脚本/main.script");
 ```
 
 When a program opens files itself, `PathFromText` and `TextFromPath` in

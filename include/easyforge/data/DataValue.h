@@ -10,6 +10,7 @@
 
 #include <easyforge/core/Color.h>
 #include <easyforge/core/Vector.h>
+#include <easyforge/data/Export.h>
 
 namespace easyforge
 {
@@ -27,7 +28,7 @@ namespace easyforge
     };
 
     // The name of a type as people read it: "nothing", "integer", "vector2".
-    std::string_view DataTypeName(DataType type);
+    EASYFORGE_DATA_EXPORT std::string_view DataTypeName(DataType type);
 
     class DataValue;
 
@@ -46,7 +47,7 @@ namespace easyforge
     //
     // Whole numbers and numbers read as each other; anything else read as the
     // wrong type gives that type's empty value, such as 0 or "".
-    class DataValue
+    class EASYFORGE_DATA_EXPORT DataValue
     {
     public:
         DataValue() = default;
@@ -131,7 +132,7 @@ namespace easyforge
 
         // Reads what ToText writes. Anything else is read as nothing, with `valid`
         // set to false when it is given.
-        static DataValue FromText(std::string_view text, bool* valid = nullptr);
+        [[nodiscard]] static DataValue FromText(std::string_view text, bool* valid = nullptr);
 
         bool operator==(const DataValue&) const = default;
 

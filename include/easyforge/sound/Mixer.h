@@ -10,6 +10,7 @@
 
 #include <easyforge/core/Property.h>
 #include <easyforge/core/Vector.h>
+#include <easyforge/sound/Export.h>
 #include <easyforge/sound/Sound.h>
 
 namespace easyforge
@@ -103,7 +104,7 @@ namespace easyforge
     //     song.FadeTo(0.0f, 2.0f);
     //
     // PlayingSound is a handle: copies control the same sound.
-    class PlayingSound
+    class EASYFORGE_SOUND_EXPORT PlayingSound
     {
     public:
         // A handle that controls nothing.
@@ -154,7 +155,7 @@ namespace easyforge
     //     mixer.Bus("Music").LowPass = 600;   // under water
     //
     // MixerBus is a handle; copies refer to the same bus.
-    class MixerBus
+    class EASYFORGE_SOUND_EXPORT MixerBus
     {
     public:
         // A handle that refers to no bus.
@@ -190,7 +191,7 @@ namespace easyforge
     // Where the mixer hears positional sounds from: usually the camera or the
     // player. It faces -Z with +Y up unless turned, as everything in easyforge
     // does.
-    class SoundListener
+    class EASYFORGE_SOUND_EXPORT SoundListener
     {
     public:
         SoundListener(const SoundListener&) = delete;
@@ -217,7 +218,7 @@ namespace easyforge
     //
     // Mixer is a handle: copies share the same mixer, which stops when the last
     // copy goes. Every function can be called from any thread.
-    class Mixer
+    class EASYFORGE_SOUND_EXPORT Mixer
     {
     public:
         // A mixer that plays nothing. It tests as false, with no error.
@@ -226,11 +227,11 @@ namespace easyforge
         // A mixer playing to the system's default output device, following it
         // when the default changes. Without a device it tests as false and its
         // error says why; playing on it does nothing.
-        static Mixer New(const MixerSettings& settings = {});
+        [[nodiscard]] static Mixer New(const MixerSettings& settings = {});
 
         // A mixer with no device, which mixes when asked with Render: for tests,
         // and for writing sound to a file.
-        static Mixer NewOffline(const OfflineSettings& settings = {});
+        [[nodiscard]] static Mixer NewOffline(const OfflineSettings& settings = {});
 
         Mixer(const Mixer& other);
         Mixer& operator=(const Mixer& other);

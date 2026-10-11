@@ -30,6 +30,13 @@ set(EASYFORGE_ONLY "" CACHE STRING
     "Build only this library and the libraries it depends on, for example 'network'")
 option(EASYFORGE_SANITIZE "Build with AddressSanitizer, so the tests catch memory errors" OFF)
 option(EASYFORGE_BUILD_BENCHMARKS "Build the programs that time the libraries' heavy work" OFF)
+option(BUILD_SHARED_LIBS "Build each easyforge library as a shared library (a DLL on Windows)" OFF)
+
+# A program finds the DLLs it needs in its own folder, so a shared build puts
+# every program and library in one folder, bin/<configuration>.
+if(BUILD_SHARED_LIBS AND PROJECT_IS_TOP_LEVEL AND NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+endif()
 
 if(EASYFORGE_SANITIZE)
     if(MSVC)

@@ -8,6 +8,7 @@
 #include <string_view>
 #include <vector>
 
+#include <easyforge/assets/Export.h>
 #include <easyforge/core/Result.h>
 
 namespace easyforge
@@ -19,7 +20,7 @@ namespace easyforge
 
     // An open file whose parts can be read in any order, for data too large to
     // read at once, such as music. Made by Files::Open. Copies share the file.
-    class FileReader
+    class EASYFORGE_ASSETS_EXPORT FileReader
     {
     public:
         FileReader() = default;
@@ -49,7 +50,7 @@ namespace easyforge
     //
     // The list of mounted places belongs to the whole program. It is safe to read
     // files from several threads at once, including while mounting.
-    class Files
+    class EASYFORGE_ASSETS_EXPORT Files
     {
     public:
         // Adds a folder, or a pack made by CreatePack, to search first.
@@ -64,7 +65,7 @@ namespace easyforge
         static Result<std::vector<std::uint8_t>> Read(std::string_view path);
 
         // Opens a file for reading parts of it.
-        static FileReader Open(std::string_view path);
+        [[nodiscard]] static FileReader Open(std::string_view path);
 
         static bool Exists(std::string_view path);
 

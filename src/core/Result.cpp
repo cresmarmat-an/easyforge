@@ -11,4 +11,9 @@ namespace easyforge::internal
         Log(LogLevel::Error, "The value of a failed Result was read. The error was: {}", error);
         std::abort();
     }
+
+    void LogFailure(const std::string& error)
+    {
+        Log(LogLevel::Error, "{}", error);
+    }
 }

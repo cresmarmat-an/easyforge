@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <easyforge/ui/Elements.h>
+#include <easyforge/ui/Export.h>
 #include <easyforge/ui/Layout.h>
 
 namespace easyforge::ui
@@ -69,7 +70,7 @@ namespace easyforge::ui
     // Clicking or pressing Enter or Space opens the list; the arrow keys move
     // through it, Enter chooses, and Escape or a click elsewhere closes it. While
     // closed, Up and Down choose the option before or after.
-    class Dropdown : public Element
+    class EASYFORGE_UI_EXPORT Dropdown : public Element
     {
     public:
         explicit Dropdown(const DropdownSettings& settings = {});
@@ -161,7 +162,7 @@ namespace easyforge::ui
     //             { .Text = "Quit", .OnClick = [window] { window.Close(); } },
     //         },
     //     })
-    class Menu : public Element
+    class EASYFORGE_UI_EXPORT Menu : public Element
     {
     public:
         explicit Menu(std::string text = {}, const MenuSettings& settings = {});
@@ -247,7 +248,7 @@ namespace easyforge::ui
     //     confirm.Open(ui::Root::Of(window));
     //     ...
     //     confirm.Close();
-    class Dialog : public Container
+    class EASYFORGE_UI_EXPORT Dialog : public Container
     {
     public:
         explicit Dialog(const DialogSettings& settings = {});

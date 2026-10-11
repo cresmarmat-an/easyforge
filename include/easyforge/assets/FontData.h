@@ -7,6 +7,7 @@
 #include <string_view>
 #include <vector>
 
+#include <easyforge/assets/Export.h>
 #include <easyforge/assets/Pending.h>
 #include <easyforge/core/Vector.h>
 
@@ -88,14 +89,14 @@ namespace easyforge
     //     GlyphBitmap bitmap = font.Rasterize(glyph, 32.0f);
     //
     // Copies share the font's data.
-    class FontData
+    class EASYFORGE_ASSETS_EXPORT FontData
     {
     public:
         FontData() = default;
 
-        static FontData Load(std::string_view path, int faceIndex = 0);
+        [[nodiscard]] static FontData Load(std::string_view path, int faceIndex = 0);
         static FontData Decode(std::vector<std::uint8_t> bytes, std::string_view name = "font", int faceIndex = 0);
-        static Pending<FontData> LoadInBackground(std::string_view path, int faceIndex = 0);
+        [[nodiscard]] static Pending<FontData> LoadInBackground(std::string_view path, int faceIndex = 0);
 
         explicit operator bool() const { return File != nullptr; }
         const std::string& Error() const { return ErrorText; }

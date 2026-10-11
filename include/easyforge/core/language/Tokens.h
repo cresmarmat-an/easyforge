@@ -4,6 +4,8 @@
 #include <string_view>
 #include <vector>
 
+#include <easyforge/core/Export.h>
+
 namespace easyforge::language
 {
     // Where something is in a source file, counting from 1.
@@ -61,11 +63,11 @@ namespace easyforge::language
     };
 
     // True for the words the easyforge languages reserve.
-    bool IsKeyword(std::string_view word);
+    EASYFORGE_CORE_EXPORT bool IsKeyword(std::string_view word);
 
     // Splits source text into tokens, leaving out comments (`--` to the end of
     // the line, and `--[[` to the next `]]`) and a UTF-8 byte order mark at the
     // start. The last token is always EndOfFile.
     // Anything that cannot be read is added to `problems`.
-    std::vector<Token> Tokenize(std::string_view source, std::vector<Problem>& problems);
+    EASYFORGE_CORE_EXPORT std::vector<Token> Tokenize(std::string_view source, std::vector<Problem>& problems);
 }

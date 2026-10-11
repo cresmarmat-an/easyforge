@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <easyforge/graphics/Shader.h>
+#include <easyforge/ui/Export.h>
 #include <easyforge/ui/Layout.h>
 
 namespace easyforge::ui
@@ -23,7 +24,7 @@ namespace easyforge::ui
     // How Displays changes from one display to the next.
     //
     //     pages.Show("Settings", ui::Transition::Slide(0.25f));
-    class Transition
+    class EASYFORGE_UI_EXPORT Transition
     {
     public:
         enum class Kind
@@ -66,7 +67,7 @@ namespace easyforge::ui
     // One screen of a Displays: a column with a name.
     //
     //     ui::Display("Settings", { .Padding = 24, .Children = { ... } })
-    class Display : public Container
+    class EASYFORGE_UI_EXPORT Display : public Container
     {
     public:
         explicit Display(std::string name = {}, const ContainerSettings& settings = {});
@@ -146,7 +147,7 @@ namespace easyforge::ui
     // Both displays are drawn during a transition. A hidden display keeps its
     // state, such as where it is scrolled to and what was typed, until it is
     // shown again. Only the display coming in gets events.
-    class Displays : public Element
+    class EASYFORGE_UI_EXPORT Displays : public Element
     {
     public:
         explicit Displays(const DisplaysSettings& settings = {});
@@ -237,7 +238,7 @@ namespace easyforge::ui
     // move to the tab before or after, and Home and End to the first and last.
     // Pages that are not shown keep their state. Tabs is as large as its largest
     // page, so it does not change size between tabs.
-    class Tabs : public Element
+    class EASYFORGE_UI_EXPORT Tabs : public Element
     {
     public:
         explicit Tabs(const TabsSettings& settings = {});

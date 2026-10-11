@@ -5,6 +5,7 @@
 #include <string_view>
 #include <vector>
 
+#include <easyforge/assets/Export.h>
 #include <easyforge/assets/Pending.h>
 #include <easyforge/core/BoundingBox.h>
 #include <easyforge/core/Color.h>
@@ -54,7 +55,7 @@ namespace easyforge
     //
     // Reads OBJ files with their MTL material libraries. glTF and FBX arrive with
     // 3D in stage 6.
-    class ModelData
+    class EASYFORGE_ASSETS_EXPORT ModelData
     {
     public:
         std::vector<MeshData> Meshes;
@@ -62,8 +63,8 @@ namespace easyforge
 
         ModelData() = default;
 
-        static ModelData Load(std::string_view path);
-        static Pending<ModelData> LoadInBackground(std::string_view path);
+        [[nodiscard]] static ModelData Load(std::string_view path);
+        [[nodiscard]] static Pending<ModelData> LoadInBackground(std::string_view path);
 
         // Reads OBJ text from memory. `materialText` is the MTL library, if any;
         // `folder` is put in front of texture paths.

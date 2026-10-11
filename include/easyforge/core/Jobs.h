@@ -12,6 +12,7 @@
 #include <variant>
 #include <vector>
 
+#include <easyforge/core/Export.h>
 #include <easyforge/core/Scalar.h>
 
 namespace easyforge
@@ -54,12 +55,12 @@ namespace easyforge
 
         class JobPool;
 
-        void Submit(JobPool& pool, Task task);
+        EASYFORGE_CORE_EXPORT void Submit(JobPool& pool, Task task);
 
         // Runs one waiting task on the calling thread. False when none was waiting.
-        bool RunOneWaitingTask(JobPool& pool);
+        EASYFORGE_CORE_EXPORT bool RunOneWaitingTask(JobPool& pool);
 
-        int ThreadCountOf(const JobPool& pool);
+        EASYFORGE_CORE_EXPORT int ThreadCountOf(const JobPool& pool);
 
         template <typename Type>
         struct JobState
@@ -135,12 +136,12 @@ namespace easyforge
     // A job's function must not throw an exception. Copies of a Jobs refer to the
     // same threads, which finish the jobs still waiting and stop when the last
     // copy is gone.
-    class Jobs
+    class EASYFORGE_CORE_EXPORT Jobs
     {
     public:
         using Settings = JobsSettings;
 
-        static Jobs New(const JobsSettings& settings = {});
+        [[nodiscard]] static Jobs New(const JobsSettings& settings = {});
 
         // Threads shared by the whole program, started the first time this is called.
         static Jobs Shared();

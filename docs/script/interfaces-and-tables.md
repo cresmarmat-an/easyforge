@@ -128,7 +128,7 @@ player["Health"] = 100;
 
 ScriptEngine scripts = ScriptEngine::New();
 scripts.Define("game", ScriptObjectFor(game));
-scripts.RunFile("rules.script");
+scripts.RunFile("rules.script").LogIfFailed();
 ```
 
 ```script

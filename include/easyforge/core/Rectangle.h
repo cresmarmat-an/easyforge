@@ -13,34 +13,34 @@ namespace easyforge
         float Width = 0.0f;
         float Height = 0.0f;
 
-        static constexpr Rectangle FromCorners(Vector2 first, Vector2 second)
+        static constexpr Rectangle FromCorners(Vector2 first, Vector2 second) noexcept
         {
             Vector2 lowest = Min(first, second);
             Vector2 highest = Max(first, second);
             return { lowest.X, lowest.Y, highest.X - lowest.X, highest.Y - lowest.Y };
         }
 
-        constexpr float Left() const { return X; }
-        constexpr float Right() const { return X + Width; }
-        constexpr float Top() const { return Y; }
-        constexpr float Bottom() const { return Y + Height; }
+        constexpr float Left() const noexcept { return X; }
+        constexpr float Right() const noexcept { return X + Width; }
+        constexpr float Top() const noexcept { return Y; }
+        constexpr float Bottom() const noexcept { return Y + Height; }
 
-        constexpr Vector2 Position() const { return { X, Y }; }
-        constexpr Vector2 Size() const { return { Width, Height }; }
-        constexpr Vector2 Center() const { return { X + Width * 0.5f, Y + Height * 0.5f }; }
+        constexpr Vector2 Position() const noexcept { return { X, Y }; }
+        constexpr Vector2 Size() const noexcept { return { Width, Height }; }
+        constexpr Vector2 Center() const noexcept { return { X + Width * 0.5f, Y + Height * 0.5f }; }
 
         // True when the width or the height is zero or less.
-        constexpr bool IsEmpty() const { return Width <= 0.0f || Height <= 0.0f; }
+        constexpr bool IsEmpty() const noexcept { return Width <= 0.0f || Height <= 0.0f; }
 
         // The left and top edges are inside; the right and bottom edges are not,
         // so two rectangles that touch never both contain the same point.
-        constexpr bool Contains(Vector2 point) const
+        constexpr bool Contains(Vector2 point) const noexcept
         {
             return point.X >= Left() && point.X < Right() && point.Y >= Top() && point.Y < Bottom();
         }
 
         // True when the two share some area. Rectangles that only touch do not intersect.
-        constexpr bool Intersects(const Rectangle& other) const
+        constexpr bool Intersects(const Rectangle& other) const noexcept
         {
             return !IsEmpty() && !other.IsEmpty() && Left() < other.Right() && other.Left() < Right() &&
                    Top() < other.Bottom() && other.Top() < Bottom();
@@ -50,7 +50,7 @@ namespace easyforge
     };
 
     // The area both share, or an empty rectangle when they share none.
-    constexpr Rectangle Intersection(const Rectangle& first, const Rectangle& second)
+    constexpr Rectangle Intersection(const Rectangle& first, const Rectangle& second) noexcept
     {
         if (!first.Intersects(second))
         {
@@ -64,7 +64,7 @@ namespace easyforge
     }
 
     // The smallest rectangle that covers both. An empty rectangle is ignored.
-    constexpr Rectangle Union(const Rectangle& first, const Rectangle& second)
+    constexpr Rectangle Union(const Rectangle& first, const Rectangle& second) noexcept
     {
         if (first.IsEmpty())
         {

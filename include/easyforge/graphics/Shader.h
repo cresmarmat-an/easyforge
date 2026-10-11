@@ -7,6 +7,7 @@
 
 #include <easyforge/core/Color.h>
 #include <easyforge/core/Vector.h>
+#include <easyforge/graphics/Export.h>
 
 namespace easyforge
 {
@@ -18,7 +19,7 @@ namespace easyforge
     // A value to give a shader's `value` of the same name:
     //
     //     { "Speed", 2.0f }, { "Tint", Color::Hex("#66CCFF") }
-    struct ShaderValue
+    struct EASYFORGE_GRAPHICS_EXPORT ShaderValue
     {
         // A number, or true or false for a boolean value.
         ShaderValue(std::string name, float value);
@@ -49,11 +50,11 @@ namespace easyforge
     // is drawn.
     //
     // Shader is a handle: copies refer to the same shader.
-    class Shader
+    class EASYFORGE_GRAPHICS_EXPORT Shader
     {
     public:
-        static Shader Load(std::string_view path);
-        static Shader FromText(std::string_view source, std::string_view name = "shader");
+        [[nodiscard]] static Shader Load(std::string_view path);
+        [[nodiscard]] static Shader FromText(std::string_view source, std::string_view name = "shader");
 
         // No shader. Tests as false.
         Shader();

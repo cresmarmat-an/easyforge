@@ -14,6 +14,7 @@
 #include <easyforge/core/Result.h>
 #include <easyforge/core/Vector.h>
 #include <easyforge/input/Binding.h>
+#include <easyforge/input/Export.h>
 #include <easyforge/input/Gamepad.h>
 #include <easyforge/input/Recording.h>
 
@@ -58,16 +59,16 @@ namespace easyforge
     // itself. Without one, pass events to Handle and call NextFrame once a frame.
     //
     // Controls is a handle: copies share the same bindings and state.
-    class Controls
+    class EASYFORGE_INPUT_EXPORT Controls
     {
     public:
         using Settings = ControlsSettings;
 
         // Controls that follow the host's events and frames.
-        static Controls New(std::shared_ptr<Host> host, const ControlsSettings& settings = {});
+        [[nodiscard]] static Controls New(std::shared_ptr<Host> host, const ControlsSettings& settings = {});
 
         // Controls that receive events through Handle and frames through NextFrame.
-        static Controls New(const ControlsSettings& settings = {});
+        [[nodiscard]] static Controls New(const ControlsSettings& settings = {});
 
         // Empty controls that follow nothing; the same as Controls::New().
         Controls();

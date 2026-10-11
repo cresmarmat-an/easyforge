@@ -5,6 +5,7 @@
 #include <string_view>
 #include <vector>
 
+#include <easyforge/core/Export.h>
 #include <easyforge/core/language/Tokens.h>
 
 namespace easyforge::language
@@ -13,7 +14,7 @@ namespace easyforge::language
 
     // A type written in the source: `number`, `vector2`, `Point`, or
     // `list of number`, where Element is the type after `of`.
-    struct TypeName
+    struct EASYFORGE_CORE_EXPORT TypeName
     {
         std::string Name {};
         std::unique_ptr<TypeName> Element {};
@@ -57,7 +58,7 @@ namespace easyforge::language
     //   List       Parts holds the items
     //   Table      Pieces holds the field names; Parts holds their values
     //   Function   Function holds the function, with an empty name
-    struct Expression
+    struct EASYFORGE_CORE_EXPORT Expression
     {
         Expression();
         Expression(Expression&&) noexcept;
@@ -127,7 +128,7 @@ namespace easyforge::language
     //   Assignment                 Name holds the operator (`=`, `+=`, ...);
     //                              Expressions holds the target and the value
     //   Expression                 Expressions holds a call
-    struct Statement
+    struct EASYFORGE_CORE_EXPORT Statement
     {
         Statement();
         Statement(Statement&&) noexcept;
@@ -157,8 +158,8 @@ namespace easyforge::language
     // Reads source text in the easyforge language: the script language, and the
     // shader language, which has the same syntax. The parser accepts both; each
     // language then checks which parts it allows.
-    SyntaxTree Parse(std::string_view source);
+    EASYFORGE_CORE_EXPORT SyntaxTree Parse(std::string_view source);
 
     // "file.script:3:14: expected then", for showing problems to people.
-    std::string Describe(const Problem& problem, std::string_view fileName);
+    EASYFORGE_CORE_EXPORT std::string Describe(const Problem& problem, std::string_view fileName);
 }

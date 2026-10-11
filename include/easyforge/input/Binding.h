@@ -4,6 +4,7 @@
 #include <variant>
 
 #include <easyforge/core/Keys.h>
+#include <easyforge/input/Export.h>
 #include <easyforge/input/Gamepad.h>
 
 namespace easyforge
@@ -36,7 +37,7 @@ namespace easyforge
     // written directly:
     //
     //     controls.Bind("Jump", { Key::Space, GamepadButton::South });
-    class Binding
+    class EASYFORGE_INPUT_EXPORT Binding
     {
     public:
         Binding(Key key) : Source(key) {}

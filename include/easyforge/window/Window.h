@@ -13,6 +13,7 @@
 #include <easyforge/core/Property.h>
 #include <easyforge/core/Rectangle.h>
 #include <easyforge/core/Vector.h>
+#include <easyforge/window/Export.h>
 #include <easyforge/window/Monitor.h>
 
 namespace easyforge
@@ -79,14 +80,14 @@ namespace easyforge
     //
     // Windows belong to the thread that made them. Make and use them on one
     // thread, normally the main one.
-    class Window
+    class EASYFORGE_WINDOW_EXPORT Window
     {
     public:
         using Settings = WindowSettings;
 
         // Opens a window. If that fails, the result tests as false and Error()
         // says why.
-        static Window New(const WindowSettings& settings = {});
+        [[nodiscard]] static Window New(const WindowSettings& settings = {});
 
         // Handles what the system sent and runs one frame of every open window,
         // whether or not anything changed. For programs that run their own loop

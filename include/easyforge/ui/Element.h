@@ -12,6 +12,7 @@
 #include <easyforge/core/Rectangle.h>
 #include <easyforge/graphics/Shader.h>
 #include <easyforge/ui/Effects.h>
+#include <easyforge/ui/Export.h>
 #include <easyforge/ui/Values.h>
 
 namespace easyforge::ui
@@ -23,9 +24,10 @@ namespace easyforge::ui
     {
         class ElementState;
 
-        std::string_view KindOf(const ElementState* state);
-        std::shared_ptr<ElementState> FindInside(const ElementState* state, std::string_view name, std::string_view kind);
-        const std::shared_ptr<ElementState>& StateOfHandle(const Element& element);
+        EASYFORGE_UI_EXPORT std::string_view KindOf(const ElementState* state);
+        EASYFORGE_UI_EXPORT std::shared_ptr<ElementState> FindInside(const ElementState* state, std::string_view name,
+            std::string_view kind);
+        EASYFORGE_UI_EXPORT const std::shared_ptr<ElementState>& StateOfHandle(const Element& element);
     }
 
     // Anything that can be part of an interface. Every element (Label, Button,
@@ -40,7 +42,7 @@ namespace easyforge::ui
     // Elements are handles: copying one is cheap and every copy refers to the
     // same element, which lives as long as a copy of it does or it is in an
     // interface. Changes work before and after the element is on screen.
-    class Element
+    class EASYFORGE_UI_EXPORT Element
     {
     public:
         // No element. Tests as false.

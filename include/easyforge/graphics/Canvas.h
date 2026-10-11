@@ -7,6 +7,7 @@
 #include <easyforge/core/Color.h>
 #include <easyforge/core/Rectangle.h>
 #include <easyforge/core/Vector.h>
+#include <easyforge/graphics/Export.h>
 #include <easyforge/graphics/Shader.h>
 
 namespace easyforge
@@ -142,7 +143,7 @@ namespace easyforge
     //
     // Positions and sizes are in points from the top left, with Y growing
     // downward, as on screen. Later drawings cover earlier ones.
-    class Canvas
+    class EASYFORGE_GRAPHICS_EXPORT Canvas
     {
     public:
         // A canvas that draws nothing. Tests as false.

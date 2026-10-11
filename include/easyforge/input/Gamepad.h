@@ -4,6 +4,7 @@
 #include <cstddef>
 
 #include <easyforge/core/Vector.h>
+#include <easyforge/input/Export.h>
 
 namespace easyforge
 {
@@ -59,7 +60,7 @@ namespace easyforge
     };
 
     // Everything a gamepad reports at one moment.
-    struct GamepadState
+    struct EASYFORGE_INPUT_EXPORT GamepadState
     {
         bool Connected = false;
         std::array<bool, static_cast<std::size_t>(GamepadButton::Count)> Buttons {};

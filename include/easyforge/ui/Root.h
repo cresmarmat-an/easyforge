@@ -9,6 +9,7 @@
 #include <easyforge/data/Table.h>
 #include <easyforge/graphics/Canvas.h>
 #include <easyforge/ui/Element.h>
+#include <easyforge/ui/Export.h>
 #include <easyforge/ui/Theme.h>
 
 namespace easyforge::ui
@@ -16,8 +17,9 @@ namespace easyforge::ui
     namespace internal
     {
         class RootState;
-        std::shared_ptr<ElementState> FindInRoot(const RootState* root, std::string_view name, std::string_view kind);
-        const std::shared_ptr<RootState>& StateOfRoot(const Root& root);
+        EASYFORGE_UI_EXPORT std::shared_ptr<ElementState> FindInRoot(const RootState* root, std::string_view name,
+            std::string_view kind);
+        EASYFORGE_UI_EXPORT const std::shared_ptr<RootState>& StateOfRoot(const Root& root);
     }
 
     struct RootSettings
@@ -44,10 +46,10 @@ namespace easyforge::ui
     //     root.Draw(canvas, deltaSeconds);
     //
     // Root is a handle: copies refer to the same root.
-    class Root
+    class EASYFORGE_UI_EXPORT Root
     {
     public:
-        static Root New(const RootSettings& settings = {});
+        [[nodiscard]] static Root New(const RootSettings& settings = {});
 
         // The root of a window's interface, made the first time it is asked for.
         static Root Of(const std::shared_ptr<Host>& host);

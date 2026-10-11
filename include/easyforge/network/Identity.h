@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include <easyforge/core/Result.h>
+#include <easyforge/network/Export.h>
 
 namespace easyforge
 {
@@ -30,15 +31,15 @@ namespace easyforge
     //
     // The file holds the private half: keep it on the server only. NetworkIdentity
     // is a handle: copies share the key.
-    class NetworkIdentity
+    class EASYFORGE_NETWORK_EXPORT NetworkIdentity
     {
     public:
         // A new, random identity.
-        static NetworkIdentity New();
+        [[nodiscard]] static NetworkIdentity New();
 
         // An identity saved with Save. Tests as false when the file cannot be
         // read or is not an identity, and Error() says why.
-        static NetworkIdentity Load(std::string_view path);
+        [[nodiscard]] static NetworkIdentity Load(std::string_view path);
 
         // No identity: a server with none proves nothing about itself. Tests
         // as false.

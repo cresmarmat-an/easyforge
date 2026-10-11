@@ -10,6 +10,7 @@
 
 #include <easyforge/core/Result.h>
 #include <easyforge/data/DataValue.h>
+#include <easyforge/data/Export.h>
 
 namespace easyforge
 {
@@ -32,7 +33,7 @@ namespace easyforge
     //
     // Reading gives the node's own value, or else its type's value, or else
     // nothing. Write the type you read into; `auto` keeps the cell itself.
-    class Cell
+    class EASYFORGE_DATA_EXPORT Cell
     {
     public:
         Cell(std::shared_ptr<internal::TableState> table, std::uint32_t slot, std::uint32_t generation, std::string property)
@@ -79,7 +80,7 @@ namespace easyforge
     //
     // Node is a handle. It stays valid until the node is removed, and becomes
     // valid again if the removal is undone.
-    class Node
+    class EASYFORGE_DATA_EXPORT Node
     {
     public:
         // No node. Tests as false.
@@ -211,15 +212,15 @@ namespace easyforge
     //     game.Save("save.tree");
     //
     // Table is a handle: copies refer to the same table.
-    class Table
+    class EASYFORGE_DATA_EXPORT Table
     {
     public:
-        static Table New(const TableSettings& settings = {});
+        [[nodiscard]] static Table New(const TableSettings& settings = {});
 
         // Reads a table saved with Save. A table that could not be read tests as
         // false, and Error() says why.
-        static Table Load(std::string_view path);
-        static Table FromText(std::string_view text, std::string_view name = "table");
+        [[nodiscard]] static Table Load(std::string_view path);
+        [[nodiscard]] static Table FromText(std::string_view text, std::string_view name = "table");
 
         // No table. Tests as false.
         Table();

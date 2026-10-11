@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include <easyforge/data/Table.h>
+#include <easyforge/ui/Export.h>
 
 namespace easyforge::ui
 {
@@ -12,7 +13,7 @@ namespace easyforge::ui
     // value changes, anywhere, the element shows the new one in the next frame.
     //
     //     ui::Label(ui::Bind(player["Health"], "Health: {}"))
-    class Binding
+    class EASYFORGE_UI_EXPORT Binding
     {
     public:
         // Follows nothing.

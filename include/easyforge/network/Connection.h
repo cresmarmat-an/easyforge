@@ -6,6 +6,7 @@
 #include <string>
 #include <string_view>
 
+#include <easyforge/network/Export.h>
 #include <easyforge/network/Message.h>
 
 namespace easyforge
@@ -64,7 +65,7 @@ namespace easyforge
     //
     // Connection is a handle. Once the connection closes it tests as false and
     // does nothing; a new connection never takes over an old one's handles.
-    class Connection
+    class EASYFORGE_NETWORK_EXPORT Connection
     {
     public:
         // A handle that refers to no connection.

@@ -6,6 +6,7 @@
 
 #include <easyforge/assets/ModelData.h>
 #include <easyforge/core/BoundingBox.h>
+#include <easyforge/graphics/Export.h>
 
 namespace easyforge
 {
@@ -21,10 +22,10 @@ namespace easyforge
     //     scene.Add(ship);
     //
     // Model is a handle: copies refer to the same model.
-    class Model
+    class EASYFORGE_GRAPHICS_EXPORT Model
     {
     public:
-        static Model Load(std::string_view path);
+        [[nodiscard]] static Model Load(std::string_view path);
         static Model FromData(ModelData data);
 
         // No model. Tests as false.

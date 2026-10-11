@@ -9,6 +9,7 @@
 #include <easyforge/core/Rectangle.h>
 #include <easyforge/core/Vector.h>
 #include <easyforge/physics/Body2D.h>
+#include <easyforge/physics/Export.h>
 #include <easyforge/physics/Joint2D.h>
 
 namespace easyforge
@@ -55,13 +56,13 @@ namespace easyforge
     // The same steps with the same bodies give the same result every run. A
     // world is used from one thread at a time. Physics2D is a handle: copies
     // share the world, which lives while any copy or body handle uses it.
-    class Physics2D
+    class EASYFORGE_PHYSICS_EXPORT Physics2D
     {
     public:
         // A world that holds nothing. It tests as false.
         Physics2D();
 
-        static Physics2D New(const Physics2DSettings& settings = {});
+        [[nodiscard]] static Physics2D New(const Physics2DSettings& settings = {});
 
         Physics2D(const Physics2D& other);
         Physics2D& operator=(const Physics2D& other);

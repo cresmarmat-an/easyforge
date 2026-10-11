@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <easyforge/core/Result.h>
+#include <easyforge/script/Export.h>
 #include <easyforge/script/ScriptObject.h>
 #include <easyforge/script/ScriptValue.h>
 
@@ -57,13 +58,13 @@ namespace easyforge
     // Scripts can only reach what the program gives them with Define: there is
     // no file or network access of their own, apart from importing other
     // scripts when the settings allow it. An engine is used from one thread.
-    class ScriptEngine
+    class EASYFORGE_SCRIPT_EXPORT ScriptEngine
     {
     public:
         // An engine that runs nothing. Tests as false.
         ScriptEngine() = default;
 
-        static ScriptEngine New(const ScriptSettings& settings = {});
+        [[nodiscard]] static ScriptEngine New(const ScriptSettings& settings = {});
 
         explicit operator bool() const { return Engine != nullptr; }
 

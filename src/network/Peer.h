@@ -14,9 +14,13 @@
 #include <utility>
 #include <vector>
 
+#include <easyforge/network/Export.h>
+
 #include "Encoding.h"
 #include "Protocol.h"
 
+// The library's own tests use what is marked for export here, so it stays
+// reachable when the library is a DLL.
 namespace easyforge::internal::networking
 {
     struct DeliveredMessage
@@ -34,7 +38,7 @@ namespace easyforge::internal::networking
         double SentAt = 0.0;
     };
 
-    class Peer
+    class EASYFORGE_NETWORK_EXPORT Peer
     {
     public:
         explicit Peer(double now);

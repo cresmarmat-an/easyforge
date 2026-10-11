@@ -135,7 +135,7 @@ scripts.Define("Score", 0);
 scripts.Define("Levels", ScriptValue::List({ "forest", "caves", "tower" }));
 scripts.Define("Window", ScriptValue::Table({ { "Width", 1280 }, { "Height", 720 } }));
 
-scripts.Run("Score = Score + 5");
+scripts.Run("Score = Score + 5").LogIfFailed();
 int score = scripts.Get("Score").As<int>();   // 5
 ```
 

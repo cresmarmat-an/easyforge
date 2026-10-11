@@ -8,7 +8,7 @@ path is found. Paths use forward slashes on every platform and are UTF-8.
 
 using namespace easyforge;
 
-Files::Mount("game.pack");          // look inside the pack first
+Files::Mount("game.pack").LogIfFailed();   // look inside the pack first
 
 ImageData logo = ImageData::Load("textures/logo.png");
 Result<std::vector<std::uint8_t>> settings = Files::Read("settings.tree");
@@ -47,7 +47,7 @@ To keep everything under one folder, mount it once at the start, and name
 files from there:
 
 ```cpp
-Files::Mount("assets");   // in the working directory, or else next to the program
+Files::Mount("assets").LogIfFailed();   // in the working directory, or else next to the program
 
 Window window = Window::New({ .Title = "Notes", .Icon = "icons/notes.png" });   // assets/icons/notes.png
 ```

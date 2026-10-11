@@ -1,12 +1,13 @@
 #pragma once
 
+#include <easyforge/core/Export.h>
 #include <easyforge/core/Matrix.h>
 
 namespace easyforge
 {
     // Where something is, how it is turned, and how big it is. Applied in the
     // order scale, then rotation, then position.
-    struct Transform
+    struct EASYFORGE_CORE_EXPORT Transform
     {
         Vector3 Position = {};
         Quaternion Rotation = {};
@@ -14,13 +15,13 @@ namespace easyforge
 
         Matrix4 ToMatrix() const;
 
-        constexpr Vector3 ApplyToPoint(Vector3 point) const
+        constexpr Vector3 ApplyToPoint(Vector3 point) const noexcept
         {
             return Position + Rotation.Rotate(point * Scale);
         }
 
         // Scales and turns a direction without moving it.
-        constexpr Vector3 ApplyToDirection(Vector3 direction) const
+        constexpr Vector3 ApplyToDirection(Vector3 direction) const noexcept
         {
             return Rotation.Rotate(direction * Scale);
         }
@@ -32,5 +33,5 @@ namespace easyforge
     // the parent lives in. Exact unless the parent is scaled unevenly and the child
     // is rotated, which would need a shear that a Transform cannot hold; then the
     // result's scale is the closest a Transform can get.
-    Transform Combine(const Transform& parent, const Transform& child);
+    EASYFORGE_CORE_EXPORT Transform Combine(const Transform& parent, const Transform& child);
 }

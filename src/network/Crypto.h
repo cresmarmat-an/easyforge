@@ -14,6 +14,10 @@
 #include <string_view>
 #include <vector>
 
+#include <easyforge/network/Export.h>
+
+// The library's own tests use what is marked for export here, so it stays
+// reachable when the library is a DLL.
 namespace easyforge::internal::networking
 {
     // A P-256 public key as its X and Y coordinates, and an ECDSA signature as
@@ -32,29 +36,29 @@ namespace easyforge::internal::networking
 
     // Fills `bytes` from the system's random generator. False only when the
     // system has no cryptography, as on platforms network does not run on yet.
-    bool RandomBytes(std::span<std::uint8_t> bytes);
+    EASYFORGE_NETWORK_EXPORT bool RandomBytes(std::span<std::uint8_t> bytes);
 
     // HMAC-SHA256 of `data` with `key`.
-    Digest Authenticate(std::span<const std::uint8_t> key, std::span<const std::uint8_t> data);
+    EASYFORGE_NETWORK_EXPORT Digest Authenticate(std::span<const std::uint8_t> key, std::span<const std::uint8_t> data);
 
     // HKDF with SHA-256 (RFC 5869): `output.size()` bytes of key material from a
     // shared secret, made specific to `salt` and `purpose`.
-    void DeriveKeys(std::span<const std::uint8_t> secret, std::span<const std::uint8_t> salt, std::string_view purpose,
-        std::span<std::uint8_t> output);
+    EASYFORGE_NETWORK_EXPORT void DeriveKeys(std::span<const std::uint8_t> secret, std::span<const std::uint8_t> salt,
+        std::string_view purpose, std::span<std::uint8_t> output);
 
     // Whether two byte sequences are equal, taking the same time whatever they
     // hold, for comparing authentication codes.
-    bool SameBytes(std::span<const std::uint8_t> first, std::span<const std::uint8_t> second);
+    EASYFORGE_NETWORK_EXPORT bool SameBytes(std::span<const std::uint8_t> first, std::span<const std::uint8_t> second);
 
     // Bytes as lowercase hexadecimal digits, and back. BytesFromHex is false for
     // text that is not whole bytes of hexadecimal.
-    std::string HexText(std::span<const std::uint8_t> bytes);
-    bool BytesFromHex(std::string_view text, std::vector<std::uint8_t>& bytes);
-    bool PublicKeyFromText(std::string_view text, PublicKey& key);
+    EASYFORGE_NETWORK_EXPORT std::string HexText(std::span<const std::uint8_t> bytes);
+    EASYFORGE_NETWORK_EXPORT bool BytesFromHex(std::string_view text, std::vector<std::uint8_t>& bytes);
+    EASYFORGE_NETWORK_EXPORT bool PublicKeyFromText(std::string_view text, PublicKey& key);
 
     // A key pair made for one connection, for agreeing on a shared secret with
     // the other end (ECDH on P-256).
-    class KeyExchange
+    class EASYFORGE_NETWORK_EXPORT KeyExchange
     {
     public:
         KeyExchange();
@@ -77,7 +81,7 @@ namespace easyforge::internal::networking
     };
 
     // A long-term key a server proves who it is with (ECDSA on P-256).
-    class SigningKey
+    class EASYFORGE_NETWORK_EXPORT SigningKey
     {
     public:
         // A new random key.
@@ -99,17 +103,18 @@ namespace easyforge::internal::networking
         struct State;
 
     private:
-        SigningKey() = default;
+        SigningKey();
         std::unique_ptr<State> Held;
         PublicKey OwnPublic {};
     };
 
     // Whether `signature` is `key`'s, over `data`.
-    bool Verify(const PublicKey& key, std::span<const std::uint8_t> data, const Signature& signature);
+    EASYFORGE_NETWORK_EXPORT bool Verify(const PublicKey& key, std::span<const std::uint8_t> data,
+        const Signature& signature);
 
     // Seals and opens packets with one AES-256-GCM key. Each packet's nonce is
     // its 64-bit counter, which must never repeat under one key.
-    class Sealer
+    class EASYFORGE_NETWORK_EXPORT Sealer
     {
     public:
         Sealer();

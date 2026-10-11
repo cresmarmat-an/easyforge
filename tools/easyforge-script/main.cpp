@@ -132,7 +132,10 @@ namespace
             {
                 std::printf("%s\n", ran->AsText().c_str());
             }
-            scripts.Update(0.0f);
+            if (Result<> updated = scripts.Update(0.0f); !updated)
+            {
+                std::printf("%s\n", updated.Error().c_str());
+            }
         }
     }
 }

@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include <easyforge/assets/SoundData.h>
+#include <easyforge/sound/Export.h>
 
 namespace easyforge
 {
@@ -30,14 +31,14 @@ namespace easyforge
     // Sound is a handle: copies share the samples, and one sound can play many
     // times at once, on any number of mixers. A streamed sound opens its file
     // again for every play.
-    class Sound
+    class EASYFORGE_SOUND_EXPORT Sound
     {
     public:
         // An empty sound. It tests as false, with no error.
         Sound() = default;
 
         // Reads WAV and QOA files, as SoundData does.
-        static Sound Load(std::string_view path, const SoundSettings& settings = {});
+        [[nodiscard]] static Sound Load(std::string_view path, const SoundSettings& settings = {});
 
         // A sound from samples already in memory, such as ones a program made.
         static Sound FromData(SoundData data);

@@ -8,6 +8,7 @@
 #include <easyforge/core/Color.h>
 #include <easyforge/core/Vector.h>
 #include <easyforge/graphics/Texture.h>
+#include <easyforge/ui/Export.h>
 
 namespace easyforge::ui
 {
@@ -44,7 +45,7 @@ namespace easyforge::ui
     //     .Background = Color::Hex("#15151A")
     //     .Background = ui::Background::Gradient(Color::Hex("#243B55"), Color::Hex("#141E30"))
     //     .Background = ui::Background::Image("paper.png", { .Slice = 12 })
-    class Background
+    class EASYFORGE_UI_EXPORT Background
     {
     public:
         enum class Kind

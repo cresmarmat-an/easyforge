@@ -15,6 +15,7 @@
 #include <vector>
 
 #include <easyforge/core/Result.h>
+#include <easyforge/script/Export.h>
 
 namespace easyforge
 {
@@ -26,13 +27,13 @@ namespace easyforge
 
     namespace internal
     {
-        std::string_view OrdinalWord(std::size_t index);
-        std::string ScriptKindWord(const ScriptValue& value);
-        bool IsScriptNumber(const ScriptValue& value);
-        bool IsScriptBoolean(const ScriptValue& value);
-        bool IsScriptText(const ScriptValue& value);
-        bool IsScriptList(const ScriptValue& value);
-        Result<ScriptValue> NothingResult();
+        EASYFORGE_SCRIPT_EXPORT std::string_view OrdinalWord(std::size_t index);
+        EASYFORGE_SCRIPT_EXPORT std::string ScriptKindWord(const ScriptValue& value);
+        EASYFORGE_SCRIPT_EXPORT bool IsScriptNumber(const ScriptValue& value);
+        EASYFORGE_SCRIPT_EXPORT bool IsScriptBoolean(const ScriptValue& value);
+        EASYFORGE_SCRIPT_EXPORT bool IsScriptText(const ScriptValue& value);
+        EASYFORGE_SCRIPT_EXPORT bool IsScriptList(const ScriptValue& value);
+        EASYFORGE_SCRIPT_EXPORT Result<ScriptValue> NothingResult();
 
         template <typename Signature>
         struct FunctionParts;

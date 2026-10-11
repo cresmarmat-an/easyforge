@@ -8,6 +8,7 @@
 #include <string_view>
 #include <vector>
 
+#include <easyforge/assets/Export.h>
 #include <easyforge/assets/Pending.h>
 #include <easyforge/core/Result.h>
 
@@ -25,7 +26,7 @@ namespace easyforge
     //
     // Reads WAV (8, 16, 24, and 32-bit integer, 32 and 64-bit float) and QOA.
     // For long music, SoundStream decodes a little at a time instead.
-    class SoundData
+    class EASYFORGE_ASSETS_EXPORT SoundData
     {
     public:
         int SampleRate = 0;
@@ -38,9 +39,9 @@ namespace easyforge
         // A sound from samples you already have.
         SoundData(int sampleRate, int channelCount, std::vector<float> samples);
 
-        static SoundData Load(std::string_view path);
+        [[nodiscard]] static SoundData Load(std::string_view path);
         static SoundData Decode(std::span<const std::uint8_t> bytes, std::string_view name = "sound");
-        static Pending<SoundData> LoadInBackground(std::string_view path);
+        [[nodiscard]] static Pending<SoundData> LoadInBackground(std::string_view path);
 
         explicit operator bool() const { return SampleRate > 0 && ChannelCount > 0 && ErrorText.empty(); }
         const std::string& Error() const { return ErrorText; }
@@ -61,12 +62,12 @@ namespace easyforge
     //     SoundStream music = SoundStream::Open("theme.qoa");
     //     std::vector<float> buffer(1024 * music.ChannelCount());
     //     std::size_t frames = music.Read(buffer);
-    class SoundStream
+    class EASYFORGE_ASSETS_EXPORT SoundStream
     {
     public:
         SoundStream() = default;
 
-        static SoundStream Open(std::string_view path);
+        [[nodiscard]] static SoundStream Open(std::string_view path);
 
         explicit operator bool() const { return Decoder != nullptr; }
         const std::string& Error() const { return ErrorText; }

@@ -2,6 +2,8 @@
 
 #include <string_view>
 
+#include <easyforge/core/Export.h>
+
 namespace easyforge
 {
     // A key on the keyboard, named by where it is on a US keyboard, not by the
@@ -73,5 +75,5 @@ namespace easyforge
     };
 
     // A name to show people, such as "A", "Left Shift", or "Page Down".
-    std::string_view KeyName(Key key);
+    EASYFORGE_CORE_EXPORT std::string_view KeyName(Key key);
 }

@@ -31,6 +31,8 @@ set(EASYFORGE_DEPENDENCIES_ui core assets data graphics)
 
 set(EASYFORGE_GENERATED_INCLUDE_DIRECTORY "${PROJECT_BINARY_DIR}/generated/include")
 
+include(GenerateExportHeader)
+
 # Sets `output` to `library` followed by every library it depends on, directly or not.
 function(easyforge_dependency_closure library output)
     set(result ${library})
@@ -105,12 +107,30 @@ function(easyforge_add_library library)
     cmake_parse_arguments(PARSE_ARGV 1 LIBRARY "" "" "SOURCES")
 
     set(target easyforge_${library})
-    add_library(${target} STATIC ${LIBRARY_SOURCES})
+    add_library(${target} ${LIBRARY_SOURCES})
     add_library(easyforge::${library} ALIAS ${target})
 
     set_target_properties(${target} PROPERTIES
         EXPORT_NAME ${library}
-        OUTPUT_NAME easyforge-${library})
+        OUTPUT_NAME easyforge-${library}
+        CXX_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN ON)
+
+    # EASYFORGE_<LIBRARY>_EXPORT in the headers marks what a shared library
+    # makes available to programs. In a static library it is empty.
+    string(TOUPPER ${library} upper)
+    generate_export_header(${target}
+        BASE_NAME easyforge_${library}
+        EXPORT_FILE_NAME "${EASYFORGE_GENERATED_INCLUDE_DIRECTORY}/easyforge/${library}/Export.h")
+    get_target_property(kind ${target} TYPE)
+    if(kind STREQUAL "STATIC_LIBRARY")
+        target_compile_definitions(${target} PUBLIC EASYFORGE_${upper}_STATIC_DEFINE)
+    elseif(MSVC)
+        # Exported classes hold standard library types, which MSVC warns about.
+        # A program built against the DLLs uses the same compiler and standard
+        # library, so the warning does not apply.
+        target_compile_options(${target} PUBLIC /wd4251 /wd4275)
+    endif()
 
     # When another project fetches easyforge, only the libraries it links get built.
     if(NOT PROJECT_IS_TOP_LEVEL)
@@ -150,8 +170,8 @@ function(easyforge_install_package)
     get_property(built_libraries GLOBAL PROPERTY EASYFORGE_BUILT_LIBRARIES)
 
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/easyforge" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-    install(FILES "${EASYFORGE_GENERATED_INCLUDE_DIRECTORY}/easyforge/version.h"
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/easyforge)
+    # version.h, and each library's Export.h.
+    install(DIRECTORY "${EASYFORGE_GENERATED_INCLUDE_DIRECTORY}/easyforge" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
     install(TARGETS easyforge_easyforge EXPORT easyforgeTargets)
     foreach(tool IN ITEMS easyforge_icon_tool easyforge_shader_tool easyforge_script_tool)

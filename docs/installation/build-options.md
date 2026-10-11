@@ -10,6 +10,7 @@ configuring, or with `set()` before `FetchContent_MakeAvailable`.
 | `EASYFORGE_ONLY` | empty | Builds one library and the libraries it depends on |
 | `EASYFORGE_SANITIZE` | `OFF` | Builds everything with AddressSanitizer, so the tests catch memory errors |
 | `EASYFORGE_BUILD_BENCHMARKS` | `OFF` | Builds `easyforge-benchmarks`, a program that times the libraries' heavy work ([measuring speed](#measuring-speed)) |
+| `BUILD_SHARED_LIBS` | `OFF` | Builds each library as a shared library, a DLL on Windows ([shared libraries](#shared-libraries)) |
 | `EASYFORGE_BUILD_CORE` | `ON` | Builds the `core` library |
 | `EASYFORGE_BUILD_ASSETS` | `ON` | Builds the `assets` library |
 | `EASYFORGE_BUILD_WINDOW` | `ON` | Builds the `window` library, on platforms it supports |
@@ -30,6 +31,36 @@ for `graphics`.
 whenever `assets` is built, and `easyforge-shader`, which
 [`easyforge_add_shaders`](shaders.md) runs, whenever `graphics` is built. When
 easyforge is fetched, each is only compiled if a program uses its function.
+
+## Shared libraries
+
+Each library is a static library by default, linked into the program that
+uses it. With `BUILD_SHARED_LIBS` each one is a shared library instead,
+`easyforge-core.dll` and so on, which several programs or plugins can share:
+
+```bash
+cmake -S . -B build -D BUILD_SHARED_LIBS=ON
+```
+
+A shared library makes available exactly its public types and functions,
+marked `EASYFORGE_<LIBRARY>_EXPORT` in its headers through
+`<easyforge/<library>/Export.h>`. Programs include the same headers either way;
+in a static build the mark is empty.
+
+A program finds the DLLs it links in its own folder. When easyforge is built on
+its own, a shared build puts every program and DLL in one folder,
+`build/bin/<configuration>`. A program that fetches easyforge copies them next
+to itself after each build:
+
+```cmake
+add_custom_command(TARGET game POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:game> $<TARGET_FILE_DIR:game>
+    COMMAND_EXPAND_LISTS)
+```
+
+The libraries' types hold standard library types, so a program and the DLLs it
+uses must be built with the same compiler and the same configuration, Debug or
+Release.
 
 ## Building one library
 
@@ -67,6 +98,7 @@ Besides each library's tests, three checks run:
 | Check | What it does |
 |---|---|
 | Every library | Builds and tests everything with Visual Studio, in Debug and in Release |
+| As DLLs | The same with `BUILD_SHARED_LIBS`, which fails to link when something a program uses is not exported ([shared libraries](#shared-libraries)) |
 | With Clang | The same with Clang, through Visual Studio's ClangCL toolset |
 | With AddressSanitizer | Every test again with `EASYFORGE_SANITIZE` ([checking memory](#checking-memory)) |
 | Each library alone | Each library built and tested with only what it depends on ([one library](#building-one-library)) |

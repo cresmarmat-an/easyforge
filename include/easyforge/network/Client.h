@@ -10,6 +10,7 @@
 #include <easyforge/core/Property.h>
 #include <easyforge/core/Result.h>
 #include <easyforge/network/Connection.h>
+#include <easyforge/network/Export.h>
 #include <easyforge/network/Message.h>
 
 namespace easyforge
@@ -53,7 +54,7 @@ namespace easyforge
     // Client is a handle: copies share the client, which disconnects when the
     // last copy goes. Every function can be called from any thread; messages
     // sent before the connection is made wait for it.
-    class Client
+    class EASYFORGE_NETWORK_EXPORT Client
     {
     public:
         // A client that is not connecting. It tests as false.
@@ -62,7 +63,7 @@ namespace easyforge
         // Starts connecting. When the address cannot be understood, the client
         // tests as false and Error() says why; whether the server answers is
         // told by OnConnected or OnDisconnected.
-        static Client New(const ClientSettings& settings = {});
+        [[nodiscard]] static Client New(const ClientSettings& settings = {});
 
         Client(const Client& other);
         Client& operator=(const Client& other);

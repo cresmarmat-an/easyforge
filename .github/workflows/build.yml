@@ -21,6 +21,24 @@ jobs:
       - name: Test
         run: ctest --test-dir build -C ${{ matrix.configuration }} --output-on-failure --timeout 1200
 
+  shared:
+    # Every library as a DLL, which fails to link when something a program
+    # uses is not exported.
+    name: Every library as DLLs (${{ matrix.configuration }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Configure
+        run: cmake -S . -B build -D BUILD_SHARED_LIBS=ON
+      - name: Build
+        run: cmake --build build --config ${{ matrix.configuration }} --parallel
+      - name: Test
+        run: ctest --test-dir build -C ${{ matrix.configuration }} --output-on-failure --timeout 1200
+
   sanitized:
     # Every test again with AddressSanitizer, which stops at the first read or
     # write outside memory a test owns.

@@ -63,7 +63,7 @@ a binding was made from, or null for any other kind.
 ## Saving bindings
 
 ```cpp
-controls.SaveBindings("bindings.txt");
+controls.SaveBindings("bindings.txt").LogIfFailed();
 // ...
 if (Result<> loaded = controls.LoadBindings("bindings.txt"); !loaded)
 {

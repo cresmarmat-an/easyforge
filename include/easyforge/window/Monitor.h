@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <easyforge/core/Rectangle.h>
+#include <easyforge/window/Export.h>
 
 namespace easyforge
 {
@@ -11,7 +12,7 @@ namespace easyforge
     //
     // Areas are in desktop pixels, not points, because screens side by side can
     // have different scaling and points would not line up across them.
-    struct Monitor
+    struct EASYFORGE_WINDOW_EXPORT Monitor
     {
         // The name the screen reports, such as "DELL U2720Q", or a generic name
         // when it reports none.

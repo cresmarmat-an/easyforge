@@ -6,6 +6,7 @@
 
 #include <easyforge/assets/FontData.h>
 #include <easyforge/core/Vector.h>
+#include <easyforge/graphics/Export.h>
 
 namespace easyforge
 {
@@ -21,10 +22,10 @@ namespace easyforge
     //     canvas.Text(font, "Hello", { .Position = { 20, 20 }, .Size = 32 });
     //
     // Font is a handle: copies refer to the same font.
-    class Font
+    class EASYFORGE_GRAPHICS_EXPORT Font
     {
     public:
-        static Font Load(std::string_view path, int faceIndex = 0);
+        [[nodiscard]] static Font Load(std::string_view path, int faceIndex = 0);
         static Font FromData(FontData data);
 
         // No font. Tests as false.

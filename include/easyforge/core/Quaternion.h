@@ -1,5 +1,6 @@
 #pragma once
 
+#include <easyforge/core/Export.h>
 #include <easyforge/core/Vector.h>
 
 namespace easyforge
@@ -10,14 +11,14 @@ namespace easyforge
     //
     // Angles are in radians. A positive angle turns counterclockwise when the axis
     // points toward you, so turning +X by a quarter turn around +Y gives -Z.
-    struct Quaternion
+    struct EASYFORGE_CORE_EXPORT Quaternion
     {
         float X = 0.0f;
         float Y = 0.0f;
         float Z = 0.0f;
         float W = 1.0f;
 
-        static constexpr Quaternion Identity() { return {}; }
+        static constexpr Quaternion Identity() noexcept { return {}; }
 
         static Quaternion FromAxisAngle(Vector3 axis, float angle);
 
@@ -33,7 +34,7 @@ namespace easyforge
         static Quaternion FromMatrix(const Matrix3& rotation);
 
         // `first * second` turns by `second`, then by `first`.
-        constexpr Quaternion operator*(Quaternion other) const
+        constexpr Quaternion operator*(Quaternion other) const noexcept
         {
             return {
                 W * other.X + X * other.W + Y * other.Z - Z * other.Y,
@@ -43,7 +44,7 @@ namespace easyforge
             };
         }
 
-        constexpr Vector3 Rotate(Vector3 vector) const
+        constexpr Vector3 Rotate(Vector3 vector) const noexcept
         {
             Vector3 axis = { X, Y, Z };
             Vector3 twice = Cross(axis, vector) * 2.0f;
@@ -53,19 +54,19 @@ namespace easyforge
         constexpr bool operator==(const Quaternion&) const = default;
     };
 
-    constexpr float Dot(Quaternion first, Quaternion second)
+    constexpr float Dot(Quaternion first, Quaternion second) noexcept
     {
         return first.X * second.X + first.Y * second.Y + first.Z * second.Z + first.W * second.W;
     }
 
-    inline float Length(Quaternion rotation)
+    inline float Length(Quaternion rotation) noexcept
     {
         return std::sqrt(Dot(rotation, rotation));
     }
 
     // Rotations built from the functions above already have length 1. Normalize
     // after combining many of them, to remove the drift that rounding adds.
-    inline Quaternion Normalize(Quaternion rotation)
+    inline Quaternion Normalize(Quaternion rotation) noexcept
     {
         float length = Length(rotation);
         if (length <= 0.0f)
@@ -75,13 +76,13 @@ namespace easyforge
         return { rotation.X / length, rotation.Y / length, rotation.Z / length, rotation.W / length };
     }
 
-    constexpr Quaternion Conjugate(Quaternion rotation)
+    constexpr Quaternion Conjugate(Quaternion rotation) noexcept
     {
         return { -rotation.X, -rotation.Y, -rotation.Z, rotation.W };
     }
 
     // The opposite rotation.
-    inline Quaternion Inverse(Quaternion rotation)
+    inline Quaternion Inverse(Quaternion rotation) noexcept
     {
         float lengthSquared = Dot(rotation, rotation);
         if (lengthSquared <= 0.0f)
@@ -98,11 +99,11 @@ namespace easyforge
     }
 
     // Turns from `from` (amount 0) to `to` (amount 1) at a steady speed, the short way around.
-    Quaternion Slerp(Quaternion from, Quaternion to, float amount);
+    EASYFORGE_CORE_EXPORT Quaternion Slerp(Quaternion from, Quaternion to, float amount);
 
     // Compares the four numbers. The same rotation can also be written with every
     // number negated; use Dot(first, second) near 1 or -1 to accept both.
-    inline bool NearlyEqual(Quaternion first, Quaternion second, float tolerance = 0.00001f)
+    inline bool NearlyEqual(Quaternion first, Quaternion second, float tolerance = 0.00001f) noexcept
     {
         return NearlyEqual(first.X, second.X, tolerance) && NearlyEqual(first.Y, second.Y, tolerance) &&
                NearlyEqual(first.Z, second.Z, tolerance) && NearlyEqual(first.W, second.W, tolerance);

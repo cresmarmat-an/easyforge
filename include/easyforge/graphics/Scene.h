@@ -7,6 +7,7 @@
 #include <easyforge/core/Property.h>
 #include <easyforge/core/Quaternion.h>
 #include <easyforge/core/Vector.h>
+#include <easyforge/graphics/Export.h>
 #include <easyforge/graphics/Model.h>
 
 namespace easyforge
@@ -61,7 +62,7 @@ namespace easyforge
     //     ship.Rotation = Quaternion::FromAngles(0, angle, 0);
     //
     // SceneObject is a handle: copies refer to the same object.
-    class SceneObject
+    class EASYFORGE_GRAPHICS_EXPORT SceneObject
     {
     public:
         // No object. Tests as false.
@@ -97,10 +98,10 @@ namespace easyforge
     //     scene.Camera = { .Position = { 0, 2, 6 }, .Target = { 0, 0, 0 } };
     //
     // Scene is a handle: copies refer to the same scene.
-    class Scene
+    class EASYFORGE_GRAPHICS_EXPORT Scene
     {
     public:
-        static Scene New();
+        [[nodiscard]] static Scene New();
 
         // No scene. Tests as false.
         Scene();

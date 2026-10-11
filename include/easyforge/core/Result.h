@@ -4,6 +4,8 @@
 #include <utility>
 #include <variant>
 
+#include <easyforge/core/Export.h>
+
 namespace easyforge
 {
     // Why something failed, as text a person can read.
@@ -12,7 +14,7 @@ namespace easyforge
     public:
         explicit Failure(std::string message) : Text(std::move(message)) {}
 
-        const std::string& Message() const { return Text; }
+        const std::string& Message() const noexcept { return Text; }
 
     private:
         std::string Text;
@@ -20,7 +22,8 @@ namespace easyforge
 
     namespace internal
     {
-        [[noreturn]] void StopOnFailedResult(const std::string& error);
+        [[noreturn]] EASYFORGE_CORE_EXPORT void StopOnFailedResult(const std::string& error);
+        EASYFORGE_CORE_EXPORT void LogFailure(const std::string& error);
 
         inline const std::string& NoError()
         {
@@ -39,24 +42,39 @@ namespace easyforge
     //
     // Reading the value of a failed result is a mistake in the program: it logs
     // the error and stops the program.
+    //
+    // A result that is never looked at hides a failure, so the compiler warns
+    // about one left unused. Where logging the error is all a program would do:
+    //
+    //     controls.SaveBindings("bindings.txt").LogIfFailed();
     template <typename Type = void>
-    class Result
+    class [[nodiscard]] Result
     {
     public:
         Result(Type value) : Stored(std::in_place_index<0>, std::move(value)) {}
         Result(Failure failure) : Stored(std::in_place_index<1>, std::move(failure)) {}
 
-        bool Succeeded() const { return Stored.index() == 0; }
-        explicit operator bool() const { return Succeeded(); }
+        bool Succeeded() const noexcept { return Stored.index() == 0; }
+        explicit operator bool() const noexcept { return Succeeded(); }
 
         // Empty when it succeeded.
-        const std::string& Error() const
+        const std::string& Error() const noexcept
         {
             if (const Failure* failure = std::get_if<1>(&Stored))
             {
                 return failure->Message();
             }
             return internal::NoError();
+        }
+
+        // Logs the error as an error when it failed. Gives whether it succeeded.
+        bool LogIfFailed() const
+        {
+            if (!Succeeded())
+            {
+                internal::LogFailure(Error());
+            }
+            return Succeeded();
         }
 
         Type& Get() & { return *CheckedValue(); }
@@ -100,16 +118,26 @@ namespace easyforge
     //
     //     Result<> saved = table.Save("save.tree");
     template <>
-    class Result<void>
+    class [[nodiscard]] Result<void>
     {
     public:
         Result() = default;
         Result(Failure failure) : Problem(std::move(failure)), Failed(true) {}
 
-        bool Succeeded() const { return !Failed; }
-        explicit operator bool() const { return Succeeded(); }
+        bool Succeeded() const noexcept { return !Failed; }
+        explicit operator bool() const noexcept { return Succeeded(); }
 
-        const std::string& Error() const { return Failed ? Problem.Message() : internal::NoError(); }
+        const std::string& Error() const noexcept { return Failed ? Problem.Message() : internal::NoError(); }
+
+        // Logs the error as an error when it failed. Gives whether it succeeded.
+        bool LogIfFailed() const
+        {
+            if (Failed)
+            {
+                internal::LogFailure(Problem.Message());
+            }
+            return !Failed;
+        }
 
     private:
         Failure Problem { std::string() };

@@ -7,6 +7,7 @@
 #include <string_view>
 #include <vector>
 
+#include <easyforge/assets/Export.h>
 #include <easyforge/assets/Pending.h>
 #include <easyforge/core/Color.h>
 
@@ -24,7 +25,7 @@ namespace easyforge
     // Reads PNG, JPEG (baseline and extended sequential), BMP, TGA, and QOI. The
     // format is recognized from the file's contents; only TGA, which has no
     // signature, is recognized by its ".tga" extension.
-    class ImageData
+    class EASYFORGE_ASSETS_EXPORT ImageData
     {
     public:
         // Decoders refuse images wider or taller than this, or with more than
@@ -54,13 +55,13 @@ namespace easyforge
         ImageData(const std::string& path);
         ImageData(std::string_view path);
 
-        static ImageData Load(std::string_view path);
+        [[nodiscard]] static ImageData Load(std::string_view path);
 
         // Decodes an image from bytes in memory. `name` is used in error messages
         // and to recognize TGA files.
         static ImageData Decode(std::span<const std::uint8_t> bytes, std::string_view name = "image");
 
-        static Pending<ImageData> LoadInBackground(std::string_view path);
+        [[nodiscard]] static Pending<ImageData> LoadInBackground(std::string_view path);
 
         // True when the image has pixels.
         explicit operator bool() const { return Width > 0 && Height > 0 && ErrorText.empty(); }

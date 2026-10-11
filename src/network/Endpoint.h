@@ -26,17 +26,20 @@
 
 #include <easyforge/core/Random.h>
 #include <easyforge/network/Client.h>
+#include <easyforge/network/Export.h>
 #include <easyforge/network/Server.h>
 
 #include "Crypto.h"
 #include "Peer.h"
 #include "Socket.h"
 
+// The library's own tests use what is marked for export here, so it stays
+// reachable when the library is a DLL.
 namespace easyforge::internal::networking
 {
     // Which packet counters have arrived on a connection, so each is taken
     // once: the newest, and a window of the ones before it.
-    class ReplayWindow
+    class EASYFORGE_NETWORK_EXPORT ReplayWindow
     {
     public:
         // Whether the counter could still be taken: not seen, not too old.

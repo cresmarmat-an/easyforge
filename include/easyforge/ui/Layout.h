@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <easyforge/ui/Element.h>
+#include <easyforge/ui/Export.h>
 
 namespace easyforge::ui
 {
@@ -55,7 +56,7 @@ namespace easyforge::ui
     };
 
     // The properties every container has, on top of an Element's.
-    class Container : public Element
+    class EASYFORGE_UI_EXPORT Container : public Element
     {
     public:
         Container(const Container& other);
@@ -74,7 +75,7 @@ namespace easyforge::ui
     // Children side by side, from left to right.
     //
     //     ui::Row({ .Gap = 8, .Children = { ui::Button("Cancel"), ui::Button("Save") } })
-    class Row : public Container
+    class EASYFORGE_UI_EXPORT Row : public Container
     {
     public:
         explicit Row(const ContainerSettings& settings = {});
@@ -88,7 +89,7 @@ namespace easyforge::ui
     };
 
     // Children one under another, from top to bottom.
-    class Column : public Container
+    class EASYFORGE_UI_EXPORT Column : public Container
     {
     public:
         explicit Column(const ContainerSettings& settings = {});
@@ -104,7 +105,7 @@ namespace easyforge::ui
     // Children on top of each other, the last on top: a game with an interface
     // over it, or a badge on a picture. Each child is placed by the stack's
     // Alignment, on both axes.
-    class Stack : public Container
+    class EASYFORGE_UI_EXPORT Stack : public Container
     {
     public:
         explicit Stack(const ContainerSettings& settings = {});
@@ -119,7 +120,7 @@ namespace easyforge::ui
 
     // A column in a box: the theme's surface color and rounded corners, unless
     // given its own.
-    class Panel : public Container
+    class EASYFORGE_UI_EXPORT Panel : public Container
     {
     public:
         explicit Panel(const ContainerSettings& settings = {});
@@ -177,7 +178,7 @@ namespace easyforge::ui
     };
 
     // Children in rows of equal columns, filled from left to right.
-    class Grid : public Element
+    class EASYFORGE_UI_EXPORT Grid : public Element
     {
     public:
         explicit Grid(const GridSettings& settings = {});
@@ -244,7 +245,7 @@ namespace easyforge::ui
     // Children in a column (or a row) that can be longer than the scroll's own
     // box. The wheel, dragging the bar, dragging with a finger (which keeps
     // going for a moment after it lets go), and the keyboard move it.
-    class Scroll : public Element
+    class EASYFORGE_UI_EXPORT Scroll : public Element
     {
     public:
         explicit Scroll(const ScrollSettings& settings = {});
@@ -272,7 +273,7 @@ namespace easyforge::ui
 
     // Empty space. Without a size it fills: in a row, it pushes what comes
     // after it to the right.
-    class Spacer : public Element
+    class EASYFORGE_UI_EXPORT Spacer : public Element
     {
     public:
         Spacer();

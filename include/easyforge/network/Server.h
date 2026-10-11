@@ -11,6 +11,7 @@
 #include <easyforge/core/Property.h>
 #include <easyforge/core/Result.h>
 #include <easyforge/network/Connection.h>
+#include <easyforge/network/Export.h>
 #include <easyforge/network/Identity.h>
 #include <easyforge/network/Message.h>
 
@@ -60,7 +61,7 @@ namespace easyforge
     // Server is a handle: copies share the server, which stops, telling its
     // clients, when the last copy goes. Every function can be called from any
     // thread.
-    class Server
+    class EASYFORGE_NETWORK_EXPORT Server
     {
     public:
         // A server that is not running. It tests as false.
@@ -68,7 +69,7 @@ namespace easyforge
 
         // Starts listening. When the port cannot be used, the server tests as
         // false and Error() says why.
-        static Server New(const ServerSettings& settings = {});
+        [[nodiscard]] static Server New(const ServerSettings& settings = {});
 
         Server(const Server& other);
         Server& operator=(const Server& other);
@@ -142,5 +143,5 @@ namespace easyforge
     // Asks every computer on the local network, this one included, for servers
     // listening on a port, and waits for their answers. A server is listed once
     // even when it answers on several networks.
-    std::vector<FoundServer> FindServers(const ServerSearchSettings& settings = {});
+    EASYFORGE_NETWORK_EXPORT std::vector<FoundServer> FindServers(const ServerSearchSettings& settings = {});
 }

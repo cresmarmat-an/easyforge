@@ -14,6 +14,7 @@
 
 #include <easyforge/core/Color.h>
 #include <easyforge/core/Vector.h>
+#include <easyforge/network/Export.h>
 
 namespace easyforge
 {
@@ -24,7 +25,7 @@ namespace easyforge
 
     // Seconds on this computer's steady clock, which never jumps when the date
     // or time is changed: the clock Message::SentAt and Smoothed use.
-    double NetworkTime();
+    EASYFORGE_NETWORK_EXPORT double NetworkTime();
 
     enum class MessageValueKind
     {
@@ -51,7 +52,7 @@ namespace easyforge
                               std::same_as<Type, MessageValue>;
 
     // One value of a message.
-    class MessageValue
+    class EASYFORGE_NETWORK_EXPORT MessageValue
     {
     public:
         // Nothing.
@@ -161,7 +162,7 @@ namespace easyforge
     //     server.OnMessage("Chat", [](Connection from, const Message& message) {
     //         std::string text = message["Text"];
     //     });
-    class Message
+    class EASYFORGE_NETWORK_EXPORT Message
     {
     public:
         Message() = default;

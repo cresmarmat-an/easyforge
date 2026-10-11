@@ -16,8 +16,11 @@
 #include <easyforge/core/Color.h>
 #include <easyforge/core/Host.h>
 #include <easyforge/core/Result.h>
+#include <easyforge/graphics/Export.h>
 #include <easyforge/graphics/Renderer.h>
 
+// The library's own tests use what is marked for export here, so it stays
+// reachable when the library is a DLL.
 namespace easyforge::internal::gpu
 {
     enum class TextureFormat
@@ -266,7 +269,7 @@ namespace easyforge::internal::gpu
 
     // The device for an adapter, shared by every renderer that asks for the same
     // adapter while any of them exists.
-    Result<std::shared_ptr<Device>> SharedDevice(GraphicsAdapter adapter);
+    EASYFORGE_GRAPHICS_EXPORT Result<std::shared_ptr<Device>> SharedDevice(GraphicsAdapter adapter);
 
     // The renderer's own shaders, in the backend's shading language.
     struct BuiltInShaders

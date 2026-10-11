@@ -19,7 +19,7 @@ using namespace easyforge;
 
 // Once, when setting the server up:
 NetworkIdentity identity = NetworkIdentity::New();
-identity.Save("server.identity");
+identity.Save("server.identity").LogIfFailed();
 std::string key = identity.PublicKey();   // 128 hexadecimal digits
 
 // Every time the server starts:

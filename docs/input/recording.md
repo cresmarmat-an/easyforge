@@ -9,7 +9,7 @@ for demo modes, and for reproducing a bug someone reported.
 controls.StartRecording();
 // ... play for a while ...
 Recording recording = controls.StopRecording();
-recording.Save("session.recording");
+recording.Save("session.recording").LogIfFailed();
 
 // later, or in another run of the program:
 Result<Recording> loaded = Recording::Load("session.recording");

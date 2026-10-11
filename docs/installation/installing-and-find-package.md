@@ -22,7 +22,10 @@ cmake --install build --config Debug --prefix C:/libraries/easyforge
 ```
 
 The folder then holds the headers in `include/easyforge`, the libraries in
-`lib`, and the files CMake reads in `lib/cmake/easyforge`.
+`lib`, and the files CMake reads in `lib/cmake/easyforge`. An installation built
+with `BUILD_SHARED_LIBS` also has the DLLs in `bin`; `find_package` works the
+same, and the program copies the DLLs next to itself
+([shared libraries](build-options.md#shared-libraries)).
 
 ## Using it
 

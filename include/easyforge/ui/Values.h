@@ -10,6 +10,7 @@
 #include <easyforge/core/Property.h>
 #include <easyforge/core/Scalar.h>
 #include <easyforge/core/Vector.h>
+#include <easyforge/ui/Export.h>
 
 namespace easyforge::ui
 {
@@ -148,7 +149,7 @@ namespace easyforge::ui
     };
 
     // How far along an animation is, from 0 to 1, after the easing.
-    float Ease(Easing easing, float progress);
+    EASYFORGE_UI_EXPORT float Ease(Easing easing, float progress);
 
     struct AnimationSettings
     {

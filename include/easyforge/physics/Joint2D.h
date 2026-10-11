@@ -6,6 +6,7 @@
 #include <easyforge/core/Property.h>
 #include <easyforge/core/Vector.h>
 #include <easyforge/physics/Body2D.h>
+#include <easyforge/physics/Export.h>
 
 namespace easyforge
 {
@@ -125,7 +126,7 @@ namespace easyforge
 
     // A joint in a Physics2D world. Joint2D is a handle; once the joint or one
     // of its bodies is removed, it tests as false and does nothing.
-    class Joint2D
+    class EASYFORGE_PHYSICS_EXPORT Joint2D
     {
     public:
         // A handle that refers to no joint.

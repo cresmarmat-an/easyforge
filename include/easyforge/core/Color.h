@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 
+#include <easyforge/core/Export.h>
 #include <easyforge/core/Scalar.h>
 
 namespace easyforge
@@ -25,24 +26,24 @@ namespace easyforge
         // Reads "#RGB", "#RGBA", "#RRGGBB", or "#RRGGBBAA", with or without the "#".
         // Text that is not a hex color gives magenta (#FF00FF), which is hard to
         // miss on screen. Use IsHex to check text from outside the program first.
-        static constexpr Color Hex(std::string_view text);
+        static constexpr Color Hex(std::string_view text) noexcept;
 
-        static constexpr bool IsHex(std::string_view text);
+        static constexpr bool IsHex(std::string_view text) noexcept;
 
         static constexpr Color FromBytes(
-            std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha = 255)
+            std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha = 255) noexcept
         {
             return { red / 255.0f, green / 255.0f, blue / 255.0f, alpha / 255.0f };
         }
 
-        constexpr Color WithAlpha(float alpha) const { return { Red, Green, Blue, alpha }; }
+        constexpr Color WithAlpha(float alpha) const noexcept { return { Red, Green, Blue, alpha }; }
 
         // "#RRGGBB" when opaque, otherwise "#RRGGBBAA". Components outside 0 to 1 are clamped.
-        std::string ToHex() const;
+        EASYFORGE_CORE_EXPORT std::string ToHex() const;
 
         // The same color in linear light, where adding and blending are physically correct.
-        Color ToLinear() const;
-        static Color FromLinear(Color linear);
+        EASYFORGE_CORE_EXPORT Color ToLinear() const;
+        EASYFORGE_CORE_EXPORT static Color FromLinear(Color linear);
 
         constexpr bool operator==(const Color&) const = default;
     };
@@ -53,7 +54,7 @@ namespace easyforge
 
     namespace internal
     {
-        constexpr int HexDigitValue(char digit)
+        constexpr int HexDigitValue(char digit) noexcept
         {
             if (digit >= '0' && digit <= '9')
             {
@@ -70,7 +71,7 @@ namespace easyforge
             return -1;
         }
 
-        constexpr std::string_view WithoutHash(std::string_view text)
+        constexpr std::string_view WithoutHash(std::string_view text) noexcept
         {
             if (!text.empty() && text.front() == '#')
             {
@@ -80,7 +81,7 @@ namespace easyforge
         }
     }
 
-    constexpr bool Color::IsHex(std::string_view text)
+    constexpr bool Color::IsHex(std::string_view text) noexcept
     {
         text = internal::WithoutHash(text);
         if (text.size() != 3 && text.size() != 4 && text.size() != 6 && text.size() != 8)
@@ -97,7 +98,7 @@ namespace easyforge
         return true;
     }
 
-    constexpr Color Color::Hex(std::string_view text)
+    constexpr Color Color::Hex(std::string_view text) noexcept
     {
         if (!IsHex(text))
         {
@@ -126,7 +127,7 @@ namespace easyforge
             static_cast<std::uint8_t>(components[2]), static_cast<std::uint8_t>(components[3]));
     }
 
-    constexpr Color Lerp(Color from, Color to, float amount)
+    constexpr Color Lerp(Color from, Color to, float amount) noexcept
     {
         return {
             Lerp(from.Red, to.Red, amount),
@@ -136,7 +137,7 @@ namespace easyforge
         };
     }
 
-    inline bool NearlyEqual(Color first, Color second, float tolerance = 0.00001f)
+    inline bool NearlyEqual(Color first, Color second, float tolerance = 0.00001f) noexcept
     {
         return NearlyEqual(first.Red, second.Red, tolerance) && NearlyEqual(first.Green, second.Green, tolerance) &&
                NearlyEqual(first.Blue, second.Blue, tolerance) && NearlyEqual(first.Alpha, second.Alpha, tolerance);

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include <easyforge/core/Export.h>
 #include <easyforge/core/Vector.h>
 
 namespace easyforge
@@ -11,7 +12,7 @@ namespace easyforge
     //
     // A Random made with a seed gives the same numbers every run, on every
     // platform. One made without a seed starts somewhere different each time.
-    class Random
+    class EASYFORGE_CORE_EXPORT Random
     {
     public:
         Random();

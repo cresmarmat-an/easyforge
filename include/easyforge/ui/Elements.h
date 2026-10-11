@@ -14,6 +14,7 @@
 #include <easyforge/graphics/Texture.h>
 #include <easyforge/ui/Bind.h>
 #include <easyforge/ui/Element.h>
+#include <easyforge/ui/Export.h>
 
 namespace easyforge::ui
 {
@@ -67,7 +68,7 @@ namespace easyforge::ui
     //
     //     ui::Label("Hello", { .FontSize = 32 })
     //     ui::Label(ui::Bind(player["Health"], "Health: {}"))
-    class Label : public Element
+    class EASYFORGE_UI_EXPORT Label : public Element
     {
     public:
         explicit Label(std::string text = {}, const LabelSettings& settings = {});
@@ -138,7 +139,7 @@ namespace easyforge::ui
     // A picture from a file or a texture.
     //
     //     ui::Image("icon.png", { .Width = 20, .Height = 20 })
-    class Image : public Element
+    class EASYFORGE_UI_EXPORT Image : public Element
     {
     public:
         explicit Image(std::string_view path = {}, const ImageSettings& settings = {});
@@ -234,7 +235,7 @@ namespace easyforge::ui
     // A button with text, or with children of its own.
     //
     //     ui::Button("Save", { .Style = ui::ButtonStyle::Accent, .OnClick = [] { Save(); } })
-    class Button : public Element
+    class EASYFORGE_UI_EXPORT Button : public Element
     {
     public:
         explicit Button(std::string text = {}, const ButtonSettings& settings = {});
@@ -304,7 +305,7 @@ namespace easyforge::ui
 
     // A box that is checked or not, with text beside it. Clicking the box or the
     // text changes it.
-    class Checkbox : public Element
+    class EASYFORGE_UI_EXPORT Checkbox : public Element
     {
     public:
         explicit Checkbox(std::string text = {}, const CheckSettings& settings = {});
@@ -328,7 +329,7 @@ namespace easyforge::ui
 
     // A switch that slides on or off, with text beside it. Checked is whether it
     // is on.
-    class Toggle : public Element
+    class EASYFORGE_UI_EXPORT Toggle : public Element
     {
     public:
         explicit Toggle(std::string text = {}, const CheckSettings& settings = {});
@@ -399,7 +400,7 @@ namespace easyforge::ui
     };
 
     // A value picked by dragging a handle along a track, or with the arrow keys.
-    class Slider : public Element
+    class EASYFORGE_UI_EXPORT Slider : public Element
     {
     public:
         explicit Slider(const RangeSettings& settings = {});
@@ -423,7 +424,7 @@ namespace easyforge::ui
     };
 
     // How far along something is: a bar filled from Minimum to Value.
-    class ProgressBar : public Element
+    class EASYFORGE_UI_EXPORT ProgressBar : public Element
     {
     public:
         explicit ProgressBar(const RangeSettings& settings = {});
@@ -502,7 +503,7 @@ namespace easyforge::ui
     // One line of text to type into, with a caret, selection by mouse and
     // keyboard, copy and paste, undo, and input methods for Chinese, Japanese,
     // and Korean.
-    class TextField : public Element
+    class EASYFORGE_UI_EXPORT TextField : public Element
     {
     public:
         explicit TextField(const TextFieldSettings& settings = {});
@@ -586,7 +587,7 @@ namespace easyforge::ui
     // Several lines of text to type into. Enter starts a new line, Up and Down
     // move between lines, and the wheel scrolls; the rest works as in a
     // TextField.
-    class TextArea : public Element
+    class EASYFORGE_UI_EXPORT TextArea : public Element
     {
     public:
         explicit TextArea(const TextAreaSettings& settings = {});
@@ -693,7 +694,7 @@ namespace easyforge::ui
     //         },
     //         .OnPress = [](Vector2 point) { /* point is where it was pressed */ },
     //     })
-    class DrawingArea : public Element
+    class EASYFORGE_UI_EXPORT DrawingArea : public Element
     {
     public:
         explicit DrawingArea(const DrawingAreaSettings& settings = {});
@@ -745,7 +746,7 @@ namespace easyforge::ui
 
     // A 3D scene drawn through its camera. It does not use pointer events, so
     // clicks on it reach the program's own controls.
-    class SceneView : public Element
+    class EASYFORGE_UI_EXPORT SceneView : public Element
     {
     public:
         explicit SceneView(const easyforge::Scene& scene = {}, const SceneViewSettings& settings = {});

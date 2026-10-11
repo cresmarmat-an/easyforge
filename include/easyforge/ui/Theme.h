@@ -6,6 +6,7 @@
 #include <easyforge/core/Host.h>
 #include <easyforge/core/Result.h>
 #include <easyforge/graphics/Font.h>
+#include <easyforge/ui/Export.h>
 
 namespace easyforge::ui
 {
@@ -17,7 +18,7 @@ namespace easyforge::ui
     //     ui::Theme theme = ui::Theme::Light();
     //     theme.Accent = Color::Hex("#E4572E");
     //     ui::Root::Of(window).Theme = theme;
-    struct Theme
+    struct EASYFORGE_UI_EXPORT Theme
     {
         // Behind everything: the window's own color.
         Color Background {};
@@ -101,5 +102,5 @@ namespace easyforge::ui
     };
 
     // A theme part way between two others, for switching themes gradually.
-    Theme Lerp(const Theme& from, const Theme& to, float amount);
+    EASYFORGE_UI_EXPORT Theme Lerp(const Theme& from, const Theme& to, float amount);
 }

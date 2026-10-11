@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <easyforge/core/Result.h>
+#include <easyforge/script/Export.h>
 #include <easyforge/script/ScriptFunctions.h>
 
 namespace easyforge
@@ -43,7 +44,7 @@ namespace easyforge
     // Lists, tables, functions, and objects stay alive while a ScriptValue
     // holds them, even if the script lets go of them. They belong to the engine
     // they came from and are empty once it is gone.
-    class ScriptValue
+    class EASYFORGE_SCRIPT_EXPORT ScriptValue
     {
     public:
         // Nothing.

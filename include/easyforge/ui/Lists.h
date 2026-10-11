@@ -8,6 +8,7 @@
 
 #include <easyforge/data/Table.h>
 #include <easyforge/ui/Element.h>
+#include <easyforge/ui/Export.h>
 
 namespace easyforge::ui
 {
@@ -62,7 +63,7 @@ namespace easyforge::ui
     // Rows of text, one of which can be chosen, in a box that scrolls when there
     // are more than fit. Clicking chooses a row; the arrow keys, Page Up, Page
     // Down, Home, and End move the choice while the list has the keyboard.
-    class List : public Element
+    class EASYFORGE_UI_EXPORT List : public Element
     {
     public:
         explicit List(const ListSettings& settings = {});
@@ -140,7 +141,7 @@ namespace easyforge::ui
     // as it changes: nodes added, removed, renamed, or moved show in the next
     // frame. Clicking the arrow beside a node, or pressing Left and Right, closes
     // and opens it; Up and Down move the choice.
-    class Tree : public Element
+    class EASYFORGE_UI_EXPORT Tree : public Element
     {
     public:
         explicit Tree(const TreeSettings& settings = {});

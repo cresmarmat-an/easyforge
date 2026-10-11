@@ -6,6 +6,8 @@
 #include <string_view>
 #include <utility>
 
+#include <easyforge/core/Export.h>
+
 namespace easyforge
 {
     enum class LogLevel
@@ -18,13 +20,13 @@ namespace easyforge
 
     // Messages below this level are dropped. The default is Information, which
     // hides Detail messages.
-    void SetLogLevel(LogLevel minimum);
-    LogLevel CurrentLogLevel();
+    EASYFORGE_CORE_EXPORT void SetLogLevel(LogLevel minimum);
+    EASYFORGE_CORE_EXPORT LogLevel CurrentLogLevel();
 
     // Writes a message. By default it goes to standard error and, on Windows,
     // to the debugger's output window.
-    void Log(std::string_view message);
-    void Log(LogLevel level, std::string_view message);
+    EASYFORGE_CORE_EXPORT void Log(std::string_view message);
+    EASYFORGE_CORE_EXPORT void Log(LogLevel level, std::string_view message);
 
     // Formats the message with std::format first: Log("Loaded {} files", count).
     // A message below the current level is dropped without being formatted.
@@ -54,8 +56,8 @@ namespace easyforge
     // Sends every message to `handler` instead, for example to show them in the
     // program's own console. Pass nullptr to go back to the default. Messages
     // arrive one at a time, even when several threads log at once.
-    void SetLogHandler(LogHandler handler);
+    EASYFORGE_CORE_EXPORT void SetLogHandler(LogHandler handler);
 
     // The level's name in lowercase: "detail", "information", "warning", or "error".
-    std::string_view LogLevelName(LogLevel level);
+    EASYFORGE_CORE_EXPORT std::string_view LogLevelName(LogLevel level);
 }
