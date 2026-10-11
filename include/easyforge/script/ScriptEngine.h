@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include <easyforge/core/Host.h>
 #include <easyforge/core/Result.h>
 #include <easyforge/script/Export.h>
 #include <easyforge/script/ScriptObject.h>
@@ -65,6 +66,12 @@ namespace easyforge
         ScriptEngine() = default;
 
         [[nodiscard]] static ScriptEngine New(const ScriptSettings& settings = {});
+
+        // An engine that follows a host, such as a window: functions started
+        // with spawn carry on in its frames, and what goes wrong in them is
+        // logged as an error, so the program never calls Update. A window that
+        // waits while nothing changes wakes when a function's wait is over.
+        [[nodiscard]] static ScriptEngine New(std::shared_ptr<Host> host, const ScriptSettings& settings = {});
 
         explicit operator bool() const { return Engine != nullptr; }
 

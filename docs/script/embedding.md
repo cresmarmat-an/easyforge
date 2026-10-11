@@ -239,21 +239,29 @@ numbers, and strings, and by identity for the rest.
 
 ## Functions that run across frames
 
+Scripts start tasks with `spawn` (see [the language](language.md#work-that-goes-on-across-frames)).
+An engine made with a window moves them along in the window's frames by itself:
+
 ```cpp
-window.OnFrame = [&](float deltaSeconds) {
-    Result<> updated = scripts.Update(deltaSeconds);
-    if (!updated)
-    {
-        Log(LogLevel::Error, updated.Error());
-    }
-};
+ScriptEngine scripts = ScriptEngine::New(window);
 ```
 
-Scripts start tasks with `spawn` (see [the language](language.md#work-that-goes-on-across-frames)).
-`Update(deltaSeconds)` moves them along: tasks waiting for time count down, and
-tasks that yielded continue. Call it once a frame. It returns the first error a
-task met; that task stops, and the others carry on. `RunningTasks()` counts the
-tasks that have not finished.
+Tasks waiting for time count down, and tasks that yielded continue. A task that
+fails stops, the others carry on, and its error is logged as an error. A window
+that waits while nothing changes wakes when a task's wait is over, and not
+before. Anything that is a `Host` works the same way.
+
+Without a window, `Update(deltaSeconds)` does the same; call it once a frame. It
+returns the first error a task met:
+
+```cpp
+if (Result<> updated = scripts.Update(deltaSeconds); !updated)
+{
+    Log(LogLevel::Error, updated.Error());
+}
+```
+
+`RunningTasks()` counts the tasks that have not finished.
 
 ## Limits
 

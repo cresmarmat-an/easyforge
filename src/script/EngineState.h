@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <easyforge/core/Host.h>
 #include <easyforge/core/Result.h>
 #include <easyforge/script/ScriptEngine.h>
 
@@ -32,6 +33,32 @@ namespace easyforge::internal::scripting
     public:
         explicit EngineState(const ScriptSettings& settings);
         ~EngineState();
+
+        // ---- Following a host ---------------------------------------------------
+
+        // Moves spawned functions along in the host's frames, and logs what goes
+        // wrong in them. Called once, on the host's thread.
+        void Follow(std::shared_ptr<Host> host);
+
+        // Seconds until a spawned function has something to do: none when one
+        // waits only for the next update, and forever when there are none.
+        double SecondsUntilWork() const;
+
+        class FrameFollower : public HostListener
+        {
+        public:
+            explicit FrameFollower(EngineState& owner) : Owner(owner) {}
+            void HandleEvent(const Event&) override {}
+            void FrameStarted(float deltaSeconds) override;
+            void FrameEnded() override {}
+            float SecondsUntilNextFrame() const override { return static_cast<float>(Owner.SecondsUntilWork()); }
+
+        private:
+            EngineState& Owner;
+        };
+
+        std::shared_ptr<Host> FollowedHost;
+        FrameFollower Follower { *this };
 
         // ---- Running ----------------------------------------------------------
 

@@ -1,3 +1,5 @@
+#include <limits>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -5,6 +7,7 @@
 #include <easyforge/script.h>
 
 #include "CommaDecimals.h"
+#include "TestHost.h"
 
 using namespace easyforge;
 
@@ -370,6 +373,33 @@ return { Items = [1, 2], Greeter = Greet }
     Result<ScriptValue> greeting = made->Field("Greeter").Call({ "Ari" });
     EASYFORGE_REQUIRE(greeting);
     EASYFORGE_EXPECT_EQUAL(greeting->AsText(), std::string("hello Ari"));
+}
+
+EASYFORGE_TEST(EnginesCanFollowAHost)
+{
+    // Spawned functions carry on in the host's frames, which come only when
+    // a function has something to do.
+    auto host = std::make_shared<testing::TestHost>();
+    std::vector<std::string> lines;
+    {
+        ScriptEngine scripts = ScriptEngine::New(host, { .Print = [&](std::string_view line) { lines.emplace_back(line); } });
+        EASYFORGE_REQUIRE(host->Listeners.size() == 1);
+        EASYFORGE_EXPECT(host->SecondsUntilWanted() == std::numeric_limits<float>::infinity());
+        EASYFORGE_REQUIRE(scripts.Run(R"(
+function Later() then
+    wait 2
+    print("later")
+end
+spawn Later()
+)"));
+        EASYFORGE_EXPECT_NEAR(host->SecondsUntilWanted(), 2.0f, 0.0001f);
+        host->RunFrame(0.5f);
+        EASYFORGE_EXPECT_NEAR(host->SecondsUntilWanted(), 1.5f, 0.0001f);
+        host->RunFrame(1.5f);
+        EASYFORGE_EXPECT_EQUAL(Printing::Joined(lines), std::string("later"));
+        EASYFORGE_EXPECT(host->SecondsUntilWanted() == std::numeric_limits<float>::infinity());
+    }
+    EASYFORGE_EXPECT(host->Listeners.empty());
 }
 
 EASYFORGE_TEST(SpawnedFunctionsWaitAcrossUpdates)

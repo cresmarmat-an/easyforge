@@ -4,8 +4,10 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <limits>
 #include <sstream>
 
+#include <easyforge/core/Log.h>
 #include <easyforge/core/Paths.h>
 #include <easyforge/core/language/Syntax.h>
 
@@ -92,6 +94,10 @@ namespace easyforge::internal::scripting
 
     EngineState::~EngineState()
     {
+        if (FollowedHost)
+        {
+            FollowedHost->RemoveListener(Follower);
+        }
         for (Root* root : Roots)
         {
             root->Pointer = nullptr;
@@ -342,6 +348,32 @@ namespace easyforge::internal::scripting
             return Failure(result.Error());
         }
         return ToScript(*result);
+    }
+
+    void EngineState::Follow(std::shared_ptr<Host> host)
+    {
+        FollowedHost = std::move(host);
+        FollowedHost->AddListener(Follower);
+    }
+
+    double EngineState::SecondsUntilWork() const
+    {
+        double seconds = std::numeric_limits<double>::infinity();
+        for (const std::unique_ptr<Task>& task : Spawned)
+        {
+            seconds = std::min(seconds, std::max(task->WaitLeft, 0.0));
+        }
+        return seconds;
+    }
+
+    void EngineState::FrameFollower::FrameStarted(float deltaSeconds)
+    {
+        // Held to the end, since a function may let go of the program's last copy.
+        std::shared_ptr<EngineState> kept = Owner.shared_from_this();
+        if (Result<> updated = Owner.Update(deltaSeconds); !updated)
+        {
+            Log(LogLevel::Error, "{}", updated.Error());
+        }
     }
 
     Result<> EngineState::Update(double deltaSeconds)

@@ -1,7 +1,6 @@
-#include <algorithm>
 #include <atomic>
 #include <cstdint>
-#include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -11,6 +10,7 @@
 #include <easyforge/network.h>
 
 #include "NetworkTesting.h"
+#include "TestHost.h"
 
 using namespace easyforge;
 using namespace easyforge::testing;
@@ -207,76 +207,11 @@ EASYFORGE_TEST(ManyThreadsSendAndAskAtOnce)
     }
 }
 
-namespace
-{
-    // A host that runs frames only when something asks for one, as a window
-    // that waits while nothing changes does.
-    class WaitingHost final : public Host
-    {
-    public:
-        Surface NativeSurface() const override { return {}; }
-        Vector2 Size() const override { return { 800, 600 }; }
-        Vector2 PixelSize() const override { return { 800, 600 }; }
-        float Scale() const override { return 1.0f; }
-        bool IsOpen() const override { return true; }
-        bool IsFocused() const override { return true; }
-        WindowMode Mode() const override { return WindowMode::Normal; }
-        bool IsTransparent() const override { return false; }
-        bool VerticalSync() const override { return true; }
-        bool ClaimSurface() override { return true; }
-        void ReleaseSurface() override {}
-        void SetCursor(Cursor) override {}
-        void SetTextInput(bool, easyforge::Rectangle) override {}
-        ColorScheme SystemColorScheme() const override { return ColorScheme::Light; }
-        std::string ClipboardText() const override { return {}; }
-        void SetClipboardText(std::string_view) override {}
-        void AddListener(HostListener& listener) override { Listeners.push_back(&listener); }
-        void RemoveListener(HostListener& listener) override
-        {
-            Listeners.erase(std::remove(Listeners.begin(), Listeners.end(), &listener), Listeners.end());
-        }
-        std::shared_ptr<void>& Shared(std::string_view name) override { return SharedObjects[std::string(name)]; }
-        void RequestFrame() override
-        {
-            ++Requests;
-            Wanted = true;
-        }
-
-        // Runs a frame when one was asked for, or a listener wants one now.
-        void RunFrameIfWanted()
-        {
-            bool now = Wanted.exchange(false);
-            for (HostListener* listener : Listeners)
-            {
-                now = now || listener->SecondsUntilNextFrame() <= 0.0f;
-            }
-            if (!now)
-            {
-                return;
-            }
-            std::vector<HostListener*> listeners = Listeners;
-            for (HostListener* listener : listeners)
-            {
-                listener->FrameStarted(1.0f / 60.0f);
-            }
-            for (HostListener* listener : listeners)
-            {
-                listener->FrameEnded();
-            }
-        }
-
-        std::vector<HostListener*> Listeners;
-        std::map<std::string, std::shared_ptr<void>> SharedObjects;
-        std::atomic<bool> Wanted = false;
-        std::atomic<int> Requests = 0;
-    };
-}
-
 EASYFORGE_TEST(ServersAndClientsCanFollowAHost)
 {
     // The handlers run in the host's frames, on its thread, and the program
     // calls no Update. Messages wake a host that is waiting.
-    auto host = std::make_shared<WaitingHost>();
+    auto host = std::make_shared<TestHost>();
     std::thread::id frameThread = std::this_thread::get_id();
     std::atomic<bool> elsewhere = false;
     int pongs = 0;

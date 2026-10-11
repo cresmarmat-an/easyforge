@@ -33,14 +33,14 @@ int main()
     });
     window.Content = pages;
 
-    ScriptEngine scripts = ScriptEngine::New({ .MemoryLimit = 16 * 1024 * 1024 });
+    // Given the window, functions the script starts with spawn carry on in its frames.
+    ScriptEngine scripts = ScriptEngine::New(window, { .MemoryLimit = 16 * 1024 * 1024 });
     ui::DefineInterface(scripts, ui::Root::Of(window));
     if (Result<ScriptValue> ran = scripts.RunFile("menu.script"); !ran)
     {
         Log(LogLevel::Error, ran.Error());
     }
 
-    window.OnFrame = [&](float deltaSeconds) { scripts.Update(deltaSeconds); };
     window.Run();
 }
 ```

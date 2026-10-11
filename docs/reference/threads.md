@@ -80,7 +80,7 @@ frame with `window.RequestFrame()`.
 
 | Type | Rule |
 |---|---|
-| `ScriptEngine`, `ScriptValue` | One thread at a time, the same for an engine and its values |
+| `ScriptEngine`, `ScriptValue` | One thread at a time, the same for an engine and its values; the window's thread for an engine made with a window |
 | `ScriptObject` | Called on the thread running its engine |
 
 ## sound

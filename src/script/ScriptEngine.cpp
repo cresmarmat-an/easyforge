@@ -30,6 +30,16 @@ namespace easyforge
         return ScriptEngine(std::make_shared<EngineState>(settings));
     }
 
+    ScriptEngine ScriptEngine::New(std::shared_ptr<Host> host, const ScriptSettings& settings)
+    {
+        auto engine = std::make_shared<EngineState>(settings);
+        if (host)
+        {
+            engine->Follow(std::move(host));
+        }
+        return ScriptEngine(std::move(engine));
+    }
+
     Result<ScriptValue> ScriptEngine::Run(std::string_view source, std::string_view name)
     {
         if (!Engine)
