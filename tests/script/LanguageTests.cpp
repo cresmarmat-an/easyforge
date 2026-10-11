@@ -477,7 +477,7 @@ return Depth(900)
     EASYFORGE_EXPECT(endless.Error().find("more than 1000 deep") != std::string::npos);
 
     // A script and the program calling each other without end stop too.
-    calls.Define("Again", [&calls](ScriptValue function) { return function.Call({ function }); });
+    calls.Define("Again", [](ScriptValue function) { return function.Call({ function }); });
     Result<ScriptValue> nested = calls.Run("function Loop(self) then\n    return Again(self)\nend\nLoop(Loop)\n", "nested.script");
     EASYFORGE_EXPECT(!nested);
     EASYFORGE_EXPECT(nested.Error().find("call each other more than 32 deep") != std::string::npos);

@@ -43,6 +43,8 @@ namespace easyforge
         {
         }
 
+        // Copying a cell copies which cell it is; assigning one copies its value.
+        Cell(const Cell&) = default;
         const Cell& operator=(const DataValue& value) const;
         const Cell& operator=(const Cell& other) const { return *this = other.Get(); }
 
