@@ -252,6 +252,35 @@ namespace easyforge::ui::internal
         {
             TheHost->RemoveListener(*this);
         }
+
+        // The elements let go of their callbacks, which may hold the elements
+        // themselves and would keep them alive once nothing else does. Every
+        // element is held here until all have let go.
+        std::vector<std::shared_ptr<ElementState>> elements;
+        auto gather = [&elements](auto& self, const std::shared_ptr<ElementState>& element) -> void {
+            if (!element)
+            {
+                return;
+            }
+            elements.push_back(element);
+            for (const std::shared_ptr<ElementState>& child : element->Children)
+            {
+                self(self, child);
+            }
+        };
+        for (const Slot& slot : Slots)
+        {
+            gather(gather, slot.Element);
+        }
+        for (Overlay& overlay : Overlays)
+        {
+            gather(gather, overlay.Element);
+            overlay.OnClosed = nullptr;
+        }
+        for (const std::shared_ptr<ElementState>& element : elements)
+        {
+            element->ReleaseObjects();
+        }
         if (Interface)
         {
             Interface->Root = nullptr;
@@ -274,6 +303,7 @@ namespace easyforge::ui::internal
 
     void RootState::Adopt(ElementState& element)
     {
+        WarnIfReleased(element);
         if (element.Parent)
         {
             std::shared_ptr<ElementState> kept = element.shared_from_this();

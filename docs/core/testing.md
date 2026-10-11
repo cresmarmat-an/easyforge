@@ -95,6 +95,23 @@ values. If `Normalize` were broken, the output would read:
 Running with a filter that matches no test counts as a failure, so a typo in a
 test name cannot pass silently.
 
+## Memory left behind
+
+In a Debug build with Visual Studio, the test program notes what memory is
+allocated when the tests start. When it ends, after its static objects are
+gone, anything allocated since and still allocated fails the run: it prints
+how many blocks and bytes, and each block, and exits with code 3.
+
+```
+2 blocks (72 bytes) allocated while the tests ran were never freed:
+{4127} normal block at 0x000001ACDE59D0D0, 56 bytes long.
+```
+
+Running one test at a time by name finds the test that leaves it. The number
+in braces is the allocation's place in order: `_CrtSetBreakAlloc(4127)` at the
+start of `main` stops the debugger where it was made, when the same tests run
+the same way. Other compilers and Release builds do not check.
+
 ## Limitations
 
 - There are no fixtures or setup functions; use ordinary functions and local
@@ -102,4 +119,6 @@ test name cannot pass silently.
 - Tests run one after another on one thread. Tests in one file run in the order
   they are written; the order of the files is up to the linker.
 - A crash stops the whole run, and a test that never returns stops it too.
+- The memory check sees what the C library allocates; memory from the operating
+  system or a graphics driver directly is not counted.
 - An exception that escapes a test is caught and reported as a failure.

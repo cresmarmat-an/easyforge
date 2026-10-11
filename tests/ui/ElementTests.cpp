@@ -1,3 +1,7 @@
+#include <algorithm>
+#include <memory>
+#include <string>
+
 #include "Helpers.h"
 
 using namespace easyforge;
@@ -192,4 +196,36 @@ EASYFORGE_TEST(SettingsGivenOnPurposeAreKept)
     // Assigning a size left out goes back to the kind's own.
     fitting.Width = ui::Size {};
     EASYFORGE_EXPECT(fitting.Width.Get() == ui::Size(200.0f));
+}
+
+EASYFORGE_TEST(CallbacksThatHoldTheirElementEndWithTheInterface)
+{
+    // A callback holding its own element would keep both alive for good once
+    // nothing else does. The interface ending lets go of it.
+    std::weak_ptr<int> watched;
+    {
+        auto held = std::make_shared<int>(0);
+        watched = held;
+        ui::Button button("Count");
+        button.OnClick = [button, held] { ++*held; };
+        Screen screen(200, 100, ui::Column({ .Children = { button } }));
+        screen.Frame();
+        button.Click();
+        EASYFORGE_EXPECT_EQUAL(*held, 1);
+    }
+    EASYFORGE_EXPECT(watched.expired());
+}
+
+EASYFORGE_TEST(AnElementShownAgainAfterItsInterfaceEndedIsReported)
+{
+    ui::Button button("Again", { .OnClick = [] {} });
+    {
+        Screen screen(200, 100, ui::Column({ .Children = { button } }));
+        screen.Frame();
+    }
+    LoggedWarnings().clear();
+    Screen again(200, 100, ui::Column({ .Children = { button } }));
+    again.Frame();
+    auto reported = [](const std::string& text) { return text.find("shown again") != std::string::npos; };
+    EASYFORGE_EXPECT_EQUAL(std::ranges::count_if(LoggedWarnings(), reported), std::ptrdiff_t { 1 });
 }

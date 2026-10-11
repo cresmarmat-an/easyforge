@@ -48,7 +48,7 @@ namespace easyforge
 
     Client Client::New(const ClientSettings& settings)
     {
-        return Client(Endpoint::StartClient(settings));
+        return Client(Endpoint::HandOut(Endpoint::StartClient(settings)));
     }
 
     Client::Client(const Client& other) : Client(other.State)

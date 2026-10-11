@@ -129,6 +129,12 @@ they share with the rest of the program needs a lock or an atomic.
 Every function of `Server`, `Client`, and `Connection` can be called from any
 thread.
 
+When the program lets go of a threaded server's or client's last copy, it
+waits for that thread to finish what it is running, then ends the server or
+client there and then: its port is free and the other ends are told before the
+handle's destructor returns. So the last copy should not go while holding a
+lock that its handlers take.
+
 ## Handlers that hold their server
 
 A handler that holds a copy of its own server or client keeps it alive, since

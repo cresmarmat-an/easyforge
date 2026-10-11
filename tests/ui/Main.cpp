@@ -6,6 +6,8 @@
 #include <easyforge/core/Log.h>
 #include <easyforge/core/Testing.h>
 
+#include "Helpers.h"
+
 int main(int argumentCount, char** arguments)
 {
     // Direct3D's validation layer checks every call the renderer makes, when the
@@ -17,6 +19,10 @@ int main(int argumentCount, char** arguments)
         if (level == easyforge::LogLevel::Error)
         {
             problems.emplace_back(message);
+        }
+        else if (level == easyforge::LogLevel::Warning)
+        {
+            easyforge::testing::LoggedWarnings().emplace_back(message);
         }
     });
 

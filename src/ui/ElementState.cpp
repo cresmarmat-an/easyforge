@@ -100,6 +100,19 @@ namespace easyforge::ui::internal
         Changed(false);
     }
 
+    void ElementState::ReleaseObjects()
+    {
+        if (Objects.empty())
+        {
+            return;
+        }
+        // Moved out first, so whatever the objects' end lets go of finds the
+        // element already without them.
+        std::map<std::string, std::any, std::less<>> released;
+        released.swap(Objects);
+        ObjectsReleased = true;
+    }
+
     void ElementState::ClearObject(std::string_view name)
     {
         auto found = Objects.find(name);
@@ -237,6 +250,33 @@ namespace easyforge::ui::internal
         }
     }
 
+    namespace
+    {
+        // Whether anything in the element, or inside it, lost its objects when
+        // an interface ended. Clears the marks, so each is reported once.
+        bool TakeReleasedMarks(ElementState& element)
+        {
+            bool released = element.ObjectsReleased;
+            element.ObjectsReleased = false;
+            for (const std::shared_ptr<ElementState>& child : element.Children)
+            {
+                released = TakeReleasedMarks(*child) || released;
+            }
+            return released;
+        }
+    }
+
+    void WarnIfReleased(ElementState& element)
+    {
+        if (TakeReleasedMarks(element))
+        {
+            Log(LogLevel::Warning,
+                "a {} is shown again after the interface it was in ended, which let go of its callbacks; "
+                "set them again, or build the elements anew",
+                element.Kind->Name());
+        }
+    }
+
     void MoveToTree(ElementState& element, const std::shared_ptr<ElementTree>& tree, const Node& parent)
     {
         RootState* leaving = element.Root();
@@ -268,6 +308,7 @@ namespace easyforge::ui::internal
             Log(LogLevel::Warning, "an element cannot be put inside itself");
             return;
         }
+        WarnIfReleased(*child);
         std::shared_ptr<ElementState> kept = child;
         if (ElementState* old = child->Parent)
         {

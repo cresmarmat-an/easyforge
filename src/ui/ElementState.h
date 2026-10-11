@@ -102,6 +102,11 @@ namespace easyforge::ui::internal
         void SetObject(std::string_view name, std::any value);
         void ClearObject(std::string_view name);
 
+        // Lets go of every object: callbacks, and what they hold. A callback
+        // may hold its own element, or one around it, which would otherwise
+        // keep both alive for good once the interface they were in is gone.
+        void ReleaseObjects();
+
         // Something about the element changed that is not in the table.
         void Changed(bool affectsLayout = true);
 
@@ -117,6 +122,9 @@ namespace easyforge::ui::internal
         ElementState* Parent = nullptr;
         std::vector<std::shared_ptr<ElementState>> Children;
         std::map<std::string, std::any, std::less<>> Objects;
+
+        // Its objects were let go when its interface ended.
+        bool ObjectsReleased = false;
 
         // Where the last layout put it, in points: the box inside the margin.
         Rectangle Frame;
@@ -171,6 +179,10 @@ namespace easyforge::ui::internal
     // Moves the element and everything in it into another table, under `parent`,
     // or at its top when `parent` is no node.
     void MoveToTree(ElementState& element, const std::shared_ptr<ElementTree>& tree, const Node& parent);
+
+    // Logs a warning when the program shows an element again that lost its
+    // objects when the interface it was in ended, once for each such element.
+    void WarnIfReleased(ElementState& element);
 
     // The element's node was renamed, removed, or changed in the table.
     ElementState* ElementOf(const ElementTree& tree, const Node& node);

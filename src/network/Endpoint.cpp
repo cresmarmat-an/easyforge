@@ -235,6 +235,45 @@ namespace easyforge::internal::networking
         }
     }
 
+    namespace
+    {
+        struct ProgramHandles
+        {
+            std::shared_ptr<Endpoint> Held;
+
+            ~ProgramHandles()
+            {
+                if (Held)
+                {
+                    Held->StopThread();
+                }
+            }
+        };
+    }
+
+    std::shared_ptr<Endpoint> Endpoint::HandOut(std::shared_ptr<Endpoint> endpoint)
+    {
+        if (!endpoint)
+        {
+            return endpoint;
+        }
+        auto handles = std::make_shared<ProgramHandles>();
+        handles->Held = std::move(endpoint);
+        Endpoint* held = handles->Held.get();
+        return std::shared_ptr<Endpoint>(std::move(handles), held);
+    }
+
+    void Endpoint::StopThread()
+    {
+        Stopping = true;
+        // The thread holds the endpoint while it updates it, so once it is
+        // done, the program's thread holds the last copy and ends it.
+        if (Worker.joinable() && Worker.get_id() != std::this_thread::get_id())
+        {
+            Worker.join();
+        }
+    }
+
     void Endpoint::Work(std::weak_ptr<Endpoint> weak)
     {
         while (true)

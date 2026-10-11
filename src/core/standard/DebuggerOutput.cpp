@@ -9,4 +9,8 @@ namespace easyforge::internal
     void StopErrorDialogs()
     {
     }
+
+    void CheckForLeaksAtExit()
+    {
+    }
 }

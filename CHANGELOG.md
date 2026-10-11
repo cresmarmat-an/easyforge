@@ -27,6 +27,8 @@
   public types and functions, marked `EASYFORGE_<LIBRARY>_EXPORT` through a
   generated `<easyforge/<library>/Export.h>`; programs and DLLs then share one
   folder, `bin/<configuration>`.
+- The test runner fails a Debug run built with Visual Studio that leaves memory
+  allocated when it ends, and lists each block.
 - `Result::LogIfFailed()` logs a failed result's error and gives whether it
   succeeded, for results where logging is all a program would do.
 - `WriteWholeFile` in `core` writes a file whole or not at all, through a file
@@ -110,6 +112,12 @@
   are saved whole or not at all, so a crash or power cut while saving leaves
   the old file instead of part of the new one.
 - A server given a `NetworkIdentity` that did not load does not start.
+- A threaded server or client ends with the program's last copy of it, waiting
+  for its thread, instead of sometimes later on that thread, which left its
+  port taken and its memory in use for a while after.
+- When an interface ends, its elements let go of their callbacks, so a
+  callback holding its own element no longer keeps it alive for good. Showing
+  such an element again logs a warning.
 - `Result` is `[[nodiscard]]`, and so is every function that makes a new
   object (`New`, `Load`, `FromText`, `Open`), so a failure or a new object
   cannot be dropped by accident. The script tool now prints errors from

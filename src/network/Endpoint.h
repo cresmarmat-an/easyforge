@@ -70,6 +70,15 @@ namespace easyforge::internal::networking
         static std::shared_ptr<Endpoint> StartServer(const ServerSettings& settings);
         static std::shared_ptr<Endpoint> StartClient(const ClientSettings& settings);
 
+        // What a Server or Client holds. When the program lets go of its last
+        // handle, the network thread is stopped and waited for, so the
+        // endpoint ends there and then, not later on its own thread. Only a
+        // handler holding the last handle lets it end on the network thread.
+        static std::shared_ptr<Endpoint> HandOut(std::shared_ptr<Endpoint> endpoint);
+
+        // Stops the network thread and waits for it, unless called from it.
+        void StopThread();
+
         Endpoint(const Endpoint&) = delete;
         Endpoint& operator=(const Endpoint&) = delete;
         ~Endpoint();

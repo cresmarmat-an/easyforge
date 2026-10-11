@@ -15,6 +15,12 @@ element. Keep a copy of any element you want to change later, before or after
 it is on screen; capturing one by value in a lambda is safe. An element lives
 as long as a copy of it does, or as long as it is inside an interface.
 
+A callback that holds its own element, or one around it, keeps both alive, so
+when an interface ends, for example when its window closes, every element in it
+lets go of its callbacks. Elements the program still holds stay usable, but
+showing one again in another interface logs a warning, since its callbacks need
+setting again. Building the elements anew for each window avoids that.
+
 Every setting in an element's settings struct is also a property of the element,
 read and assigned like a variable:
 

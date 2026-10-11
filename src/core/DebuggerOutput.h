@@ -12,4 +12,10 @@ namespace easyforge::internal
     // cannot start a part it needs, and a failed check in the C++ library's
     // debug build. A test run then never waits for someone to close a window.
     void StopErrorDialogs();
+
+    // Notes what memory is allocated now. When the program ends, after its
+    // static objects are gone, anything allocated since and still allocated
+    // is printed and the program exits with code 3. Only debug builds whose C
+    // library keeps count of its allocations check; elsewhere it does nothing.
+    void CheckForLeaksAtExit();
 }

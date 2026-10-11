@@ -93,6 +93,7 @@ namespace easyforge
             return 0;
         }
 
+        internal::CheckForLeaksAtExit();
         int passed = 0;
         int failed = 0;
         for (const TestCase& test : Registered())

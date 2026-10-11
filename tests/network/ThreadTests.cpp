@@ -55,6 +55,21 @@ EASYFORGE_TEST(ThreadedEndsNeedNoUpdates)
     EASYFORGE_EXPECT(WaitUntil([&] { return told.load(); }));
 }
 
+EASYFORGE_TEST(AThreadedServerEndsWithItsLastHandle)
+{
+    // Its thread holds it while updating it, which once let it end later, on
+    // that thread. Now the port is free the moment the handle is gone.
+    std::uint16_t port = 0;
+    for (int round = 0; round < 20; ++round)
+    {
+        Server server = Server::New({ .Port = port, .ThisComputerOnly = true, .Threaded = true });
+        EASYFORGE_REQUIRE(server);
+        port = server.Port();
+        Client client = Client::New({ .Port = port, .Threaded = true });
+        EASYFORGE_REQUIRE(client);
+    }
+}
+
 EASYFORGE_TEST(ThreadedHandlersMayHoldTheirServer)
 {
     // The handler holds the last copy of the server once `server` lets go, so

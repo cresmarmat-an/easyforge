@@ -3,12 +3,23 @@
 // What the ui tests share: a root drawn into an image on the software renderer,
 // with the test font, so text measures the same on every computer.
 
+#include <string>
+#include <vector>
+
 #include <easyforge/core/Testing.h>
 #include <easyforge/graphics.h>
 #include <easyforge/ui.h>
 
 namespace easyforge::testing
 {
+    // Warnings logged while the tests run, which main gathers. Made on first
+    // use, during a test, so it is gone before the leak check at exit.
+    inline std::vector<std::string>& LoggedWarnings()
+    {
+        static std::vector<std::string> warnings;
+        return warnings;
+    }
+
     inline ui::Theme TestTheme()
     {
         ui::Theme theme = ui::Theme::Light();

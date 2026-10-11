@@ -49,7 +49,7 @@ namespace easyforge
 
     Server Server::New(const ServerSettings& settings)
     {
-        return Server(Endpoint::StartServer(settings));
+        return Server(Endpoint::HandOut(Endpoint::StartServer(settings)));
     }
 
     Server::Server(const Server& other) : Server(other.State)
